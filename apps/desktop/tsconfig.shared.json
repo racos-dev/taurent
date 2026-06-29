@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "paths": {
+      "@taurent/shared": ["../../shared/src"]
+    }
+  },
+  "include": ["src/**/*"],
+  "references": [
+    { "path": "../../shared" }
+  ]
+}

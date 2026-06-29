@@ -1,0 +1,58 @@
+@import '@taurent/shared/theme/themes.css';
+@import "tailwindcss";
+
+@config "../tailwind.config.ts";
+@source "./**/*.{js,ts,jsx,tsx}";
+@source "../../../packages/web-ui/src/**/*.{js,ts,jsx,tsx}";
+@source "../../../packages/shared/src/**/*.{js,ts,jsx,tsx}";
+
+/*
+ * App-level base styles only.
+ * All theme class definitions are now in the shared themes.css import above.
+ */
+
+:root {
+  --sat: env(safe-area-inset-top);
+  --sar: env(safe-area-inset-right);
+  --sab: env(safe-area-inset-bottom);
+  --sal: env(safe-area-inset-left);
+  --mobile-tab-bar-safe-height: 0px;
+}
+
+html {
+  height: 100%;
+  background: var(--color-background);
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+  height: 100vh;
+  min-height: 100dvh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+#root {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  overscroll-behavior: none;
+  /*
+   * WKWebView on iOS can report 100dvh as the safe-area-excluded viewport.
+   * Keep the root on 100vh so bottom chrome reaches the physical screen edge;
+   * the shell/tab bar applies env(safe-area-inset-*) padding internally.
+   */
+  height: 100vh;
+  min-height: 100dvh;
+  padding-top: var(--sat);
+  padding-left: var(--sal);
+  padding-right: var(--sar);
+}

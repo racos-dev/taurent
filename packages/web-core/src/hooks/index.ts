@@ -1,0 +1,41 @@
+// hooks module — shared React Query hooks
+
+export * from './useCategories';
+export * from './useTags';
+export * from './usePreferences';
+export * from './useTorrentList';
+export * from './useTorrentProperties';
+export * from './useTorrentTrackers';
+export * from './useTorrentFiles';
+export * from './useTorrentMutations';
+export * from './useCategoryMutations';
+export * from './useTagMutations';
+export * from './usePreferencesMutations';
+export * from './useRssMutations';
+export * from './useTransfer';
+export * from './useSettings';
+export * from './useShutdown';
+
+export { createCategoriesHooks } from './useCategories';
+export type { CategoriesAdapters, CreateCategoriesHooksOptions } from './useCategories';
+export { createTagsHooks } from './useTags';
+export type { TagsAdapters, CreateTagsHooksOptions } from './useTags';
+export { createPlatformHooks } from './createPlatformHooks';
+export type { PlatformHooksBridge, CreatePlatformHooksOptions } from './createPlatformHooks';
+export { createTorrentsHook } from './useTorrents';
+export type { UseTorrentsOptions, UseTorrentsResult, WorkspaceViewBridge } from './useTorrents';
+export { createTorrentDetailHooks } from './createTorrentDetailHooks';
+export type { TorrentDetailBridge, UseTorrentDetailOptions, PeerRow } from './createTorrentDetailHooks';
+export { createTrackerEntriesHook } from './useTrackerEntries';
+export type { UseTrackerEntriesResult } from './useTrackerEntries';
+export { useFiltersFormState } from './useFiltersFormState';
+export type { UseFiltersFormStateOptions, UseFiltersFormStateResult } from './useFiltersFormState';
+export { useFilterSummary } from './useFilterSummary';
+export type { FilterSummaryItem, UseFilterSummaryOptions } from './useFilterSummary';
+export { createServerStatisticsHook } from './useServerStatistics';
+export type { ServerStatistics, UseServerStatisticsResult } from './useServerStatistics';
+export { useOperationNotifications } from './useOperationNotifications';
+export type { UseOperationNotificationsOptions } from './useOperationNotifications';
+export { reportOperationFailure } from './operationFailureReporter';
+export { subscribeOperationFailures } from './operationFailureReporter';
+export type { OperationFailurePayload } from './operationFailureReporter';

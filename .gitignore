@@ -1,0 +1,74 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# Debug logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# Local env files
+.env*.local
+
+# TypeScript
+*.tsbuildinfo
+
+app-example
+
+# generated native folders
+/ios
+/android
+
+# Tauri build artifacts
+/target/
+apps/mobile/src-tauri/target/
+apps/mobile/src-tauri/gen/
+apps/desktop/src-tauri/gen/
+
+# Editor settings
+.vscode/
+.idea/
+.cursor/
+.continue/
+
+# Local agent/tooling state
+.agents/
+.claude/
+.codex/
+.hyper/
+.opencode/
+.slim/
+opencode.json
+skills-lock.json
+
+# Performance / build artifacts
+artifacts/
+coverage/
+playwright-report/
+test-results/
+.playwright-mcp/
+omp-session-*.html

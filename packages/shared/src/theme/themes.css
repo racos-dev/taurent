@@ -1,0 +1,1591 @@
+/**
+ * Shared Theme CSS — Canonical source of truth for all theme class definitions.
+ *
+ * Both desktop and mobile import this file. Class application targets
+ * document.documentElement (mobile convention, also safe for desktop).
+ *
+ * Token surface is a superset of what both apps need:
+ * - Surface colors, text colors, semantic colors
+ * - Alpha variants (primary-10/20/30/40, success-20, warning-20, error-20, info-20, upload-20)
+ * - Text alpha (text-50, text-70, text-muted-30)
+ * - Status colors (all torrent + connection states, with -15 alpha variants)
+ * - Feature colors (download, upload, size, ratio, peers, time)
+ * - Border tokens (border-subtle, border-20)
+ * - Glass/glow effects for desktop
+ * - Touch highlight for mobile
+ *
+ * Class names are preserved exactly (theme-solarized-light, theme-midnight, etc.)
+ * to maintain backward compatibility.
+ */
+
+:root {
+  --color-scrollbar-thumb: var(--color-text-muted-30, var(--color-text-50, var(--color-divider)));
+  --color-scrollbar-thumb-hover: var(--color-text-50, var(--color-text-muted));
+  --color-scrollbar-thumb-active: var(--color-text-70, var(--color-text-secondary));
+  --color-scrollbar-track: transparent;
+}
+
+/* ============================================================
+ * Scrollbar Styles — shared across all platforms
+ * ============================================================ */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-corner {
+  background: var(--color-scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb {
+  min-height: 32px;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-color: var(--color-scrollbar-thumb);
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-scrollbar-thumb-hover);
+}
+
+*::-webkit-scrollbar-thumb:active {
+  background-color: var(--color-scrollbar-thumb-active);
+}
+
+*::-webkit-scrollbar-button {
+  display: none;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-scrollbar-thumb) var(--color-scrollbar-track);
+  }
+}
+
+/* forced-colors: accessibility — use system colors */
+@media (forced-colors: active) {
+  * {
+    scrollbar-width: auto;
+    scrollbar-color: CanvasText Canvas;
+  }
+
+  *::-webkit-scrollbar {
+    width: auto;
+    height: auto;
+  }
+
+  *::-webkit-scrollbar-track,
+  *::-webkit-scrollbar-corner {
+    background: Canvas;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    border: 1px solid Canvas;
+    background: CanvasText;
+  }
+}
+
+/* ============================================================
+ * Solarized Light Theme
+ * ============================================================ */
+.theme-solarized-light {
+  /* Base Colors */
+  --color-background: #fdf6e3;
+  --color-surface: #eee8d5;
+  --color-surface-elevated: #e8e2ce;
+  --color-surface-interactive: #ddd8c8;
+
+  /* Text Colors */
+  --color-text-primary: #002b36;
+  --color-text-secondary: #586e75;
+  --color-text-muted: #506068;
+  --color-text-placeholder: #707070;
+
+  /* Semantic Colors */
+  --color-primary: #268bd2;
+  --color-primary-hover: #2076b3;
+  --color-primary-light: #d4eef7;
+  --color-text-on-primary: #1a1a1a;
+  --color-success: #859900;
+  --color-warning: #b58900;
+  --color-error: #dc322f;
+  --color-info: #2aa198;
+  
+  --color-text-on-success: #1a1a1a;
+  --color-text-on-warning: #3c1f00;
+  --color-text-on-info: #1a1a1a;
+  --color-text-on-error: #ffffff;
+  --color-text-on-danger: #ffffff;
+
+  /* Feature Colors */
+  --color-download: #859900;
+  --color-upload: #cb4b16;
+  --color-size: #268bd2;
+  --color-ratio: #d33682;
+  --color-peers: #b58900;
+  --color-time: #6c71c4;
+
+  /* Border Colors */
+  --color-border: #d3cbb8;
+  --color-border-focus: #268bd2;
+  --color-border-elevated: #c4bcaa;
+  --color-border-subtle: rgba(211, 203, 184, 0.5);
+  --color-divider: rgba(88, 110, 117, 0.15);
+  --color-border-input: #9a9080;
+  --color-border-interactive: #c8c0b0;
+  --color-border-disabled: #bbb4a4;
+
+  /* Disabled State */
+  --color-bg-disabled: #ddd8c8;
+  --color-text-disabled: #686860;
+
+  /* Overlay & Backdrop */
+  --color-overlay: rgba(0, 0, 0, 0.35);
+  --color-backdrop: rgba(253, 246, 227, 0.85);
+
+  /* State Colors (Interaction) */
+  --color-state-selected: rgba(38, 139, 210, 0.16);
+
+  /* RGB Channels (for Tailwind opacity modifiers: bg-primary/10, etc.) */
+  --color-primary-rgb: 38 139 210;
+  --color-error-rgb: 220 50 47;
+  --color-success-rgb: 133 153 0;
+  --color-info-rgb: 42 161 152;
+  --color-warning-rgb: 181 137 0;
+  
+  --color-background-rgb: 253 246 227;
+  --color-surface-rgb: 238 232 213;
+  --color-text-on-primary-rgb: 26 26 26;
+
+  /* Alpha Variants */
+  --color-primary-10: rgba(38, 139, 210, 0.10);
+  --color-primary-20: rgba(38, 139, 210, 0.20);
+  --color-primary-30: rgba(38, 139, 210, 0.30);
+  --color-primary-40: rgba(38, 139, 210, 0.40);
+  --color-success-20: rgba(133, 153, 0, 0.20);
+  --color-warning-20: rgba(181, 137, 0, 0.20);
+  --color-error-20: rgba(220, 50, 47, 0.20);
+  --color-info-20: rgba(42, 161, 152, 0.20);
+  --color-upload-20: rgba(203, 75, 22, 0.20);
+  --color-text-50: rgba(0, 43, 54, 0.50);
+  --color-text-70: rgba(0, 43, 54, 0.70);
+  --color-text-muted-30: rgba(101, 123, 131, 0.30);
+
+  /* Status Colors (Torrent States) */
+  --color-status-downloading: #268bd2;
+  --color-status-downloading-15: rgba(38, 139, 210, 0.15);
+  --color-status-seeding: #859900;
+  --color-status-seeding-15: rgba(133, 153, 0, 0.15);
+  --color-status-stalled: #b58900;
+  --color-status-stalled-15: rgba(181, 137, 0, 0.15);
+  --color-status-paused: #586e75;
+  --color-status-paused-15: rgba(88, 110, 117, 0.15);
+  --color-status-queued: #cb4b16;
+  --color-status-queued-15: rgba(203, 75, 22, 0.15);
+  --color-status-checking: #6c71c4;
+  --color-status-checking-15: rgba(108, 113, 196, 0.15);
+  --color-status-metadata: #d33682;
+  --color-status-metadata-15: rgba(211, 54, 130, 0.15);
+  --color-status-error: #dc322f;
+  --color-status-error-15: rgba(220, 50, 47, 0.15);
+  --color-status-inactive: #657b83;
+  --color-status-inactive-15: rgba(101, 123, 131, 0.15);
+
+  /* Connection Status */
+  --color-status-connected: #859900;
+  --color-status-connected-15: rgba(133, 153, 0, 0.15);
+  --color-status-firewalled: #b58900;
+  --color-status-firewalled-15: rgba(181, 137, 0, 0.15);
+  --color-status-disconnected: #dc322f;
+  --color-status-disconnected-15: rgba(220, 50, 47, 0.15);
+  --color-status-idle: #586e75;
+  --color-status-idle-15: rgba(88, 110, 117, 0.15);
+  --color-status-connecting: #268bd2;
+  --color-status-connecting-15: rgba(38, 139, 210, 0.15);
+  --color-status-reconnecting: #b58900;
+  --color-status-reconnecting-15: rgba(181, 137, 0, 0.15);
+  --color-status-unreachable: #dc322f;
+  --color-status-unreachable-15: rgba(220, 50, 47, 0.15);
+  --color-status-auth-failed: #dc322f;
+  --color-status-auth-failed-15: rgba(220, 50, 47, 0.15);
+}
+
+/* ============================================================
+ * Solarized Dark Theme
+ * ============================================================ */
+.theme-solarized-dark {
+  /* Base Colors */
+  --color-background: #002b36;
+  --color-surface: #073642;
+  --color-surface-elevated: #0f4856;
+  --color-surface-interactive: #1a5566;
+  --color-surface-900: #042029;
+  --color-surface-950: #02171d;
+
+  /* Text Colors */
+  --color-text-primary: #fdf6e3;
+  --color-text-secondary: #93a1a1;
+  --color-text-muted: #6b7c84;
+  --color-text-placeholder: #8a9da2;
+
+  /* Semantic Colors */
+  --color-primary: #268bd2;
+  --color-primary-hover: #3e9cc1;
+  --color-primary-light: #1b6e90;
+  --color-text-on-primary: #000000;
+  --color-success: #859900;
+  --color-warning: #b58900;
+  --color-error: #dc322f;
+  --color-info: #2aa198;
+  
+  --color-text-on-success: #000000;
+  --color-text-on-warning: #2a1f00;
+  --color-text-on-info: #000000;
+  --color-text-on-error: #000000;
+  --color-text-on-danger: #000000;
+
+  /* Feature Colors */
+  --color-download: #859900;
+  --color-upload: #cb4b16;
+  --color-size: #268bd2;
+  --color-ratio: #d33682;
+  --color-peers: #b58900;
+  --color-time: #6c71c4;
+
+  /* Border Colors */
+  --color-border: #1a4756;
+  --color-border-focus: #268bd2;
+  --color-border-elevated: #236682;
+  --color-border-subtle: rgba(26, 71, 86, 0.4);
+  --color-divider: rgba(88, 110, 117, 0.15);
+  --color-border-input: #2a5a6a;
+  --color-border-interactive: #1f5060;
+  --color-border-disabled: #1a3a4a;
+
+  /* Overlay & Backdrop */
+  --color-overlay: rgba(0, 0, 0, 0.6);
+  --color-backdrop: rgba(0, 43, 54, 0.9);
+
+  /* State Colors (Interaction) */
+  --color-state-selected: rgba(38, 139, 210, 0.16);
+
+  /* RGB Channels (for Tailwind opacity modifiers: bg-primary/10, etc.) */
+  --color-primary-rgb: 38 139 210;
+  --color-error-rgb: 220 50 47;
+  --color-success-rgb: 133 153 0;
+  --color-info-rgb: 42 161 152;
+  --color-warning-rgb: 181 137 0;
+  
+  --color-background-rgb: 0 43 54;
+  --color-surface-rgb: 7 54 66;
+  --color-text-on-primary-rgb: 0 0 0;
+
+  /* Alpha Variants */
+  --color-primary-10: rgba(38, 139, 210, 0.10);
+  --color-primary-20: rgba(38, 139, 210, 0.20);
+  --color-primary-30: rgba(38, 139, 210, 0.30);
+  --color-primary-40: rgba(38, 139, 210, 0.40);
+  --color-success-20: rgba(133, 153, 0, 0.20);
+  --color-warning-20: rgba(181, 137, 0, 0.20);
+  --color-error-20: rgba(220, 50, 47, 0.20);
+  --color-info-20: rgba(42, 161, 152, 0.20);
+  --color-upload-20: rgba(203, 75, 22, 0.20);
+  --color-text-50: rgba(253, 246, 227, 0.50);
+  --color-text-70: rgba(253, 246, 227, 0.70);
+  --color-text-muted-30: rgba(147, 161, 169, 0.30);
+
+  /* Disabled State */
+  --color-bg-disabled: #042029;
+  --color-text-disabled: #586d77;
+
+  /* Status Colors (Torrent States) */
+  --color-status-downloading: #268bd2;
+  --color-status-downloading-15: rgba(38, 139, 210, 0.15);
+  --color-status-seeding: #859900;
+  --color-status-seeding-15: rgba(133, 153, 0, 0.15);
+  --color-status-stalled: #b58900;
+  --color-status-stalled-15: rgba(181, 137, 0, 0.15);
+  --color-status-paused: #586e75;
+  --color-status-paused-15: rgba(88, 110, 117, 0.15);
+  --color-status-queued: #cb4b16;
+  --color-status-queued-15: rgba(203, 75, 22, 0.15);
+  --color-status-checking: #6c71c4;
+  --color-status-checking-15: rgba(108, 113, 196, 0.15);
+  --color-status-metadata: #d33682;
+  --color-status-metadata-15: rgba(211, 54, 130, 0.15);
+  --color-status-error: #dc322f;
+  --color-status-error-15: rgba(220, 50, 47, 0.15);
+  --color-status-inactive: #657b83;
+  --color-status-inactive-15: rgba(101, 123, 131, 0.15);
+
+  /* Connection Status */
+  --color-status-connected: #859900;
+  --color-status-connected-15: rgba(133, 153, 0, 0.15);
+  --color-status-firewalled: #b58900;
+  --color-status-firewalled-15: rgba(181, 137, 0, 0.15);
+  --color-status-disconnected: #dc322f;
+  --color-status-disconnected-15: rgba(220, 50, 47, 0.15);
+  --color-status-idle: #586e75;
+  --color-status-idle-15: rgba(88, 110, 117, 0.15);
+  --color-status-connecting: #268bd2;
+  --color-status-connecting-15: rgba(38, 139, 210, 0.15);
+  --color-status-reconnecting: #b58900;
+  --color-status-reconnecting-15: rgba(181, 137, 0, 0.15);
+  --color-status-unreachable: #dc322f;
+  --color-status-unreachable-15: rgba(220, 50, 47, 0.15);
+  --color-status-auth-failed: #dc322f;
+  --color-status-auth-failed-15: rgba(220, 50, 47, 0.15);
+}
+
+/* ============================================================
+ * Midnight Theme — Dark only
+ * ============================================================ */
+.theme-midnight {
+  /* Base Colors */
+  --color-background: #000000;
+  --color-surface: #0f0f0f;
+  --color-surface-elevated: #191919;
+  --color-surface-interactive: #252525;
+
+  /* Text Colors */
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #a0a0a0;
+  --color-text-muted: #767676;
+  --color-text-placeholder: #808080;
+
+  /* Semantic Colors */
+  --color-primary: #5B8DB8;
+  --color-primary-hover: #6B9DC8;
+  --color-primary-light: #3D5D78;
+  --color-text-on-primary: #000000;
+  --color-success: #5B8DB8;
+  --color-warning: #5B8DB8;
+  --color-error: #5B8DB8;
+  --color-info: #5B8DB8;
+  
+  --color-text-on-success: #000000;
+  --color-text-on-warning: #000000;
+  --color-text-on-info: #000000;
+  --color-text-on-error: #000000;
+  --color-text-on-danger: #000000;
+
+  /* Feature Colors */
+  --color-download: #5B8DB8;
+  --color-upload: #5B8DB8;
+  --color-size: #5B8DB8;
+  --color-ratio: #5B8DB8;
+  --color-peers: #5B8DB8;
+  --color-time: #5B8DB8;
+
+  /* Border Colors */
+  --color-border: #2a2a2a;
+  --color-border-focus: #5B8DB8;
+  --color-border-elevated: #3d3d3d;
+  --color-border-subtle: rgba(42, 42, 42, 0.5);
+  --color-divider: rgba(160, 160, 160, 0.15);
+  --color-border-input: #444444;
+  --color-border-interactive: #383838;
+  --color-border-disabled: #303030;
+
+  /* Disabled State */
+  --color-bg-disabled: #0a0a0a;
+  --color-text-disabled: #5f5f5f;
+
+  /* Overlay & Backdrop */
+  --color-overlay: rgba(0, 0, 0, 0.85);
+  --color-backdrop: rgba(0, 0, 0, 0.95);
+
+  /* State Colors */
+  --color-state-selected: rgba(91, 141, 184, 0.16);
+
+  /* RGB Channels (for Tailwind opacity modifiers: bg-primary/10, etc.) */
+  --color-primary-rgb: 91 141 184;
+  --color-error-rgb: 91 141 184;
+  --color-success-rgb: 91 141 184;
+  --color-info-rgb: 91 141 184;
+  --color-warning-rgb: 91 141 184;
+  
+  --color-background-rgb: 0 0 0;
+  --color-surface-rgb: 15 15 15;
+  --color-text-on-primary-rgb: 0 0 0;
+
+  /* Alpha Variants */
+  --color-primary-10: rgba(91, 141, 184, 0.10);
+  --color-primary-20: rgba(91, 141, 184, 0.20);
+  --color-primary-30: rgba(91, 141, 184, 0.30);
+  --color-primary-40: rgba(91, 141, 184, 0.40);
+  --color-success-20: rgba(91, 141, 184, 0.20);
+  --color-warning-20: rgba(91, 141, 184, 0.20);
+  --color-error-20: rgba(91, 141, 184, 0.20);
+  --color-info-20: rgba(91, 141, 184, 0.20);
+  --color-upload-20: rgba(91, 141, 184, 0.20);
+  --color-text-50: rgba(255, 255, 255, 0.50);
+  --color-text-70: rgba(255, 255, 255, 0.70);
+  --color-text-muted-30: rgba(112, 112, 112, 0.30);
+
+  /* Status Colors */
+  --color-status-downloading: #5B8DB8;
+  --color-status-downloading-15: rgba(91, 141, 184, 0.15);
+  --color-status-seeding: #5B8DB8;
+  --color-status-seeding-15: rgba(91, 141, 184, 0.15);
+  --color-status-stalled: #5B8DB8;
+  --color-status-stalled-15: rgba(91, 141, 184, 0.15);
+  --color-status-paused: #707070;
+  --color-status-paused-15: rgba(112, 112, 112, 0.15);
+  --color-status-queued: #5B8DB8;
+  --color-status-queued-15: rgba(91, 141, 184, 0.15);
+  --color-status-checking: #5B8DB8;
+  --color-status-checking-15: rgba(91, 141, 184, 0.15);
+  --color-status-metadata: #5B8DB8;
+  --color-status-metadata-15: rgba(91, 141, 184, 0.15);
+  --color-status-error: #707070;
+  --color-status-error-15: rgba(112, 112, 112, 0.15);
+  --color-status-inactive: #505050;
+  --color-status-inactive-15: rgba(80, 80, 80, 0.15);
+
+  /* Connection Status */
+  --color-status-connected: #5B8DB8;
+  --color-status-connected-15: rgba(91, 141, 184, 0.15);
+  --color-status-firewalled: #5B8DB8;
+  --color-status-firewalled-15: rgba(91, 141, 184, 0.15);
+  --color-status-disconnected: #707070;
+  --color-status-disconnected-15: rgba(112, 112, 112, 0.15);
+  --color-status-idle: #707070;
+  --color-status-idle-15: rgba(112, 112, 112, 0.15);
+  --color-status-connecting: #5B8DB8;
+  --color-status-connecting-15: rgba(91, 141, 184, 0.15);
+  --color-status-reconnecting: #5B8DB8;
+  --color-status-reconnecting-15: rgba(91, 141, 184, 0.15);
+  --color-status-unreachable: #707070;
+  --color-status-unreachable-15: rgba(112, 112, 112, 0.15);
+  --color-status-auth-failed: #707070;
+  --color-status-auth-failed-15: rgba(112, 112, 112, 0.15);
+}
+
+/* ============================================================
+ * Catppuccin Latte Theme — Light
+ * ============================================================ */
+.theme-catppuccin-latte {
+  /* Base Colors */
+  --color-background: #eff1f5;
+  --color-surface: #e6e9ef;
+  --color-surface-elevated: #dce0e8;
+  --color-surface-interactive: #ccd0da;
+
+  /* Text Colors */
+  --color-text-primary: #4c4f69;
+  --color-text-secondary: #5c5f77;
+  --color-text-muted: #5a5d72;
+  --color-text-placeholder: #707388;
+
+  /* Semantic Colors */
+  --color-primary: #1e66f5;
+  --color-primary-hover: #1e5bd5;
+  --color-primary-light: #b4befe;
+  --color-text-on-primary: #ffffff;
+  --color-success: #40a02b;
+  --color-warning: #df8e1d;
+  --color-error: #d20f39;
+  --color-info: #04a5e5;
+  
+  --color-text-on-success: #000000;
+  --color-text-on-warning: #2a1800;
+  --color-text-on-info: #000000;
+  --color-text-on-error: #eff1f5;
+  --color-text-on-danger: #eff1f5;
+
+  /* Feature Colors */
+  --color-download: #40a02b;
+  --color-upload: #fe640b;
+  --color-size: #1e66f5;
+  --color-ratio: #8839ef;
+  --color-peers: #df8e1d;
+  --color-time: #7287fd;
+
+  /* Border Colors */
+  --color-border: #bcc0cc;
+  --color-border-focus: #1e66f5;
+  --color-border-elevated: #acb0be;
+  --color-border-subtle: rgba(188, 192, 204, 0.5);
+  --color-divider: rgba(92, 95, 119, 0.15);
+  --color-border-input: #9a9eb8;
+  --color-border-interactive: #aeaebe;
+  --color-border-disabled: #989ca8;
+
+  /* Disabled State */
+  --color-bg-disabled: #d5d8e0;
+  --color-text-disabled: #585b6e;
+
+  /* Overlay & Backdrop */
+  --color-overlay: rgba(76, 79, 105, 0.35);
+  --color-backdrop: rgba(239, 241, 245, 0.85);
+
+  /* State Colors */
+  --color-state-selected: rgba(30, 102, 245, 0.16);
+
+  /* RGB Channels (for Tailwind opacity modifiers: bg-primary/10, etc.) */
+  --color-primary-rgb: 30 102 245;
+  --color-error-rgb: 210 15 57;
+  --color-success-rgb: 64 160 43;
+  --color-info-rgb: 4 165 229;
+  --color-warning-rgb: 223 142 29;
+  
+  --color-background-rgb: 239 241 245;
+  --color-surface-rgb: 230 233 239;
+  --color-text-on-primary-rgb: 255 255 255;
+
+  /* Alpha Variants */
+  --color-primary-10: rgba(30, 102, 245, 0.10);
+  --color-primary-20: rgba(30, 102, 245, 0.20);
+  --color-primary-30: rgba(30, 102, 245, 0.30);
+  --color-primary-40: rgba(30, 102, 245, 0.40);
+  --color-success-20: rgba(64, 160, 43, 0.20);
+  --color-warning-20: rgba(223, 142, 29, 0.20);
+  --color-error-20: rgba(210, 15, 57, 0.20);
+  --color-info-20: rgba(4, 165, 229, 0.20);
+  --color-upload-20: rgba(254, 100, 11, 0.20);
+  --color-text-50: rgba(76, 79, 105, 0.50);
+  --color-text-70: rgba(76, 79, 105, 0.70);
+  --color-text-muted-30: rgba(108, 111, 133, 0.30);
+
+  /* Status Colors */
+  --color-status-downloading: #1e66f5;
+  --color-status-downloading-15: rgba(30, 102, 245, 0.15);
+  --color-status-seeding: #40a02b;
+  --color-status-seeding-15: rgba(64, 160, 43, 0.15);
+  --color-status-stalled: #40a02b;
+  --color-status-stalled-15: rgba(64, 160, 43, 0.15);
+  --color-status-paused: #5c5f77;
+  --color-status-paused-15: rgba(92, 95, 119, 0.15);
+  --color-status-queued: #1e66f5;
+  --color-status-queued-15: rgba(30, 102, 245, 0.15);
+  --color-status-checking: #7287fd;
+  --color-status-checking-15: rgba(114, 135, 253, 0.15);
+  --color-status-metadata: #8839ef;
+  --color-status-metadata-15: rgba(136, 57, 239, 0.15);
+  --color-status-error: #d20f39;
+  --color-status-error-15: rgba(210, 15, 57, 0.15);
+  --color-status-inactive: #6c6f85;
+  --color-status-inactive-15: rgba(108, 111, 133, 0.15);
+
+  /* Connection Status */
+  --color-status-connected: #40a02b;
+  --color-status-connected-15: rgba(64, 160, 43, 0.15);
+  --color-status-firewalled: #df8e1d;
+  --color-status-firewalled-15: rgba(223, 142, 29, 0.15);
+  --color-status-disconnected: #d20f39;
+  --color-status-disconnected-15: rgba(210, 15, 57, 0.15);
+  --color-status-idle: #5c5f77;
+  --color-status-idle-15: rgba(92, 95, 119, 0.15);
+  --color-status-connecting: #1e66f5;
+  --color-status-connecting-15: rgba(30, 102, 245, 0.15);
+  --color-status-reconnecting: #df8e1d;
+  --color-status-reconnecting-15: rgba(223, 142, 29, 0.15);
+  --color-status-unreachable: #d20f39;
+  --color-status-unreachable-15: rgba(210, 15, 57, 0.15);
+  --color-status-auth-failed: #d20f39;
+  --color-status-auth-failed-15: rgba(210, 15, 57, 0.15);
+}
+
+/* ============================================================
+ * Catppuccin Mocha Theme — Dark
+ * ============================================================ */
+.theme-catppuccin-mocha {
+  /* Base Colors */
+  --color-background: #1e1e2e;
+  --color-surface: #313244;
+  --color-surface-elevated: #45475a;
+  --color-surface-interactive: #585b70;
+
+  /* Text Colors */
+  --color-text-primary: #cdd6f4;
+  --color-text-secondary: #a6adc8;
+  --color-text-muted: #9399b2;
+  --color-text-placeholder: #7f849c;
+
+  /* Semantic Colors */
+  --color-primary: #89b4fa;
+  --color-primary-hover: #74c7ec;
+  --color-primary-light: #1e66f5;
+  --color-text-on-primary: #1e1e2e;
+  --color-success: #a6e3a1;
+  --color-warning: #f9e2af;
+  --color-error: #f38ba8;
+  --color-info: #89dceb;
+  
+  --color-text-on-success: #1e1e2e;
+  --color-text-on-warning: #2a1f00;
+  --color-text-on-info: #1e1e2e;
+  --color-text-on-error: #1e1e2e;
+  --color-text-on-danger: #1e1e2e;
+
+  /* Feature Colors */
+  --color-download: #a6e3a1;
+  --color-upload: #fab387;
+  --color-size: #89b4fa;
+  --color-ratio: #cba6f7;
+  --color-peers: #f9e2af;
+  --color-time: #b4befe;
+
+  /* Border Colors */
+  --color-border: #45475a;
+  --color-border-focus: #89b4fa;
+  --color-border-elevated: #585b70;
+  --color-border-subtle: rgba(69, 71, 90, 0.5);
+  --color-divider: rgba(166, 173, 200, 0.15);
+  --color-border-input: #585b70;
+  --color-border-interactive: #4a4d60;
+  --color-border-disabled: #3f4250;
+
+  /* Disabled State */
+  --color-bg-disabled: #16161e;
+  --color-text-disabled: #61647a;
+
+  /* Overlay & Backdrop */
+  --color-overlay: rgba(0, 0, 0, 0.6);
+  --color-backdrop: rgba(30, 30, 46, 0.9);
+
+  /* State Colors */
+  --color-state-selected: rgba(137, 180, 250, 0.16);
+
+  /* RGB Channels (for Tailwind opacity modifiers: bg-primary/10, etc.) */
+  --color-primary-rgb: 137 180 250;
+  --color-error-rgb: 243 139 168;
+  --color-success-rgb: 166 227 161;
+  --color-info-rgb: 137 220 235;
+  --color-warning-rgb: 249 226 175;
+  
+  --color-background-rgb: 30 30 46;
+  --color-surface-rgb: 49 50 68;
+  --color-text-on-primary-rgb: 30 30 46;
+
+  /* Alpha Variants */
+  --color-primary-10: rgba(137, 180, 250, 0.10);
+  --color-primary-20: rgba(137, 180, 250, 0.20);
+  --color-primary-30: rgba(137, 180, 250, 0.30);
+  --color-primary-40: rgba(137, 180, 250, 0.40);
+  --color-success-20: rgba(166, 227, 161, 0.20);
+  --color-warning-20: rgba(249, 226, 175, 0.20);
+  --color-error-20: rgba(243, 139, 168, 0.20);
+  --color-info-20: rgba(137, 220, 235, 0.20);
+  --color-upload-20: rgba(250, 179, 135, 0.20);
+  --color-text-50: rgba(205, 214, 244, 0.50);
+  --color-text-70: rgba(205, 214, 244, 0.70);
+  --color-text-muted-30: rgba(147, 153, 178, 0.30);
+
+  /* Status Colors */
+  --color-status-downloading: #89b4fa;
+  --color-status-downloading-15: rgba(137, 180, 250, 0.15);
+  --color-status-seeding: #a6e3a1;
+  --color-status-seeding-15: rgba(166, 227, 161, 0.15);
+  --color-status-stalled: #a6e3a1;
+  --color-status-stalled-15: rgba(166, 227, 161, 0.15);
+  --color-status-paused: #6c7086;
+  --color-status-paused-15: rgba(108, 112, 134, 0.15);
+  --color-status-queued: #89b4fa;
+  --color-status-queued-15: rgba(137, 180, 250, 0.15);
+  --color-status-checking: #b4befe;
+  --color-status-checking-15: rgba(180, 190, 254, 0.15);
+  --color-status-metadata: #cba6f7;
+  --color-status-metadata-15: rgba(203, 166, 247, 0.15);
+  --color-status-error: #f38ba8;
+  --color-status-error-15: rgba(243, 139, 168, 0.15);
+  --color-status-inactive: #9399b2;
+  --color-status-inactive-15: rgba(147, 153, 178, 0.15);
+
+  /* Connection Status */
+  --color-status-connected: #a6e3a1;
+  --color-status-connected-15: rgba(166, 227, 161, 0.15);
+  --color-status-firewalled: #f9e2af;
+  --color-status-firewalled-15: rgba(249, 226, 175, 0.15);
+  --color-status-disconnected: #f38ba8;
+  --color-status-disconnected-15: rgba(243, 139, 168, 0.15);
+  --color-status-idle: #6c7086;
+  --color-status-idle-15: rgba(108, 112, 134, 0.15);
+  --color-status-connecting: #89b4fa;
+  --color-status-connecting-15: rgba(137, 180, 250, 0.15);
+  --color-status-reconnecting: #f9e2af;
+  --color-status-reconnecting-15: rgba(249, 226, 175, 0.15);
+  --color-status-unreachable: #f38ba8;
+  --color-status-unreachable-15: rgba(243, 139, 168, 0.15);
+  --color-status-auth-failed: #f38ba8;
+  --color-status-auth-failed-15: rgba(243, 139, 168, 0.15);
+}
+
+/* ============================================================
+ * Nord Theme — Dark
+ * ============================================================ */
+.theme-nord {
+  /* Base Colors */
+  --color-background: #2e3440;
+  --color-surface: #3b4252;
+  --color-surface-elevated: #434c5e;
+  --color-surface-interactive: #4c566a;
+
+  /* Text Colors */
+  --color-text-primary: #eceff4;
+  --color-text-secondary: #d8dee9;
+  --color-text-muted: #a0a9b8;
+  --color-text-placeholder: #8a93a1;
+
+  /* Semantic Colors */
+  --color-primary: #88c0d0;
+  --color-primary-hover: #8fbcbb;
+  --color-primary-light: #5e81ac;
+  --color-text-on-primary: #2e3440;
+  --color-success: #a3be8c;
+  --color-warning: #ebcb8b;
+  --color-error: #bd505a;
+  --color-info: #88c0d0;
+  
+  --color-text-on-success: #2e3440;
+  --color-text-on-warning: #2a1f00;
+  --color-text-on-info: #2e3440;
+  --color-text-on-error: #ffffff;
+  --color-text-on-danger: #ffffff;
+
+  /* Feature Colors */
+  --color-download: #a3be8c;
+  --color-upload: #d08770;
+  --color-size: #88c0d0;
+  --color-ratio: #b48ead;
+  --color-peers: #ebcb8b;
+  --color-time: #81a1c1;
+
+  /* Border Colors */
+  --color-border: #4c566a;
+  --color-border-focus: #88c0d0;
+  --color-border-elevated: #5c687a;
+  --color-border-subtle: rgba(76, 86, 106, 0.5);
+  --color-divider: rgba(216, 222, 233, 0.15);
+  --color-border-input: #5c687a;
+  --color-border-interactive: #4c566a;
+  --color-border-disabled: #3c4452;
+
+  /* Disabled State */
+  --color-bg-disabled: #252936;
+  --color-text-disabled: #697586;
+
+  /* Overlay & Backdrop */
+  --color-overlay: rgba(0, 0, 0, 0.6);
+  --color-backdrop: rgba(46, 52, 64, 0.95);
+
+  /* State Colors */
+  --color-state-selected: rgba(136, 192, 208, 0.16);
+
+  /* RGB Channels (for Tailwind opacity modifiers: bg-primary/10, etc.) */
+  --color-primary-rgb: 136 192 208;
+  --color-error-rgb: 189 80 90;
+  --color-success-rgb: 163 190 140;
+  --color-info-rgb: 136 192 208;
+  --color-warning-rgb: 235 203 139;
+  
+  --color-background-rgb: 46 52 64;
+  --color-surface-rgb: 59 66 82;
+  --color-text-on-primary-rgb: 46 52 64;
+
+  /* Alpha Variants */
+  --color-primary-10: rgba(136, 192, 208, 0.10);
+  --color-primary-20: rgba(136, 192, 208, 0.20);
+  --color-primary-30: rgba(136, 192, 208, 0.30);
+  --color-primary-40: rgba(136, 192, 208, 0.40);
+  --color-success-20: rgba(163, 190, 140, 0.20);
+  --color-warning-20: rgba(235, 203, 139, 0.20);
+  --color-error-20: rgba(189, 80, 90, 0.20);
+  --color-info-20: rgba(136, 192, 208, 0.20);
+  --color-upload-20: rgba(208, 135, 112, 0.20);
+  --color-text-50: rgba(236, 239, 244, 0.50);
+  --color-text-70: rgba(236, 239, 244, 0.70);
+  --color-text-muted-30: rgba(160, 169, 184, 0.30);
+
+  /* Status Colors */
+  --color-status-downloading: #88c0d0;
+  --color-status-downloading-15: rgba(136, 192, 208, 0.15);
+  --color-status-seeding: #a3be8c;
+  --color-status-seeding-15: rgba(163, 190, 140, 0.15);
+  --color-status-stalled: #a3be8c;
+  --color-status-stalled-15: rgba(163, 190, 140, 0.15);
+  --color-status-paused: #6c7885;
+  --color-status-paused-15: rgba(108, 120, 133, 0.15);
+  --color-status-queued: #88c0d0;
+  --color-status-queued-15: rgba(136, 192, 208, 0.15);
+  --color-status-checking: #81a1c1;
+  --color-status-checking-15: rgba(129, 161, 193, 0.15);
+  --color-status-metadata: #b48ead;
+  --color-status-metadata-15: rgba(180, 142, 173, 0.15);
+  --color-status-error: #bd505a;
+  --color-status-error-15: rgba(189, 80, 90, 0.15);
+  --color-status-inactive: #a0a9b8;
+  --color-status-inactive-15: rgba(160, 169, 184, 0.15);
+
+  /* Connection Status */
+  --color-status-connected: #a3be8c;
+  --color-status-connected-15: rgba(163, 190, 140, 0.15);
+  --color-status-firewalled: #ebcb8b;
+  --color-status-firewalled-15: rgba(235, 203, 139, 0.15);
+  --color-status-disconnected: #bd505a;
+  --color-status-disconnected-15: rgba(189, 80, 90, 0.15);
+  --color-status-idle: #6c7885;
+  --color-status-idle-15: rgba(108, 120, 133, 0.15);
+  --color-status-connecting: #88c0d0;
+  --color-status-connecting-15: rgba(136, 192, 208, 0.15);
+  --color-status-reconnecting: #ebcb8b;
+  --color-status-reconnecting-15: rgba(235, 203, 139, 0.15);
+  --color-status-unreachable: #bd505a;
+  --color-status-unreachable-15: rgba(189, 80, 90, 0.15);
+  --color-status-auth-failed: #bd505a;
+  --color-status-auth-failed-15: rgba(189, 80, 90, 0.15);
+}
+
+/* ============================================================
+ * Dracula Theme — Dark
+ * ============================================================ */
+.theme-dracula {
+  /* Base Colors */
+  --color-background: #282a36;
+  --color-surface: #44475a;
+  --color-surface-elevated: #6272a4;
+  --color-surface-interactive: #53576b;
+
+  /* Text Colors */
+  --color-text-primary: #f8f8f2;
+  --color-text-secondary: #bfbfbf;
+  --color-text-muted: #a0a0a0;
+  --color-text-placeholder: #8e8ea0;
+
+  /* Semantic Colors */
+  --color-primary: #bd93f9;
+  --color-primary-hover: #caa9fa;
+  --color-primary-light: #ff79c6;
+  --color-text-on-primary: #282a36;
+  --color-success: #50fa7b;
+  --color-warning: #f1fa8c;
+  --color-error: #ff5555;
+  --color-info: #8be9fd;
+  
+  --color-text-on-success: #282a36;
+  --color-text-on-warning: #282a36;
+  --color-text-on-info: #282a36;
+  --color-text-on-error: #282a36;
+  --color-text-on-danger: #282a36;
+
+  /* Feature Colors */
+  --color-download: #50fa7b;
+  --color-upload: #ffb86c;
+  --color-size: #8be9fd;
+  --color-ratio: #ff79c6;
+  --color-peers: #f1fa8c;
+  --color-time: #bd93f9;
+
+  /* Border Colors */
+  --color-border: #8b7dbb;
+  --color-border-focus: #bd93f9;
+  --color-border-elevated: #6272a4;
+  --color-border-subtle: rgba(68, 71, 90, 0.5);
+  --color-divider: rgba(98, 114, 164, 0.15);
+  --color-border-input: #6272a4;
+  --color-border-interactive: #555980;
+  --color-border-disabled: #353849;
+
+  /* Disabled State */
+  --color-bg-disabled: #1e1f2a;
+  --color-text-disabled: #686b7a;
+
+  /* Overlay & Backdrop */
+  --color-overlay: rgba(0, 0, 0, 0.6);
+  --color-backdrop: rgba(40, 42, 54, 0.95);
+
+  /* State Colors */
+  --color-state-selected: rgba(189, 147, 249, 0.16);
+
+  /* RGB Channels (for Tailwind opacity modifiers: bg-primary/10, etc.) */
+  --color-primary-rgb: 189 147 249;
+  --color-error-rgb: 255 85 85;
+  --color-success-rgb: 80 250 123;
+  --color-info-rgb: 139 233 253;
+  --color-warning-rgb: 241 250 140;
+  
+  --color-background-rgb: 40 42 54;
+  --color-surface-rgb: 68 71 90;
+  --color-text-on-primary-rgb: 40 42 54;
+
+  /* Alpha Variants */
+  --color-primary-10: rgba(189, 147, 249, 0.10);
+  --color-primary-20: rgba(189, 147, 249, 0.20);
+  --color-primary-30: rgba(189, 147, 249, 0.30);
+  --color-primary-40: rgba(189, 147, 249, 0.40);
+  --color-success-20: rgba(80, 250, 123, 0.20);
+  --color-warning-20: rgba(241, 250, 140, 0.20);
+  --color-error-20: rgba(255, 85, 85, 0.20);
+  --color-info-20: rgba(139, 233, 253, 0.20);
+  --color-upload-20: rgba(255, 184, 108, 0.20);
+  --color-text-50: rgba(248, 248, 242, 0.50);
+  --color-text-70: rgba(248, 248, 242, 0.70);
+  --color-text-muted-30: rgba(160, 160, 160, 0.30);
+
+  /* Status Colors */
+  --color-status-downloading: #8be9fd;
+  --color-status-downloading-15: rgba(139, 233, 253, 0.15);
+  --color-status-seeding: #50fa7b;
+  --color-status-seeding-15: rgba(80, 250, 123, 0.15);
+  --color-status-stalled: #50fa7b;
+  --color-status-stalled-15: rgba(80, 250, 123, 0.15);
+  --color-status-paused: #6272a4;
+  --color-status-paused-15: rgba(98, 114, 164, 0.15);
+  --color-status-queued: #8be9fd;
+  --color-status-queued-15: rgba(139, 233, 253, 0.15);
+  --color-status-checking: #bd93f9;
+  --color-status-checking-15: rgba(189, 147, 249, 0.15);
+  --color-status-metadata: #ff79c6;
+  --color-status-metadata-15: rgba(255, 121, 198, 0.15);
+  --color-status-error: #ff5555;
+  --color-status-error-15: rgba(255, 85, 85, 0.15);
+  --color-status-inactive: #bfbfbf;
+  --color-status-inactive-15: rgba(191, 191, 191, 0.15);
+
+  /* Connection Status */
+  --color-status-connected: #50fa7b;
+  --color-status-connected-15: rgba(80, 250, 123, 0.15);
+  --color-status-firewalled: #f1fa8c;
+  --color-status-firewalled-15: rgba(241, 250, 140, 0.15);
+  --color-status-disconnected: #ff5555;
+  --color-status-disconnected-15: rgba(255, 85, 85, 0.15);
+  --color-status-idle: #6272a4;
+  --color-status-idle-15: rgba(98, 114, 164, 0.15);
+  --color-status-connecting: #8be9fd;
+  --color-status-connecting-15: rgba(139, 233, 253, 0.15);
+  --color-status-reconnecting: #f1fa8c;
+  --color-status-reconnecting-15: rgba(241, 250, 140, 0.15);
+  --color-status-unreachable: #ff5555;
+  --color-status-unreachable-15: rgba(255, 85, 85, 0.15);
+  --color-status-auth-failed: #ff5555;
+  --color-status-auth-failed-15: rgba(255, 85, 85, 0.15);
+}
+
+/* ============================================================
+ * Gruvbox Light Theme
+ * ============================================================ */
+.theme-gruvbox-light {
+  /* Base Colors */
+  --color-background: #fbf1c7;
+  --color-surface: #ebdbb2;
+  --color-surface-elevated: #d5c4a1;
+  --color-surface-interactive: #bdae93;
+
+  /* Text Colors */
+  --color-text-primary: #282828;
+  --color-text-secondary: #504945;
+  --color-text-muted: #565048;
+  --color-text-placeholder: #686058;
+
+  /* Semantic Colors */
+  --color-primary: #458588;
+  --color-primary-hover: #689d6a;
+  --color-primary-light: #83a598;
+  --color-text-on-primary: #000000;
+  --color-success: #98971a;
+  --color-warning: #d79921;
+  --color-error: #cc241d;
+  --color-info: #689d6a;
+  
+  --color-text-on-success: #1a1a1a;
+  --color-text-on-warning: #382800;
+  --color-text-on-info: #1a1a1a;
+  --color-text-on-error: #fbf1c7;
+  --color-text-on-danger: #fbf1c7;
+
+  /* Feature Colors */
+  --color-download: #98971a;
+  --color-upload: #d65d0e;
+  --color-size: #458588;
+  --color-ratio: #b16286;
+  --color-peers: #d79921;
+  --color-time: #928374;
+
+  /* Border Colors */
+  --color-border: #bdae93;
+  --color-border-focus: #458588;
+  --color-border-elevated: #a89984;
+  --color-border-subtle: rgba(189, 174, 147, 0.5);
+  --color-divider: rgba(80, 73, 69, 0.15);
+  --color-border-input: #a89984;
+  --color-border-interactive: #bdae93;
+  --color-border-disabled: #9e9284;
+
+  /* Disabled State */
+  --color-bg-disabled: #d9ceb8;
+  --color-text-disabled: #6e6458;
+
+  /* Overlay & Backdrop */
+  --color-overlay: rgba(40, 40, 40, 0.35);
+  --color-backdrop: rgba(251, 241, 199, 0.85);
+
+  /* State Colors */
+  --color-state-selected: rgba(69, 133, 136, 0.16);
+
+  /* RGB Channels (for Tailwind opacity modifiers: bg-primary/10, etc.) */
+  --color-primary-rgb: 69 133 136;
+  --color-error-rgb: 204 36 29;
+  --color-success-rgb: 152 151 26;
+  --color-info-rgb: 104 157 106;
+  --color-warning-rgb: 215 153 33;
+  
+  --color-background-rgb: 251 241 199;
+  --color-surface-rgb: 235 219 178;
+  --color-text-on-primary-rgb: 0 0 0;
+
+  /* Alpha Variants */
+  --color-primary-10: rgba(69, 133, 136, 0.10);
+  --color-primary-20: rgba(69, 133, 136, 0.20);
+  --color-primary-30: rgba(69, 133, 136, 0.30);
+  --color-primary-40: rgba(69, 133, 136, 0.40);
+  --color-success-20: rgba(152, 151, 26, 0.20);
+  --color-warning-20: rgba(215, 153, 33, 0.20);
+  --color-error-20: rgba(204, 36, 29, 0.20);
+  --color-info-20: rgba(104, 157, 106, 0.20);
+  --color-upload-20: rgba(214, 93, 14, 0.20);
+  --color-text-50: rgba(40, 40, 40, 0.50);
+  --color-text-70: rgba(40, 40, 40, 0.70);
+  --color-text-muted-30: rgba(102, 92, 84, 0.30);
+
+  /* Status Colors */
+  --color-status-downloading: #458588;
+  --color-status-downloading-15: rgba(69, 133, 136, 0.15);
+  --color-status-seeding: #98971a;
+  --color-status-seeding-15: rgba(152, 151, 26, 0.15);
+  --color-status-stalled: #98971a;
+  --color-status-stalled-15: rgba(152, 151, 26, 0.15);
+  --color-status-paused: #928374;
+  --color-status-paused-15: rgba(146, 131, 116, 0.15);
+  --color-status-queued: #458588;
+  --color-status-queued-15: rgba(69, 133, 136, 0.15);
+  --color-status-checking: #b16286;
+  --color-status-checking-15: rgba(177, 98, 134, 0.15);
+  --color-status-metadata: #b16286;
+  --color-status-metadata-15: rgba(177, 98, 134, 0.15);
+  --color-status-error: #cc241d;
+  --color-status-error-15: rgba(204, 36, 29, 0.15);
+  --color-status-inactive: #665c54;
+  --color-status-inactive-15: rgba(102, 92, 84, 0.15);
+
+  /* Connection Status */
+  --color-status-connected: #98971a;
+  --color-status-connected-15: rgba(152, 151, 26, 0.15);
+  --color-status-firewalled: #d79921;
+  --color-status-firewalled-15: rgba(215, 153, 33, 0.15);
+  --color-status-disconnected: #cc241d;
+  --color-status-disconnected-15: rgba(204, 36, 29, 0.15);
+  --color-status-idle: #928374;
+  --color-status-idle-15: rgba(146, 131, 116, 0.15);
+  --color-status-connecting: #458588;
+  --color-status-connecting-15: rgba(69, 133, 136, 0.15);
+  --color-status-reconnecting: #d79921;
+  --color-status-reconnecting-15: rgba(215, 153, 33, 0.15);
+  --color-status-unreachable: #cc241d;
+  --color-status-unreachable-15: rgba(204, 36, 29, 0.15);
+  --color-status-auth-failed: #cc241d;
+  --color-status-auth-failed-15: rgba(204, 36, 29, 0.15);
+}
+
+/* ============================================================
+ * Gruvbox Dark Theme
+ * ============================================================ */
+.theme-gruvbox-dark {
+  /* Base Colors */
+  --color-background: #282828;
+  --color-surface: #3c3836;
+  --color-surface-elevated: #504945;
+  --color-surface-interactive: #665c54;
+
+  /* Text Colors */
+  --color-text-primary: #ebdbb2;
+  --color-text-secondary: #d5c4a1;
+  --color-text-muted: #bdae93;
+  --color-text-placeholder: #a89984;
+
+  /* Semantic Colors */
+  --color-primary: #83a598;
+  --color-primary-hover: #8ec07c;
+  --color-primary-light: #458588;
+  --color-text-on-primary: #282828;
+  --color-success: #b8bb26;
+  --color-warning: #fabd2f;
+  --color-error: #fb4934;
+  --color-info: #8ec07c;
+  
+  --color-text-on-success: #282828;
+  --color-text-on-warning: #282810;
+  --color-text-on-info: #282828;
+  --color-text-on-error: #000000;
+  --color-text-on-danger: #000000;
+
+  /* Feature Colors */
+  --color-download: #b8bb26;
+  --color-upload: #fe8019;
+  --color-size: #83a598;
+  --color-ratio: #d3869b;
+  --color-peers: #fabd2f;
+  --color-time: #a89984;
+
+  /* Border Colors */
+  --color-border: #504945;
+  --color-border-focus: #83a598;
+  --color-border-elevated: #665c54;
+  --color-border-subtle: rgba(80, 73, 69, 0.5);
+  --color-divider: rgba(213, 196, 161, 0.15);
+  --color-border-input: #665c54;
+  --color-border-interactive: #565048;
+  --color-border-disabled: #4a4238;
+
+  /* Disabled State */
+  --color-bg-disabled: #1e1c1a;
+  --color-text-disabled: #70685b;
+
+  /* Overlay & Backdrop */
+  --color-overlay: rgba(0, 0, 0, 0.6);
+  --color-backdrop: rgba(40, 40, 40, 0.95);
+
+  /* State Colors */
+  --color-state-selected: rgba(131, 165, 152, 0.16);
+
+  /* RGB Channels (for Tailwind opacity modifiers: bg-primary/10, etc.) */
+  --color-primary-rgb: 131 165 152;
+  --color-error-rgb: 251 73 52;
+  --color-success-rgb: 184 187 38;
+  --color-info-rgb: 142 192 124;
+  --color-warning-rgb: 250 189 47;
+  
+  --color-background-rgb: 40 40 40;
+  --color-surface-rgb: 60 56 54;
+  --color-text-on-primary-rgb: 40 40 40;
+
+  /* Alpha Variants */
+  --color-primary-10: rgba(131, 165, 152, 0.10);
+  --color-primary-20: rgba(131, 165, 152, 0.20);
+  --color-primary-30: rgba(131, 165, 152, 0.30);
+  --color-primary-40: rgba(131, 165, 152, 0.40);
+  --color-success-20: rgba(184, 187, 38, 0.20);
+  --color-warning-20: rgba(250, 189, 47, 0.20);
+  --color-error-20: rgba(251, 73, 52, 0.20);
+  --color-info-20: rgba(142, 192, 124, 0.20);
+  --color-upload-20: rgba(254, 128, 25, 0.20);
+  --color-text-50: rgba(235, 219, 178, 0.50);
+  --color-text-70: rgba(235, 219, 178, 0.70);
+  --color-text-muted-30: rgba(189, 174, 147, 0.30);
+
+  /* Status Colors */
+  --color-status-downloading: #83a598;
+  --color-status-downloading-15: rgba(131, 165, 152, 0.15);
+  --color-status-seeding: #b8bb26;
+  --color-status-seeding-15: rgba(184, 187, 38, 0.15);
+  --color-status-stalled: #b8bb26;
+  --color-status-stalled-15: rgba(184, 187, 38, 0.15);
+  --color-status-paused: #928374;
+  --color-status-paused-15: rgba(146, 131, 116, 0.15);
+  --color-status-queued: #83a598;
+  --color-status-queued-15: rgba(131, 165, 152, 0.15);
+  --color-status-checking: #d3869b;
+  --color-status-checking-15: rgba(211, 134, 155, 0.15);
+  --color-status-metadata: #d3869b;
+  --color-status-metadata-15: rgba(211, 134, 155, 0.15);
+  --color-status-error: #fb4934;
+  --color-status-error-15: rgba(251, 73, 52, 0.15);
+  --color-status-inactive: #bdae93;
+  --color-status-inactive-15: rgba(189, 174, 147, 0.15);
+
+  /* Connection Status */
+  --color-status-connected: #b8bb26;
+  --color-status-connected-15: rgba(184, 187, 38, 0.15);
+  --color-status-firewalled: #fabd2f;
+  --color-status-firewalled-15: rgba(250, 189, 47, 0.15);
+  --color-status-disconnected: #fb4934;
+  --color-status-disconnected-15: rgba(251, 73, 52, 0.15);
+  --color-status-idle: #928374;
+  --color-status-idle-15: rgba(146, 131, 116, 0.15);
+  --color-status-connecting: #83a598;
+  --color-status-connecting-15: rgba(131, 165, 152, 0.15);
+  --color-status-reconnecting: #fabd2f;
+  --color-status-reconnecting-15: rgba(250, 189, 47, 0.15);
+  --color-status-unreachable: #fb4934;
+  --color-status-unreachable-15: rgba(251, 73, 52, 0.15);
+  --color-status-auth-failed: #fb4934;
+  --color-status-auth-failed-15: rgba(251, 73, 52, 0.15);
+}
+
+/* ============================================================
+ * Tokyo Night Theme — Dark
+ * ============================================================ */
+.theme-tokyonight {
+  /* Base Colors */
+  --color-background: #1a1b26;
+  --color-surface: #24283b;
+  --color-surface-elevated: #414868;
+  --color-surface-interactive: #565f89;
+
+  /* Text Colors */
+  --color-text-primary: #c0caf5;
+  --color-text-secondary: #a9b1d6;
+  --color-text-muted: #7a92b0;
+  --color-text-placeholder: #6a82a0;
+
+  /* Semantic Colors */
+  --color-primary: #7aa2f7;
+  --color-primary-hover: #bb9af7;
+  --color-primary-light: #2ac3de;
+  --color-text-on-primary: #1a1b26;
+  --color-success: #9ece6a;
+  --color-warning: #e0af68;
+  --color-error: #f7768e;
+  --color-info: #2ac3de;
+  
+  --color-text-on-success: #1a1b26;
+  --color-text-on-warning: #1a1b10;
+  --color-text-on-info: #1a1b26;
+  --color-text-on-error: #1a1b26;
+  --color-text-on-danger: #1a1b26;
+
+  /* Feature Colors */
+  --color-download: #9ece6a;
+  --color-upload: #ff9e64;
+  --color-size: #7aa2f7;
+  --color-ratio: #bb9af7;
+  --color-peers: #e0af68;
+  --color-time: #73daca;
+
+  /* Border Colors */
+  --color-border: #414868;
+  --color-border-focus: #7aa2f7;
+  --color-border-elevated: #565f89;
+  --color-border-subtle: rgba(65, 72, 104, 0.5);
+  --color-divider: rgba(169, 177, 214, 0.15);
+  --color-border-input: #565f89;
+  --color-border-interactive: #4a5278;
+  --color-border-disabled: #3a4260;
+
+  /* Disabled State */
+  --color-bg-disabled: #13141f;
+  --color-text-disabled: #576387;
+
+  /* Overlay & Backdrop */
+  --color-overlay: rgba(0, 0, 0, 0.6);
+  --color-backdrop: rgba(26, 27, 38, 0.95);
+
+  /* State Colors */
+  --color-state-selected: rgba(122, 162, 247, 0.16);
+
+  /* RGB Channels (for Tailwind opacity modifiers: bg-primary/10, etc.) */
+  --color-primary-rgb: 122 162 247;
+  --color-error-rgb: 247 118 142;
+  --color-success-rgb: 158 206 106;
+  --color-info-rgb: 42 195 222;
+  --color-warning-rgb: 224 175 104;
+  
+  --color-background-rgb: 26 27 38;
+  --color-surface-rgb: 36 40 59;
+  --color-text-on-primary-rgb: 26 27 38;
+
+  /* Alpha Variants */
+  --color-primary-10: rgba(122, 162, 247, 0.10);
+  --color-primary-20: rgba(122, 162, 247, 0.20);
+  --color-primary-30: rgba(122, 162, 247, 0.30);
+  --color-primary-40: rgba(122, 162, 247, 0.40);
+  --color-success-20: rgba(158, 206, 106, 0.20);
+  --color-warning-20: rgba(224, 175, 104, 0.20);
+  --color-error-20: rgba(247, 118, 142, 0.20);
+  --color-info-20: rgba(42, 195, 222, 0.20);
+  --color-upload-20: rgba(255, 158, 100, 0.20);
+  --color-text-50: rgba(192, 202, 245, 0.50);
+  --color-text-70: rgba(192, 202, 245, 0.70);
+  --color-text-muted-30: rgba(122, 162, 247, 0.30);
+
+  /* Status Colors */
+  --color-status-downloading: #7aa2f7;
+  --color-status-downloading-15: rgba(122, 162, 247, 0.15);
+  --color-status-seeding: #9ece6a;
+  --color-status-seeding-15: rgba(158, 206, 106, 0.15);
+  --color-status-stalled: #9ece6a;
+  --color-status-stalled-15: rgba(158, 206, 106, 0.15);
+  --color-status-paused: #565f89;
+  --color-status-paused-15: rgba(86, 95, 137, 0.15);
+  --color-status-queued: #7aa2f7;
+  --color-status-queued-15: rgba(122, 162, 247, 0.15);
+  --color-status-checking: #bb9af7;
+  --color-status-checking-15: rgba(187, 154, 247, 0.15);
+  --color-status-metadata: #bb9af7;
+  --color-status-metadata-15: rgba(187, 154, 247, 0.15);
+  --color-status-error: #f7768e;
+  --color-status-error-15: rgba(247, 118, 142, 0.15);
+  --color-status-inactive: #7aa2f7;
+  --color-status-inactive-15: rgba(122, 162, 247, 0.15);
+
+  /* Connection Status */
+  --color-status-connected: #9ece6a;
+  --color-status-connected-15: rgba(158, 206, 106, 0.15);
+  --color-status-firewalled: #e0af68;
+  --color-status-firewalled-15: rgba(224, 175, 104, 0.15);
+  --color-status-disconnected: #f7768e;
+  --color-status-disconnected-15: rgba(247, 118, 142, 0.15);
+  --color-status-idle: #565f89;
+  --color-status-idle-15: rgba(86, 95, 137, 0.15);
+  --color-status-connecting: #7aa2f7;
+  --color-status-connecting-15: rgba(122, 162, 247, 0.15);
+  --color-status-reconnecting: #e0af68;
+  --color-status-reconnecting-15: rgba(224, 175, 104, 0.15);
+  --color-status-unreachable: #f7768e;
+  --color-status-unreachable-15: rgba(247, 118, 142, 0.15);
+  --color-status-auth-failed: #f7768e;
+  --color-status-auth-failed-15: rgba(247, 118, 142, 0.15);
+}
+
+/* ============================================================
+ * Monokai Theme — Dark
+ * ============================================================ */
+.theme-monokai {
+  /* Base Colors */
+  --color-background: #272822;
+  --color-surface: #3e3d32;
+  --color-surface-elevated: #49483e;
+  --color-surface-interactive: #57564d;
+
+  /* Text Colors */
+  --color-text-primary: #f8f8f2;
+  --color-text-secondary: #cfcfc2;
+  --color-text-muted: #a59f85;
+  --color-text-placeholder: #75715e;
+
+  /* Semantic Colors */
+  --color-primary: #66d9ef;
+  --color-primary-hover: #ae81ff;
+  --color-primary-light: #f92672;
+  --color-text-on-primary: #272822;
+  --color-success: #a6e22e;
+  --color-warning: #e6db74;
+  --color-error: #f92672;
+  --color-info: #66d9ef;
+  
+  --color-text-on-success: #272822;
+  --color-text-on-warning: #272810;
+  --color-text-on-info: #272822;
+  --color-text-on-error: #000000;
+  --color-text-on-danger: #000000;
+
+  /* Feature Colors */
+  --color-download: #a6e22e;
+  --color-upload: #fd971f;
+  --color-size: #66d9ef;
+  --color-ratio: #ae81ff;
+  --color-peers: #e6db74;
+  --color-time: #75715e;
+
+  /* Border Colors */
+  --color-border: #49483e;
+  --color-border-focus: #66d9ef;
+  --color-border-elevated: #57564d;
+  --color-border-subtle: rgba(73, 72, 62, 0.5);
+  --color-divider: rgba(207, 207, 194, 0.15);
+  --color-border-input: #57564d;
+  --color-border-interactive: #49483e;
+  --color-border-disabled: #3e3d32;
+
+  /* Disabled State */
+  --color-bg-disabled: #1a1b16;
+  --color-text-disabled: #6a685b;
+
+  /* Overlay & Backdrop */
+  --color-overlay: rgba(0, 0, 0, 0.6);
+  --color-backdrop: rgba(39, 40, 34, 0.95);
+
+  /* State Colors */
+  --color-state-selected: rgba(102, 217, 239, 0.16);
+
+  /* RGB Channels (for Tailwind opacity modifiers: bg-primary/10, etc.) */
+  --color-primary-rgb: 102 217 239;
+  --color-error-rgb: 249 38 114;
+  --color-success-rgb: 166 226 46;
+  --color-info-rgb: 102 217 239;
+  --color-warning-rgb: 230 219 116;
+  
+  --color-background-rgb: 39 40 34;
+  --color-surface-rgb: 62 61 50;
+  --color-text-on-primary-rgb: 39 40 34;
+
+  /* Alpha Variants */
+  --color-primary-10: rgba(102, 217, 239, 0.10);
+  --color-primary-20: rgba(102, 217, 239, 0.20);
+  --color-primary-30: rgba(102, 217, 239, 0.30);
+  --color-primary-40: rgba(102, 217, 239, 0.40);
+  --color-success-20: rgba(166, 226, 46, 0.20);
+  --color-warning-20: rgba(230, 219, 116, 0.20);
+  --color-error-20: rgba(249, 38, 114, 0.20);
+  --color-info-20: rgba(102, 217, 239, 0.20);
+  --color-upload-20: rgba(253, 151, 31, 0.20);
+  --color-text-50: rgba(248, 248, 242, 0.50);
+  --color-text-70: rgba(248, 248, 242, 0.70);
+  --color-text-muted-30: rgba(165, 159, 133, 0.30);
+
+  /* Status Colors */
+  --color-status-downloading: #66d9ef;
+  --color-status-downloading-15: rgba(102, 217, 239, 0.15);
+  --color-status-seeding: #a6e22e;
+  --color-status-seeding-15: rgba(166, 226, 46, 0.15);
+  --color-status-stalled: #a6e22e;
+  --color-status-stalled-15: rgba(166, 226, 46, 0.15);
+  --color-status-paused: #75715e;
+  --color-status-paused-15: rgba(117, 113, 94, 0.15);
+  --color-status-queued: #66d9ef;
+  --color-status-queued-15: rgba(102, 217, 239, 0.15);
+  --color-status-checking: #ae81ff;
+  --color-status-checking-15: rgba(174, 129, 255, 0.15);
+  --color-status-metadata: #ae81ff;
+  --color-status-metadata-15: rgba(174, 129, 255, 0.15);
+  --color-status-error: #f92672;
+  --color-status-error-15: rgba(249, 38, 114, 0.15);
+  --color-status-inactive: #a59f85;
+  --color-status-inactive-15: rgba(165, 159, 133, 0.15);
+
+  /* Connection Status */
+  --color-status-connected: #a6e22e;
+  --color-status-connected-15: rgba(166, 226, 46, 0.15);
+  --color-status-firewalled: #e6db74;
+  --color-status-firewalled-15: rgba(230, 219, 116, 0.15);
+  --color-status-disconnected: #f92672;
+  --color-status-disconnected-15: rgba(249, 38, 114, 0.15);
+  --color-status-idle: #75715e;
+  --color-status-idle-15: rgba(117, 113, 94, 0.15);
+  --color-status-connecting: #66d9ef;
+  --color-status-connecting-15: rgba(102, 217, 239, 0.15);
+  --color-status-reconnecting: #e6db74;
+  --color-status-reconnecting-15: rgba(230, 219, 116, 0.15);
+  --color-status-unreachable: #f92672;
+  --color-status-unreachable-15: rgba(249, 38, 114, 0.15);
+  --color-status-auth-failed: #f92672;
+  --color-status-auth-failed-15: rgba(249, 38, 114, 0.15);
+}
+
+/* ============================================================
+ * One Dark Theme — Dark
+ * ============================================================ */
+.theme-onedark {
+  /* Base Colors */
+  --color-background: #282c34;
+  --color-surface: #3e4451;
+  --color-surface-elevated: #4b5263;
+  --color-surface-interactive: #545d6b;
+
+  /* Text Colors */
+  --color-text-primary: #abb2bf;
+  --color-text-secondary: #a0a6b1;
+  --color-text-muted: #7a8390;
+  --color-text-placeholder: #5c6370;
+
+  /* Semantic Colors */
+  --color-primary: #61afef;
+  --color-primary-hover: #98c379;
+  --color-primary-light: #c678dd;
+  --color-text-on-primary: #282c34;
+  --color-success: #98c379;
+  --color-warning: #e5c07b;
+  --color-error: #e06c75;
+  --color-info: #56b6c2;
+  
+  --color-text-on-success: #282c34;
+  --color-text-on-warning: #282810;
+  --color-text-on-info: #282c34;
+  --color-text-on-error: #000000;
+  --color-text-on-danger: #000000;
+
+  /* Feature Colors */
+  --color-download: #98c379;
+  --color-upload: #d19a66;
+  --color-size: #61afef;
+  --color-ratio: #c678dd;
+  --color-peers: #e5c07b;
+  --color-time: #7a8390;
+
+  /* Border Colors */
+  --color-border: #4b5263;
+  --color-border-focus: #61afef;
+  --color-border-elevated: #545d6b;
+  --color-border-subtle: rgba(75, 82, 99, 0.5);
+  --color-divider: rgba(130, 137, 151, 0.15);
+  --color-border-input: #545d6b;
+  --color-border-interactive: #4b5263;
+  --color-border-disabled: #3c424c;
+
+  /* Disabled State */
+  --color-bg-disabled: #1e2029;
+  --color-text-disabled: #646d7a;
+
+  /* Overlay & Backdrop */
+  --color-overlay: rgba(0, 0, 0, 0.6);
+  --color-backdrop: rgba(40, 44, 52, 0.95);
+
+  /* State Colors */
+  --color-state-selected: rgba(97, 175, 239, 0.16);
+
+  /* RGB Channels (for Tailwind opacity modifiers: bg-primary/10, etc.) */
+  --color-primary-rgb: 97 175 239;
+  --color-error-rgb: 224 108 117;
+  --color-success-rgb: 152 195 121;
+  --color-info-rgb: 86 182 194;
+  --color-warning-rgb: 229 192 123;
+  
+  --color-background-rgb: 40 44 52;
+  --color-surface-rgb: 62 68 81;
+  --color-text-on-primary-rgb: 40 44 52;
+
+  /* Alpha Variants */
+  --color-primary-10: rgba(97, 175, 239, 0.10);
+  --color-primary-20: rgba(97, 175, 239, 0.20);
+  --color-primary-30: rgba(97, 175, 239, 0.30);
+  --color-primary-40: rgba(97, 175, 239, 0.40);
+  --color-success-20: rgba(152, 195, 121, 0.20);
+  --color-warning-20: rgba(229, 192, 123, 0.20);
+  --color-error-20: rgba(224, 108, 117, 0.20);
+  --color-info-20: rgba(86, 182, 194, 0.20);
+  --color-upload-20: rgba(209, 154, 102, 0.20);
+  --color-text-50: rgba(171, 178, 191, 0.50);
+  --color-text-70: rgba(171, 178, 191, 0.70);
+  --color-text-muted-30: rgba(122, 131, 144, 0.30);
+
+  /* Status Colors */
+  --color-status-downloading: #61afef;
+  --color-status-downloading-15: rgba(97, 175, 239, 0.15);
+  --color-status-seeding: #98c379;
+  --color-status-seeding-15: rgba(152, 195, 121, 0.15);
+  --color-status-stalled: #98c379;
+  --color-status-stalled-15: rgba(152, 195, 121, 0.15);
+  --color-status-paused: #5c6370;
+  --color-status-paused-15: rgba(92, 99, 112, 0.15);
+  --color-status-queued: #61afef;
+  --color-status-queued-15: rgba(97, 175, 239, 0.15);
+  --color-status-checking: #c678dd;
+  --color-status-checking-15: rgba(198, 120, 221, 0.15);
+  --color-status-metadata: #c678dd;
+  --color-status-metadata-15: rgba(198, 120, 221, 0.15);
+  --color-status-error: #e06c75;
+  --color-status-error-15: rgba(224, 108, 117, 0.15);
+  --color-status-inactive: #a0a6b1;
+  --color-status-inactive-15: rgba(160, 166, 177, 0.15);
+
+  /* Connection Status */
+  --color-status-connected: #98c379;
+  --color-status-connected-15: rgba(152, 195, 121, 0.15);
+  --color-status-firewalled: #e5c07b;
+  --color-status-firewalled-15: rgba(229, 192, 123, 0.15);
+  --color-status-disconnected: #e06c75;
+  --color-status-disconnected-15: rgba(224, 108, 117, 0.15);
+  --color-status-idle: #5c6370;
+  --color-status-idle-15: rgba(92, 99, 112, 0.15);
+  --color-status-connecting: #61afef;
+  --color-status-connecting-15: rgba(97, 175, 239, 0.15);
+  --color-status-reconnecting: #e5c07b;
+  --color-status-reconnecting-15: rgba(229, 192, 123, 0.15);
+  --color-status-unreachable: #e06c75;
+  --color-status-unreachable-15: rgba(224, 108, 117, 0.15);
+  --color-status-auth-failed: #e06c75;
+  --color-status-auth-failed-15: rgba(224, 108, 117, 0.15);
+}

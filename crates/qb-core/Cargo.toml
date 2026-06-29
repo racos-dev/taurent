@@ -1,0 +1,21 @@
+[package]
+name = "qb-core"
+version = "0.1.0"
+authors = ["racos.dev"]
+edition = "2021"
+rust-version = "1.90.0"
+repository = "https://github.com/racos-dev/taurent"
+publish = false
+
+[lib]
+name = "qb_core"
+path = "src/lib.rs"
+
+[dependencies]
+icu_collator = "2"
+icu_locale = "2"
+log = "0.4"
+reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+url = "2"

@@ -1,0 +1,36 @@
+[package]
+name = "taurent-mobile"
+version = "1.0.0"
+description = "Taurent"
+authors = ["racos.dev"]
+license = "MIT"
+repository = "https://github.com/racos-dev/taurent"
+edition = "2021"
+rust-version = "1.90.0"
+
+[lib]
+name = "mobile_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.6.3", features = [] }
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+log = "0.4"
+tauri = { version = "2.11.3", features = [] }
+tauri-plugin-log = "2.8.0"
+tauri-plugin-store = "2.4.3"
+tauri-plugin-http = { version = "2.5.9", features = ["unsafe-headers"] }
+tauri-plugin-notification = "2.3.3"
+tauri-plugin-fs = "2.5.1"
+tauri-plugin-dialog = "2.7.1"
+tauri-plugin-deep-link = "2.4.9"
+tauri-plugin-shell = "2.3.5"
+tauri-plugin-secure-storage = "1.5.0"
+qb-core = { path = "../../../crates/qb-core" }
+qb-tauri = { path = "../../../crates/qb-tauri", features = ["mobile"] }
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-single-instance = "2.4.2"

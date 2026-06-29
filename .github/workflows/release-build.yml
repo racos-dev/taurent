@@ -1,0 +1,338 @@
+name: Release Build
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing v* tag to build and publish'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-build-${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '24'
+  PNPM_VERSION: '11.0.0'
+  ANDROID_NDK_VERSION: '28.2.13676358'
+
+jobs:
+  release-preflight:
+    name: Release Preflight
+    runs-on: ubuntu-latest
+    outputs:
+      release_tag: ${{ steps.release.outputs.release_tag }}
+      app_version: ${{ steps.release.outputs.app_version }}
+      git_sha: ${{ steps.build_metadata.outputs.git_sha }}
+    steps:
+      - name: Resolve release tag
+        id: release
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            release_tag="${{ inputs.tag }}"
+          else
+            release_tag="${GITHUB_REF_NAME}"
+          fi
+
+          if [[ ! "$release_tag" =~ ^v.+ ]]; then
+            echo "Release builds only accept v* tags. Got: $release_tag" >&2
+            exit 1
+          fi
+
+          echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
+          echo "app_version=${release_tag#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ steps.release.outputs.release_tag }}
+
+      - name: Resolve build metadata
+        id: build_metadata
+        shell: bash
+        run: echo "git_sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Enable pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@1.90.0
+        with:
+          components: rustfmt, clippy
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: rust-release-preflight-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install Linux deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf build-essential curl wget file
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check app versions
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.release_tag }}
+        run: node scripts/ci/check-versions.mjs
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test:unit
+
+      - name: Mobile unit tests
+        run: pnpm mobile:test
+
+      - name: Mobile renderer build
+        run: pnpm mobile:build
+
+      - name: Rustfmt check
+        run: cargo fmt --all --check
+
+      - name: Cargo check
+        run: |
+          cargo check --workspace --locked -p qb-core
+          cargo check --workspace --locked --features desktop -p qb-tauri
+          cargo check --workspace --locked --features mobile -p qb-tauri
+
+      - name: Clippy
+        run: |
+          cargo clippy --workspace --all-targets --locked -p qb-core
+          cargo clippy --workspace --all-targets --locked --features desktop -p qb-tauri
+          cargo clippy --workspace --all-targets --locked --features mobile -p qb-tauri
+
+  desktop-build:
+    name: Desktop Build (${{ matrix.name }})
+    needs: release-preflight
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS Intel
+            artifact: taurent-macos-intel
+            runner: macos-15-intel
+            tauriArgs: --target x86_64-apple-darwin
+            rustTargets: x86_64-apple-darwin
+          - name: macOS Apple Silicon
+            artifact: taurent-macos-apple-silicon
+            runner: macos-15
+            tauriArgs: --target aarch64-apple-darwin
+            rustTargets: aarch64-apple-darwin
+          - name: Windows
+            artifact: taurent-windows
+            runner: windows-latest
+            tauriArgs: ''
+            rustTargets: x86_64-pc-windows-msvc
+          - name: Linux
+            artifact: taurent-linux
+            runner: ubuntu-22.04
+            tauriArgs: ''
+            rustTargets: x86_64-unknown-linux-gnu
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.release-preflight.outputs.release_tag }}
+
+      - name: Enable pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@1.90.0
+        with:
+          targets: ${{ matrix.rustTargets }}
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: rust-release-desktop-${{ matrix.artifact }}-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Linux deps
+        if: matrix.name == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf build-essential curl wget file
+
+      - name: Build desktop Tauri app
+        uses: tauri-apps/tauri-action@v0.6.2
+        env:
+          VITE_APP_VERSION: ${{ needs.release-preflight.outputs.app_version }}
+          VITE_RELEASE_TAG: ${{ needs.release-preflight.outputs.release_tag }}
+          VITE_GIT_SHA: ${{ needs.release-preflight.outputs.git_sha }}
+        with:
+          projectPath: apps/desktop
+          args: ${{ matrix.tauriArgs }}
+
+      - name: Collect desktop release bundles
+        shell: bash
+        run: |
+          mkdir -p artifacts/release/desktop
+          find target -type f \( \
+            -name '*.AppImage' -o \
+            -name '*.AppImage.tar.gz' -o \
+            -name '*.AppImage.tar.gz.sig' -o \
+            -name '*.deb' -o \
+            -name '*.rpm' -o \
+            -name '*.dmg' -o \
+            -name '*.app.tar.gz' -o \
+            -name '*.app.tar.gz.sig' -o \
+            -name '*.msi' -o \
+            -name '*.exe' \
+          \) -print -exec cp {} artifacts/release/desktop/ \;
+          test -n "$(find artifacts/release/desktop -type f -print -quit)"
+
+      - name: Upload desktop artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact }}
+          path: artifacts/release/desktop/*
+          if-no-files-found: error
+
+  android-build:
+    name: Android Build
+    needs: release-preflight
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.release-preflight.outputs.release_tag }}
+
+      - name: Enable pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Install Android NDK
+        run: |
+          sdkmanager "ndk;${ANDROID_NDK_VERSION}"
+          echo "NDK_HOME=${ANDROID_HOME}/ndk/${ANDROID_NDK_VERSION}" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/${ANDROID_NDK_VERSION}" >> "$GITHUB_ENV"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@1.90.0
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: rust-release-android-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Regenerate ignored Android project
+        run: pnpm --filter taurent-mobile tauri android init
+
+      - name: Build unsigned Android release APKs
+        env:
+          VITE_APP_VERSION: ${{ needs.release-preflight.outputs.app_version }}
+          VITE_RELEASE_TAG: ${{ needs.release-preflight.outputs.release_tag }}
+          VITE_GIT_SHA: ${{ needs.release-preflight.outputs.git_sha }}
+        run: pnpm --filter taurent-mobile tauri android build --apk --split-per-abi
+
+      - name: Collect Android release APKs
+        run: |
+          mkdir -p artifacts/release/android
+          find apps/mobile/src-tauri/gen/android/app/build/outputs/apk -path '*/release/*.apk' -type f -print -exec cp {} artifacts/release/android/ \;
+          test -n "$(find artifacts/release/android -name '*.apk' -type f -print -quit)"
+
+      - name: Upload Android artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: taurent-android-unsigned-release-apks
+          path: artifacts/release/android/*.apk
+          if-no-files-found: error
+
+  publish-release:
+    name: Publish GitHub Release
+    needs: [release-preflight, desktop-build, android-build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download release artifacts
+        uses: actions/download-artifact@v7
+        with:
+          path: release-assets
+
+      - name: Publish release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.release-preflight.outputs.release_tag }}
+        shell: bash
+        run: |
+          mkdir -p release-upload
+          while IFS= read -r -d '' asset; do
+            relative="${asset#release-assets/}"
+            artifact_name="${relative%%/*}"
+            basename="$(basename "$asset")"
+            cp "$asset" "release-upload/${artifact_name}-${basename}"
+          done < <(find release-assets -type f -print0)
+
+          mapfile -d '' assets < <(find release-upload -type f -print0)
+          if [[ "${#assets[@]}" -eq 0 ]]; then
+            echo "No release assets found." >&2
+            exit 1
+          fi
+
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release edit "$RELEASE_TAG" --title "$RELEASE_TAG" --latest --draft=false
+            gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
+          else
+            gh release create "$RELEASE_TAG" "${assets[@]}" --verify-tag --title "$RELEASE_TAG" --notes "Automated unsigned release build for $RELEASE_TAG." --latest
+          fi

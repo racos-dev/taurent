@@ -1,0 +1,8492 @@
+{
+  "version": 1,
+  "snapshot_rid": 42,
+  "fixture": {
+    "torrent_rows": [
+      {
+        "hash": "f01",
+        "name": "downloading-torrent",
+        "state": "downloading",
+        "category": "docs",
+        "tags": "",
+        "tracker": "udp://tracker.example.com:80",
+        "availability": 1,
+        "eta": 120,
+        "ratio": 0.5,
+        "ratio_limit": 2,
+        "popularity": 100,
+        "priority": 1,
+        "force_start": false,
+        "dlspeed": 100000,
+        "upspeed": 0,
+        "size": 1000000,
+        "added_on": 1
+      },
+      {
+        "hash": "f02",
+        "name": "stalled-DL",
+        "state": "stalledDL",
+        "category": "docs",
+        "tags": "stalled",
+        "tracker": "udp://tracker.example.com:80",
+        "availability": 0.5,
+        "eta": -1,
+        "ratio": 0.4,
+        "ratio_limit": -1,
+        "popularity": 50,
+        "priority": 1,
+        "force_start": false,
+        "dlspeed": 0,
+        "upspeed": 0,
+        "size": 1000000,
+        "added_on": 2
+      },
+      {
+        "hash": "f03",
+        "name": "seeding-torrent",
+        "state": "uploading",
+        "category": "videos",
+        "tags": "linux",
+        "tracker": "http://tracker.example.com/announce",
+        "availability": 2,
+        "eta": -1,
+        "ratio": 1.5,
+        "ratio_limit": 2,
+        "popularity": 200,
+        "priority": 0,
+        "force_start": false,
+        "dlspeed": 0,
+        "upspeed": 50000,
+        "size": 2000000,
+        "added_on": 3
+      },
+      {
+        "hash": "f04",
+        "name": "stalled-UP",
+        "state": "stalledUP",
+        "category": "videos",
+        "tags": "linux",
+        "tracker": "http://tracker.example.com/announce",
+        "availability": 1.5,
+        "eta": -1,
+        "ratio": 1.2,
+        "ratio_limit": 2,
+        "popularity": 150,
+        "priority": 0,
+        "force_start": false,
+        "dlspeed": 0,
+        "upspeed": 0,
+        "size": 2000000,
+        "added_on": 4
+      },
+      {
+        "hash": "f05",
+        "name": "queued-DL",
+        "state": "queuedDL",
+        "category": "music",
+        "tags": "audio",
+        "tracker": "https://tracker.example.com/announce",
+        "availability": 0,
+        "eta": 60,
+        "ratio": 0,
+        "ratio_limit": -1,
+        "popularity": 10,
+        "priority": 2,
+        "force_start": false,
+        "dlspeed": 0,
+        "upspeed": 0,
+        "size": 500000,
+        "added_on": 5
+      },
+      {
+        "hash": "f06",
+        "name": "queued-UP",
+        "state": "queuedUP",
+        "category": "music",
+        "tags": "audio",
+        "tracker": "https://tracker.example.com/announce",
+        "availability": 1,
+        "eta": -1,
+        "ratio": 1,
+        "ratio_limit": -1,
+        "popularity": 80,
+        "priority": 0,
+        "force_start": false,
+        "dlspeed": 0,
+        "upspeed": 0,
+        "size": 500000,
+        "added_on": 6
+      },
+      {
+        "hash": "f07",
+        "name": "stopped-DL",
+        "state": "stoppedDL",
+        "category": "",
+        "tags": "paused",
+        "tracker": "udp://other.example.com:6969",
+        "availability": 0,
+        "eta": -1,
+        "ratio": 0,
+        "ratio_limit": -1,
+        "popularity": 20,
+        "priority": 1,
+        "force_start": false,
+        "dlspeed": 0,
+        "upspeed": 0,
+        "size": 750000,
+        "added_on": 7
+      },
+      {
+        "hash": "f08",
+        "name": "stopped-UP",
+        "state": "stoppedUP",
+        "category": "",
+        "tags": "paused",
+        "tracker": "udp://other.example.com:6969",
+        "availability": 1,
+        "eta": -1,
+        "ratio": 1,
+        "ratio_limit": -1,
+        "popularity": 40,
+        "priority": 0,
+        "force_start": false,
+        "dlspeed": 0,
+        "upspeed": 0,
+        "size": 750000,
+        "added_on": 8
+      },
+      {
+        "hash": "f09",
+        "name": "forced-DL",
+        "state": "forcedDL",
+        "category": "iso",
+        "tags": "force",
+        "tracker": "udp://forced.example.com:80",
+        "availability": 1,
+        "eta": 30,
+        "ratio": 0.5,
+        "ratio_limit": 2,
+        "popularity": 60,
+        "priority": 1,
+        "force_start": true,
+        "dlspeed": 200000,
+        "upspeed": 0,
+        "size": 4000000,
+        "added_on": 9
+      },
+      {
+        "hash": "f10",
+        "name": "forced-UP",
+        "state": "forcedUP",
+        "category": "iso",
+        "tags": "force",
+        "tracker": "udp://forced.example.com:80",
+        "availability": 1,
+        "eta": -1,
+        "ratio": 1.5,
+        "ratio_limit": 2,
+        "popularity": 120,
+        "priority": 0,
+        "force_start": true,
+        "dlspeed": 0,
+        "upspeed": 100000,
+        "size": 4000000,
+        "added_on": 10
+      },
+      {
+        "hash": "f11",
+        "name": "error-state",
+        "state": "error",
+        "category": "iso",
+        "tags": "broken",
+        "tracker": "udp://broken.example.com:80",
+        "availability": 0,
+        "eta": -1,
+        "ratio": 0,
+        "ratio_limit": -1,
+        "popularity": null,
+        "priority": 1,
+        "force_start": false,
+        "dlspeed": 0,
+        "upspeed": 0,
+        "size": 1500000,
+        "added_on": 11
+      },
+      {
+        "hash": "f12",
+        "name": "missing-files",
+        "state": "missingFiles",
+        "category": "iso",
+        "tags": "broken",
+        "tracker": "udp://broken.example.com:80",
+        "availability": -1,
+        "eta": -1,
+        "ratio": -1,
+        "ratio_limit": -1,
+        "popularity": null,
+        "priority": 1,
+        "force_start": false,
+        "dlspeed": 0,
+        "upspeed": 0,
+        "size": 1500000,
+        "added_on": 12
+      },
+      {
+        "hash": "f13",
+        "name": "uncategorized-two-tags",
+        "state": "stoppedDL",
+        "category": "",
+        "tags": "a, b",
+        "tracker": "udp://example.com:80",
+        "availability": 0,
+        "eta": -1,
+        "ratio": 0,
+        "ratio_limit": -1,
+        "popularity": 5,
+        "priority": 1,
+        "force_start": false,
+        "dlspeed": 0,
+        "upspeed": 0,
+        "size": 100000,
+        "added_on": 13
+      },
+      {
+        "hash": "f14",
+        "name": "日本語-clef-café",
+        "state": "downloading",
+        "category": "music",
+        "tags": "world",
+        "tracker": "udp://国際.example.com:6969",
+        "availability": 1,
+        "eta": 45,
+        "ratio": 0.5,
+        "ratio_limit": 2,
+        "popularity": 70,
+        "priority": 1,
+        "force_start": false,
+        "dlspeed": 50000,
+        "upspeed": 0,
+        "size": 800000,
+        "added_on": 14
+      },
+      {
+        "hash": "f15",
+        "name": "availability-negative",
+        "state": "stalledDL",
+        "category": "docs",
+        "tags": "stalled",
+        "tracker": "udp://tracker.example.com:80",
+        "availability": -2,
+        "eta": -1,
+        "ratio": 0.4,
+        "ratio_limit": 2,
+        "popularity": 30,
+        "priority": 1,
+        "force_start": false,
+        "dlspeed": 0,
+        "upspeed": 0,
+        "size": 1000000,
+        "added_on": 15
+      },
+      {
+        "hash": "f16",
+        "name": "eta-and-ratio-negative",
+        "state": "downloading",
+        "category": "docs",
+        "tags": "",
+        "tracker": "udp://tracker.example.com:80",
+        "availability": 0,
+        "eta": -1,
+        "ratio": -1,
+        "ratio_limit": -1,
+        "popularity": 15,
+        "priority": 1,
+        "force_start": false,
+        "dlspeed": 25000,
+        "upspeed": 0,
+        "size": 1000000,
+        "added_on": 16
+      },
+      {
+        "hash": "f17",
+        "name": "popularity-none",
+        "state": "uploading",
+        "category": "videos",
+        "tags": "linux",
+        "tracker": "http://tracker.example.com/announce",
+        "availability": 1,
+        "eta": -1,
+        "ratio": 1.5,
+        "ratio_limit": 2,
+        "popularity": null,
+        "priority": 0,
+        "force_start": false,
+        "dlspeed": 0,
+        "upspeed": 75000,
+        "size": 2000000,
+        "added_on": 17
+      },
+      {
+        "hash": "f18",
+        "name": "invalid-tracker",
+        "state": "downloading",
+        "category": "docs",
+        "tags": "",
+        "tracker": "not a real url",
+        "availability": 1,
+        "eta": 60,
+        "ratio": 0.5,
+        "ratio_limit": 2,
+        "popularity": 25,
+        "priority": 1,
+        "force_start": false,
+        "dlspeed": 10000,
+        "upspeed": 0,
+        "size": 1000000,
+        "added_on": 18
+      },
+      {
+        "hash": "f19",
+        "name": "empty-tracker",
+        "state": "stoppedDL",
+        "category": "",
+        "tags": "",
+        "tracker": "",
+        "availability": 0,
+        "eta": -1,
+        "ratio": 0,
+        "ratio_limit": -1,
+        "popularity": 2,
+        "priority": 1,
+        "force_start": false,
+        "dlspeed": 0,
+        "upspeed": 0,
+        "size": 50000,
+        "added_on": 19
+      },
+      {
+        "hash": "f20",
+        "name": "multi-tag",
+        "state": "downloading",
+        "category": "docs",
+        "tags": "linux, audio, 4k",
+        "tracker": "udp://multi.example.com:80",
+        "availability": 1,
+        "eta": 90,
+        "ratio": 0.5,
+        "ratio_limit": 2,
+        "popularity": 45,
+        "priority": 1,
+        "force_start": false,
+        "dlspeed": 75000,
+        "upspeed": 0,
+        "size": 3000000,
+        "added_on": 20
+      }
+    ],
+    "categories": [
+      {
+        "name": "docs",
+        "savePath": "/data/docs"
+      },
+      {
+        "name": "iso",
+        "savePath": "/data/iso"
+      },
+      {
+        "name": "music",
+        "savePath": "/data/music"
+      },
+      {
+        "name": "videos",
+        "savePath": "/data/videos"
+      }
+    ],
+    "known_tags": [
+      "4k",
+      "a",
+      "audio",
+      "b",
+      "broken",
+      "force",
+      "linux",
+      "paused",
+      "stalled",
+      "world"
+    ]
+  },
+  "filter_cases": [
+    {
+      "id": "F01_default",
+      "filter": {
+        "status": "all",
+        "category": null,
+        "tag": null,
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f20",
+          "f19",
+          "f18",
+          "f17",
+          "f16",
+          "f15",
+          "f14",
+          "f13",
+          "f12",
+          "f11",
+          "f10",
+          "f09",
+          "f08",
+          "f07",
+          "f06",
+          "f05",
+          "f04",
+          "f03",
+          "f02",
+          "f01"
+        ],
+        "filtered_count": 20,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "docs": 6,
+          "videos": 3,
+          "music": 3,
+          "": 4,
+          "iso": 4
+        },
+        "tag_counts": {
+          "4k": 1,
+          "a": 1,
+          "audio": 3,
+          "b": 1,
+          "broken": 2,
+          "force": 2,
+          "linux": 4,
+          "paused": 2,
+          "stalled": 2,
+          "world": 1
+        },
+        "tracker_counts": {
+          "udp://tracker.example.com:80": 4,
+          "http://tracker.example.com/announce": 3,
+          "https://tracker.example.com/announce": 2,
+          "udp://other.example.com:6969": 2,
+          "udp://forced.example.com:80": 2,
+          "udp://broken.example.com:80": 2,
+          "udp://example.com:80": 1,
+          "udp://国際.example.com:6969": 1,
+          "udp://multi.example.com:80": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 6
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 4
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 3
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 3
+          },
+          {
+            "name": "",
+            "save_path": "",
+            "count": 4
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 1
+          },
+          {
+            "tag": "a",
+            "count": 1
+          },
+          {
+            "tag": "audio",
+            "count": 3
+          },
+          {
+            "tag": "b",
+            "count": 1
+          },
+          {
+            "tag": "broken",
+            "count": 2
+          },
+          {
+            "tag": "force",
+            "count": 2
+          },
+          {
+            "tag": "linux",
+            "count": 4
+          },
+          {
+            "tag": "paused",
+            "count": 2
+          },
+          {
+            "tag": "stalled",
+            "count": 2
+          },
+          {
+            "tag": "world",
+            "count": 1
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://tracker.example.com:80",
+            "hostname": "tracker.example.com",
+            "count": 4
+          },
+          {
+            "tracker_url": "http://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 3
+          },
+          {
+            "tracker_url": "udp://broken.example.com:80",
+            "hostname": "broken.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://forced.example.com:80",
+            "hostname": "forced.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://other.example.com:6969",
+            "hostname": "other.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "https://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://国際.example.com:6969",
+            "hostname": "%E5%9B%BD%E9%9A%9B.example.com",
+            "count": 1
+          },
+          {
+            "tracker_url": "udp://example.com:80",
+            "hostname": "example.com",
+            "count": 1
+          },
+          {
+            "tracker_url": "udp://multi.example.com:80",
+            "hostname": "multi.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": false
+      }
+    },
+    {
+      "id": "F02_status_downloading",
+      "filter": {
+        "status": "downloading",
+        "category": null,
+        "tag": null,
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f20",
+          "f18",
+          "f16",
+          "f15",
+          "f14",
+          "f02",
+          "f01"
+        ],
+        "filtered_count": 7,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "docs": 6,
+          "music": 1
+        },
+        "tag_counts": {
+          "4k": 1,
+          "a": 0,
+          "audio": 1,
+          "b": 0,
+          "broken": 0,
+          "force": 0,
+          "linux": 1,
+          "paused": 0,
+          "stalled": 2,
+          "world": 1
+        },
+        "tracker_counts": {
+          "udp://tracker.example.com:80": 4,
+          "udp://国際.example.com:6969": 1,
+          "udp://multi.example.com:80": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 6
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 1
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 0
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 1
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 1
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 1
+          },
+          {
+            "tag": "paused",
+            "count": 0
+          },
+          {
+            "tag": "stalled",
+            "count": 2
+          },
+          {
+            "tag": "world",
+            "count": 1
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://tracker.example.com:80",
+            "hostname": "tracker.example.com",
+            "count": 4
+          },
+          {
+            "tracker_url": "udp://国際.example.com:6969",
+            "hostname": "%E5%9B%BD%E9%9A%9B.example.com",
+            "count": 1
+          },
+          {
+            "tracker_url": "udp://multi.example.com:80",
+            "hostname": "multi.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F02_status_seeding",
+      "filter": {
+        "status": "seeding",
+        "category": null,
+        "tag": null,
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f17",
+          "f04",
+          "f03"
+        ],
+        "filtered_count": 3,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "videos": 3
+        },
+        "tag_counts": {
+          "4k": 0,
+          "a": 0,
+          "audio": 0,
+          "b": 0,
+          "broken": 0,
+          "force": 0,
+          "linux": 3,
+          "paused": 0,
+          "stalled": 0,
+          "world": 0
+        },
+        "tracker_counts": {
+          "http://tracker.example.com/announce": 3
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 0
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 0
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 3
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 0
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 0
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 3
+          },
+          {
+            "tag": "paused",
+            "count": 0
+          },
+          {
+            "tag": "stalled",
+            "count": 0
+          },
+          {
+            "tag": "world",
+            "count": 0
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "http://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 3
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F02_status_completed",
+      "filter": {
+        "status": "completed",
+        "category": null,
+        "tag": null,
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f17",
+          "f08",
+          "f06",
+          "f04",
+          "f03"
+        ],
+        "filtered_count": 5,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "videos": 3,
+          "music": 1,
+          "": 1
+        },
+        "tag_counts": {
+          "4k": 0,
+          "a": 0,
+          "audio": 1,
+          "b": 0,
+          "broken": 0,
+          "force": 0,
+          "linux": 3,
+          "paused": 1,
+          "stalled": 0,
+          "world": 0
+        },
+        "tracker_counts": {
+          "http://tracker.example.com/announce": 3,
+          "https://tracker.example.com/announce": 1,
+          "udp://other.example.com:6969": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 0
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 1
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 3
+          },
+          {
+            "name": "",
+            "save_path": "",
+            "count": 1
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 0
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 1
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 3
+          },
+          {
+            "tag": "paused",
+            "count": 1
+          },
+          {
+            "tag": "stalled",
+            "count": 0
+          },
+          {
+            "tag": "world",
+            "count": 0
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "http://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 3
+          },
+          {
+            "tracker_url": "udp://other.example.com:6969",
+            "hostname": "other.example.com",
+            "count": 1
+          },
+          {
+            "tracker_url": "https://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F02_status_stopped",
+      "filter": {
+        "status": "stopped",
+        "category": null,
+        "tag": null,
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f19",
+          "f13",
+          "f08",
+          "f07"
+        ],
+        "filtered_count": 4,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "": 4
+        },
+        "tag_counts": {
+          "4k": 0,
+          "a": 1,
+          "audio": 0,
+          "b": 1,
+          "broken": 0,
+          "force": 0,
+          "linux": 0,
+          "paused": 2,
+          "stalled": 0,
+          "world": 0
+        },
+        "tracker_counts": {
+          "udp://other.example.com:6969": 2,
+          "udp://example.com:80": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 0
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 0
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 0
+          },
+          {
+            "name": "",
+            "save_path": "",
+            "count": 4
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 0
+          },
+          {
+            "tag": "a",
+            "count": 1
+          },
+          {
+            "tag": "audio",
+            "count": 0
+          },
+          {
+            "tag": "b",
+            "count": 1
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 0
+          },
+          {
+            "tag": "paused",
+            "count": 2
+          },
+          {
+            "tag": "stalled",
+            "count": 0
+          },
+          {
+            "tag": "world",
+            "count": 0
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://other.example.com:6969",
+            "hostname": "other.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://example.com:80",
+            "hostname": "example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F02_status_active",
+      "filter": {
+        "status": "active",
+        "category": null,
+        "tag": null,
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f20",
+          "f18",
+          "f17",
+          "f16",
+          "f15",
+          "f14",
+          "f04",
+          "f03",
+          "f02",
+          "f01"
+        ],
+        "filtered_count": 10,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "docs": 6,
+          "videos": 3,
+          "music": 1
+        },
+        "tag_counts": {
+          "4k": 1,
+          "a": 0,
+          "audio": 1,
+          "b": 0,
+          "broken": 0,
+          "force": 0,
+          "linux": 4,
+          "paused": 0,
+          "stalled": 2,
+          "world": 1
+        },
+        "tracker_counts": {
+          "udp://tracker.example.com:80": 4,
+          "http://tracker.example.com/announce": 3,
+          "udp://国際.example.com:6969": 1,
+          "udp://multi.example.com:80": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 6
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 1
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 3
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 1
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 1
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 4
+          },
+          {
+            "tag": "paused",
+            "count": 0
+          },
+          {
+            "tag": "stalled",
+            "count": 2
+          },
+          {
+            "tag": "world",
+            "count": 1
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://tracker.example.com:80",
+            "hostname": "tracker.example.com",
+            "count": 4
+          },
+          {
+            "tracker_url": "http://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 3
+          },
+          {
+            "tracker_url": "udp://国際.example.com:6969",
+            "hostname": "%E5%9B%BD%E9%9A%9B.example.com",
+            "count": 1
+          },
+          {
+            "tracker_url": "udp://multi.example.com:80",
+            "hostname": "multi.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F02_status_inactive",
+      "filter": {
+        "status": "inactive",
+        "category": null,
+        "tag": null,
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f19",
+          "f13",
+          "f08",
+          "f07",
+          "f06",
+          "f05"
+        ],
+        "filtered_count": 6,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "music": 2,
+          "": 4
+        },
+        "tag_counts": {
+          "4k": 0,
+          "a": 1,
+          "audio": 2,
+          "b": 1,
+          "broken": 0,
+          "force": 0,
+          "linux": 0,
+          "paused": 2,
+          "stalled": 0,
+          "world": 0
+        },
+        "tracker_counts": {
+          "https://tracker.example.com/announce": 2,
+          "udp://other.example.com:6969": 2,
+          "udp://example.com:80": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 0
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 2
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 0
+          },
+          {
+            "name": "",
+            "save_path": "",
+            "count": 4
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 0
+          },
+          {
+            "tag": "a",
+            "count": 1
+          },
+          {
+            "tag": "audio",
+            "count": 2
+          },
+          {
+            "tag": "b",
+            "count": 1
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 0
+          },
+          {
+            "tag": "paused",
+            "count": 2
+          },
+          {
+            "tag": "stalled",
+            "count": 0
+          },
+          {
+            "tag": "world",
+            "count": 0
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://other.example.com:6969",
+            "hostname": "other.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "https://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://example.com:80",
+            "hostname": "example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F02_status_running",
+      "filter": {
+        "status": "running",
+        "category": null,
+        "tag": null,
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f20",
+          "f18",
+          "f17",
+          "f16",
+          "f14",
+          "f10",
+          "f09",
+          "f03",
+          "f01"
+        ],
+        "filtered_count": 9,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "docs": 4,
+          "videos": 2,
+          "iso": 2,
+          "music": 1
+        },
+        "tag_counts": {
+          "4k": 1,
+          "a": 0,
+          "audio": 1,
+          "b": 0,
+          "broken": 0,
+          "force": 2,
+          "linux": 3,
+          "paused": 0,
+          "stalled": 0,
+          "world": 1
+        },
+        "tracker_counts": {
+          "udp://tracker.example.com:80": 2,
+          "http://tracker.example.com/announce": 2,
+          "udp://forced.example.com:80": 2,
+          "udp://国際.example.com:6969": 1,
+          "udp://multi.example.com:80": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 4
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 2
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 1
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 2
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 1
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 1
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 2
+          },
+          {
+            "tag": "linux",
+            "count": 3
+          },
+          {
+            "tag": "paused",
+            "count": 0
+          },
+          {
+            "tag": "stalled",
+            "count": 0
+          },
+          {
+            "tag": "world",
+            "count": 1
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://forced.example.com:80",
+            "hostname": "forced.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://tracker.example.com:80",
+            "hostname": "tracker.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "http://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://国際.example.com:6969",
+            "hostname": "%E5%9B%BD%E9%9A%9B.example.com",
+            "count": 1
+          },
+          {
+            "tracker_url": "udp://multi.example.com:80",
+            "hostname": "multi.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F02_status_stalled",
+      "filter": {
+        "status": "stalled",
+        "category": null,
+        "tag": null,
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f15",
+          "f04",
+          "f02"
+        ],
+        "filtered_count": 3,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "docs": 2,
+          "videos": 1
+        },
+        "tag_counts": {
+          "4k": 0,
+          "a": 0,
+          "audio": 0,
+          "b": 0,
+          "broken": 0,
+          "force": 0,
+          "linux": 1,
+          "paused": 0,
+          "stalled": 2,
+          "world": 0
+        },
+        "tracker_counts": {
+          "udp://tracker.example.com:80": 2,
+          "http://tracker.example.com/announce": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 2
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 0
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 1
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 0
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 0
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 1
+          },
+          {
+            "tag": "paused",
+            "count": 0
+          },
+          {
+            "tag": "stalled",
+            "count": 2
+          },
+          {
+            "tag": "world",
+            "count": 0
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://tracker.example.com:80",
+            "hostname": "tracker.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "http://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F02_status_stalled_uploading",
+      "filter": {
+        "status": "stalled_uploading",
+        "category": null,
+        "tag": null,
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f04"
+        ],
+        "filtered_count": 1,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "videos": 1
+        },
+        "tag_counts": {
+          "4k": 0,
+          "a": 0,
+          "audio": 0,
+          "b": 0,
+          "broken": 0,
+          "force": 0,
+          "linux": 1,
+          "paused": 0,
+          "stalled": 0,
+          "world": 0
+        },
+        "tracker_counts": {
+          "http://tracker.example.com/announce": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 0
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 0
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 1
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 0
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 0
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 1
+          },
+          {
+            "tag": "paused",
+            "count": 0
+          },
+          {
+            "tag": "stalled",
+            "count": 0
+          },
+          {
+            "tag": "world",
+            "count": 0
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "http://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F02_status_stalled_downloading",
+      "filter": {
+        "status": "stalled_downloading",
+        "category": null,
+        "tag": null,
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f15",
+          "f02"
+        ],
+        "filtered_count": 2,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "docs": 2
+        },
+        "tag_counts": {
+          "4k": 0,
+          "a": 0,
+          "audio": 0,
+          "b": 0,
+          "broken": 0,
+          "force": 0,
+          "linux": 0,
+          "paused": 0,
+          "stalled": 2,
+          "world": 0
+        },
+        "tracker_counts": {
+          "udp://tracker.example.com:80": 2
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 2
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 0
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 0
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 0
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 0
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 0
+          },
+          {
+            "tag": "paused",
+            "count": 0
+          },
+          {
+            "tag": "stalled",
+            "count": 2
+          },
+          {
+            "tag": "world",
+            "count": 0
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://tracker.example.com:80",
+            "hostname": "tracker.example.com",
+            "count": 2
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F02_status_errored",
+      "filter": {
+        "status": "errored",
+        "category": null,
+        "tag": null,
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f12",
+          "f11"
+        ],
+        "filtered_count": 2,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "iso": 2
+        },
+        "tag_counts": {
+          "4k": 0,
+          "a": 0,
+          "audio": 0,
+          "b": 0,
+          "broken": 2,
+          "force": 0,
+          "linux": 0,
+          "paused": 0,
+          "stalled": 0,
+          "world": 0
+        },
+        "tracker_counts": {
+          "udp://broken.example.com:80": 2
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 0
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 2
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 0
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 0
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 0
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 0
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 2
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 0
+          },
+          {
+            "tag": "paused",
+            "count": 0
+          },
+          {
+            "tag": "stalled",
+            "count": 0
+          },
+          {
+            "tag": "world",
+            "count": 0
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://broken.example.com:80",
+            "hostname": "broken.example.com",
+            "count": 2
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F03_category_docs",
+      "filter": {
+        "status": "all",
+        "category": "docs",
+        "tag": null,
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f20",
+          "f18",
+          "f16",
+          "f15",
+          "f02",
+          "f01"
+        ],
+        "filtered_count": 6,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "docs": 6,
+          "videos": 3,
+          "music": 3,
+          "": 4,
+          "iso": 4
+        },
+        "tag_counts": {
+          "4k": 1,
+          "a": 0,
+          "audio": 1,
+          "b": 0,
+          "broken": 0,
+          "force": 0,
+          "linux": 1,
+          "paused": 0,
+          "stalled": 2,
+          "world": 0
+        },
+        "tracker_counts": {
+          "udp://tracker.example.com:80": 4,
+          "udp://multi.example.com:80": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 6
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 4
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 3
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 3
+          },
+          {
+            "name": "",
+            "save_path": "",
+            "count": 4
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 1
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 1
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 1
+          },
+          {
+            "tag": "paused",
+            "count": 0
+          },
+          {
+            "tag": "stalled",
+            "count": 2
+          },
+          {
+            "tag": "world",
+            "count": 0
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://tracker.example.com:80",
+            "hostname": "tracker.example.com",
+            "count": 4
+          },
+          {
+            "tracker_url": "udp://multi.example.com:80",
+            "hostname": "multi.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F04_category_uncategorized",
+      "filter": {
+        "status": "all",
+        "category": "",
+        "tag": null,
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f19",
+          "f13",
+          "f08",
+          "f07"
+        ],
+        "filtered_count": 4,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "docs": 6,
+          "videos": 3,
+          "music": 3,
+          "": 4,
+          "iso": 4
+        },
+        "tag_counts": {
+          "4k": 0,
+          "a": 1,
+          "audio": 0,
+          "b": 1,
+          "broken": 0,
+          "force": 0,
+          "linux": 0,
+          "paused": 2,
+          "stalled": 0,
+          "world": 0
+        },
+        "tracker_counts": {
+          "udp://other.example.com:6969": 2,
+          "udp://example.com:80": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 6
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 4
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 3
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 3
+          },
+          {
+            "name": "",
+            "save_path": "",
+            "count": 4
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 0
+          },
+          {
+            "tag": "a",
+            "count": 1
+          },
+          {
+            "tag": "audio",
+            "count": 0
+          },
+          {
+            "tag": "b",
+            "count": 1
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 0
+          },
+          {
+            "tag": "paused",
+            "count": 2
+          },
+          {
+            "tag": "stalled",
+            "count": 0
+          },
+          {
+            "tag": "world",
+            "count": 0
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://other.example.com:6969",
+            "hostname": "other.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://example.com:80",
+            "hostname": "example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F05_tag_linux",
+      "filter": {
+        "status": "all",
+        "category": null,
+        "tag": "linux",
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f20",
+          "f17",
+          "f04",
+          "f03"
+        ],
+        "filtered_count": 4,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "videos": 3,
+          "docs": 1
+        },
+        "tag_counts": {
+          "4k": 1,
+          "a": 1,
+          "audio": 3,
+          "b": 1,
+          "broken": 2,
+          "force": 2,
+          "linux": 4,
+          "paused": 2,
+          "stalled": 2,
+          "world": 1
+        },
+        "tracker_counts": {
+          "http://tracker.example.com/announce": 3,
+          "udp://multi.example.com:80": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 1
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 0
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 3
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 1
+          },
+          {
+            "tag": "a",
+            "count": 1
+          },
+          {
+            "tag": "audio",
+            "count": 3
+          },
+          {
+            "tag": "b",
+            "count": 1
+          },
+          {
+            "tag": "broken",
+            "count": 2
+          },
+          {
+            "tag": "force",
+            "count": 2
+          },
+          {
+            "tag": "linux",
+            "count": 4
+          },
+          {
+            "tag": "paused",
+            "count": 2
+          },
+          {
+            "tag": "stalled",
+            "count": 2
+          },
+          {
+            "tag": "world",
+            "count": 1
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "http://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 3
+          },
+          {
+            "tracker_url": "udp://multi.example.com:80",
+            "hostname": "multi.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F06_tag_paused",
+      "filter": {
+        "status": "all",
+        "category": null,
+        "tag": "paused",
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f08",
+          "f07"
+        ],
+        "filtered_count": 2,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "": 2
+        },
+        "tag_counts": {
+          "4k": 1,
+          "a": 1,
+          "audio": 3,
+          "b": 1,
+          "broken": 2,
+          "force": 2,
+          "linux": 4,
+          "paused": 2,
+          "stalled": 2,
+          "world": 1
+        },
+        "tracker_counts": {
+          "udp://other.example.com:6969": 2
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 0
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 0
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 0
+          },
+          {
+            "name": "",
+            "save_path": "",
+            "count": 2
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 1
+          },
+          {
+            "tag": "a",
+            "count": 1
+          },
+          {
+            "tag": "audio",
+            "count": 3
+          },
+          {
+            "tag": "b",
+            "count": 1
+          },
+          {
+            "tag": "broken",
+            "count": 2
+          },
+          {
+            "tag": "force",
+            "count": 2
+          },
+          {
+            "tag": "linux",
+            "count": 4
+          },
+          {
+            "tag": "paused",
+            "count": 2
+          },
+          {
+            "tag": "stalled",
+            "count": 2
+          },
+          {
+            "tag": "world",
+            "count": 1
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://other.example.com:6969",
+            "hostname": "other.example.com",
+            "count": 2
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F07_tracker_udp_example",
+      "filter": {
+        "status": "all",
+        "category": null,
+        "tag": null,
+        "tracker": "udp://tracker.example.com:80",
+        "search": ""
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f16",
+          "f15",
+          "f02",
+          "f01"
+        ],
+        "filtered_count": 4,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "docs": 4
+        },
+        "tag_counts": {
+          "4k": 0,
+          "a": 0,
+          "audio": 0,
+          "b": 0,
+          "broken": 0,
+          "force": 0,
+          "linux": 0,
+          "paused": 0,
+          "stalled": 2,
+          "world": 0
+        },
+        "tracker_counts": {
+          "udp://tracker.example.com:80": 4,
+          "http://tracker.example.com/announce": 3,
+          "https://tracker.example.com/announce": 2,
+          "udp://other.example.com:6969": 2,
+          "udp://forced.example.com:80": 2,
+          "udp://broken.example.com:80": 2,
+          "udp://example.com:80": 1,
+          "udp://国際.example.com:6969": 1,
+          "udp://multi.example.com:80": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 4
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 0
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 0
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 0
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 0
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 0
+          },
+          {
+            "tag": "paused",
+            "count": 0
+          },
+          {
+            "tag": "stalled",
+            "count": 2
+          },
+          {
+            "tag": "world",
+            "count": 0
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://tracker.example.com:80",
+            "hostname": "tracker.example.com",
+            "count": 4
+          },
+          {
+            "tracker_url": "http://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 3
+          },
+          {
+            "tracker_url": "udp://broken.example.com:80",
+            "hostname": "broken.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://forced.example.com:80",
+            "hostname": "forced.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://other.example.com:6969",
+            "hostname": "other.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "https://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://国際.example.com:6969",
+            "hostname": "%E5%9B%BD%E9%9A%9B.example.com",
+            "count": 1
+          },
+          {
+            "tracker_url": "udp://example.com:80",
+            "hostname": "example.com",
+            "count": 1
+          },
+          {
+            "tracker_url": "udp://multi.example.com:80",
+            "hostname": "multi.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F08_search_download",
+      "filter": {
+        "status": "all",
+        "category": null,
+        "tag": null,
+        "tracker": null,
+        "search": "download"
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f01"
+        ],
+        "filtered_count": 1,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "docs": 1
+        },
+        "tag_counts": {
+          "4k": 0,
+          "a": 0,
+          "audio": 0,
+          "b": 0,
+          "broken": 0,
+          "force": 0,
+          "linux": 0,
+          "paused": 0,
+          "stalled": 0,
+          "world": 0
+        },
+        "tracker_counts": {
+          "udp://tracker.example.com:80": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 1
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 0
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 0
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 0
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 0
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 0
+          },
+          {
+            "tag": "paused",
+            "count": 0
+          },
+          {
+            "tag": "stalled",
+            "count": 0
+          },
+          {
+            "tag": "world",
+            "count": 0
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://tracker.example.com:80",
+            "hostname": "tracker.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F09_search_seed",
+      "filter": {
+        "status": "all",
+        "category": null,
+        "tag": null,
+        "tracker": null,
+        "search": "seed"
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f03"
+        ],
+        "filtered_count": 1,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "videos": 1
+        },
+        "tag_counts": {
+          "4k": 0,
+          "a": 0,
+          "audio": 0,
+          "b": 0,
+          "broken": 0,
+          "force": 0,
+          "linux": 1,
+          "paused": 0,
+          "stalled": 0,
+          "world": 0
+        },
+        "tracker_counts": {
+          "http://tracker.example.com/announce": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 0
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 0
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 1
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 0
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 0
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 1
+          },
+          {
+            "tag": "paused",
+            "count": 0
+          },
+          {
+            "tag": "stalled",
+            "count": 0
+          },
+          {
+            "tag": "world",
+            "count": 0
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "http://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F10_downloading_docs",
+      "filter": {
+        "status": "downloading",
+        "category": "docs",
+        "tag": null,
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f20",
+          "f18",
+          "f16",
+          "f15",
+          "f02",
+          "f01"
+        ],
+        "filtered_count": 6,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "docs": 6,
+          "music": 1
+        },
+        "tag_counts": {
+          "4k": 1,
+          "a": 0,
+          "audio": 1,
+          "b": 0,
+          "broken": 0,
+          "force": 0,
+          "linux": 1,
+          "paused": 0,
+          "stalled": 2,
+          "world": 0
+        },
+        "tracker_counts": {
+          "udp://tracker.example.com:80": 4,
+          "udp://multi.example.com:80": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 6
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 1
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 0
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 1
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 1
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 1
+          },
+          {
+            "tag": "paused",
+            "count": 0
+          },
+          {
+            "tag": "stalled",
+            "count": 2
+          },
+          {
+            "tag": "world",
+            "count": 0
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://tracker.example.com:80",
+            "hostname": "tracker.example.com",
+            "count": 4
+          },
+          {
+            "tracker_url": "udp://multi.example.com:80",
+            "hostname": "multi.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F11_seeding_videos",
+      "filter": {
+        "status": "seeding",
+        "category": "videos",
+        "tag": null,
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f17",
+          "f04",
+          "f03"
+        ],
+        "filtered_count": 3,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "videos": 3
+        },
+        "tag_counts": {
+          "4k": 0,
+          "a": 0,
+          "audio": 0,
+          "b": 0,
+          "broken": 0,
+          "force": 0,
+          "linux": 3,
+          "paused": 0,
+          "stalled": 0,
+          "world": 0
+        },
+        "tracker_counts": {
+          "http://tracker.example.com/announce": 3
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 0
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 0
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 3
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 0
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 0
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 3
+          },
+          {
+            "tag": "paused",
+            "count": 0
+          },
+          {
+            "tag": "stalled",
+            "count": 0
+          },
+          {
+            "tag": "world",
+            "count": 0
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "http://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 3
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F12_uncategorized_paused",
+      "filter": {
+        "status": "all",
+        "category": "",
+        "tag": "paused",
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f08",
+          "f07"
+        ],
+        "filtered_count": 2,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "": 2
+        },
+        "tag_counts": {
+          "4k": 0,
+          "a": 1,
+          "audio": 0,
+          "b": 1,
+          "broken": 0,
+          "force": 0,
+          "linux": 0,
+          "paused": 2,
+          "stalled": 0,
+          "world": 0
+        },
+        "tracker_counts": {
+          "udp://other.example.com:6969": 2
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 0
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 0
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 0
+          },
+          {
+            "name": "",
+            "save_path": "",
+            "count": 2
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 0
+          },
+          {
+            "tag": "a",
+            "count": 1
+          },
+          {
+            "tag": "audio",
+            "count": 0
+          },
+          {
+            "tag": "b",
+            "count": 1
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 0
+          },
+          {
+            "tag": "paused",
+            "count": 2
+          },
+          {
+            "tag": "stalled",
+            "count": 0
+          },
+          {
+            "tag": "world",
+            "count": 0
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://other.example.com:6969",
+            "hostname": "other.example.com",
+            "count": 2
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F13_active_tag_linux",
+      "filter": {
+        "status": "active",
+        "category": null,
+        "tag": "linux",
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f20",
+          "f17",
+          "f04",
+          "f03"
+        ],
+        "filtered_count": 4,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "videos": 3,
+          "docs": 1
+        },
+        "tag_counts": {
+          "4k": 1,
+          "a": 0,
+          "audio": 1,
+          "b": 0,
+          "broken": 0,
+          "force": 0,
+          "linux": 4,
+          "paused": 0,
+          "stalled": 2,
+          "world": 1
+        },
+        "tracker_counts": {
+          "http://tracker.example.com/announce": 3,
+          "udp://multi.example.com:80": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 1
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 0
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 3
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 1
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 1
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 4
+          },
+          {
+            "tag": "paused",
+            "count": 0
+          },
+          {
+            "tag": "stalled",
+            "count": 2
+          },
+          {
+            "tag": "world",
+            "count": 1
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "http://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 3
+          },
+          {
+            "tracker_url": "udp://multi.example.com:80",
+            "hostname": "multi.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F14_errored_iso",
+      "filter": {
+        "status": "errored",
+        "category": "iso",
+        "tag": null,
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f12",
+          "f11"
+        ],
+        "filtered_count": 2,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "iso": 2
+        },
+        "tag_counts": {
+          "4k": 0,
+          "a": 0,
+          "audio": 0,
+          "b": 0,
+          "broken": 2,
+          "force": 0,
+          "linux": 0,
+          "paused": 0,
+          "stalled": 0,
+          "world": 0
+        },
+        "tracker_counts": {
+          "udp://broken.example.com:80": 2
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 0
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 2
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 0
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 0
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 0
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 0
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 2
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 0
+          },
+          {
+            "tag": "paused",
+            "count": 0
+          },
+          {
+            "tag": "stalled",
+            "count": 0
+          },
+          {
+            "tag": "world",
+            "count": 0
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://broken.example.com:80",
+            "hostname": "broken.example.com",
+            "count": 2
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F15_stalled_tracker",
+      "filter": {
+        "status": "stalled",
+        "category": null,
+        "tag": null,
+        "tracker": "udp://tracker.example.com:80",
+        "search": ""
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f15",
+          "f02"
+        ],
+        "filtered_count": 2,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "docs": 2
+        },
+        "tag_counts": {
+          "4k": 0,
+          "a": 0,
+          "audio": 0,
+          "b": 0,
+          "broken": 0,
+          "force": 0,
+          "linux": 0,
+          "paused": 0,
+          "stalled": 2,
+          "world": 0
+        },
+        "tracker_counts": {
+          "udp://tracker.example.com:80": 2,
+          "http://tracker.example.com/announce": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 2
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 0
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 0
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 0
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 0
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 0
+          },
+          {
+            "tag": "paused",
+            "count": 0
+          },
+          {
+            "tag": "stalled",
+            "count": 2
+          },
+          {
+            "tag": "world",
+            "count": 0
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://tracker.example.com:80",
+            "hostname": "tracker.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "http://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F16_stopped_other_tracker",
+      "filter": {
+        "status": "stopped",
+        "category": null,
+        "tag": null,
+        "tracker": "udp://other.example.com:6969",
+        "search": ""
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f08",
+          "f07"
+        ],
+        "filtered_count": 2,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "": 2
+        },
+        "tag_counts": {
+          "4k": 0,
+          "a": 0,
+          "audio": 0,
+          "b": 0,
+          "broken": 0,
+          "force": 0,
+          "linux": 0,
+          "paused": 2,
+          "stalled": 0,
+          "world": 0
+        },
+        "tracker_counts": {
+          "udp://other.example.com:6969": 2,
+          "udp://example.com:80": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 0
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 0
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 0
+          },
+          {
+            "name": "",
+            "save_path": "",
+            "count": 2
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 0
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 0
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 0
+          },
+          {
+            "tag": "paused",
+            "count": 2
+          },
+          {
+            "tag": "stalled",
+            "count": 0
+          },
+          {
+            "tag": "world",
+            "count": 0
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://other.example.com:6969",
+            "hostname": "other.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://example.com:80",
+            "hostname": "example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F17_tracker_search",
+      "filter": {
+        "status": "all",
+        "category": null,
+        "tag": null,
+        "tracker": "udp://tracker.example.com:80",
+        "search": "availability"
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f15"
+        ],
+        "filtered_count": 1,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "docs": 1
+        },
+        "tag_counts": {
+          "4k": 0,
+          "a": 0,
+          "audio": 0,
+          "b": 0,
+          "broken": 0,
+          "force": 0,
+          "linux": 0,
+          "paused": 0,
+          "stalled": 1,
+          "world": 0
+        },
+        "tracker_counts": {
+          "udp://tracker.example.com:80": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 1
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 0
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 0
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 0
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 0
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 0
+          },
+          {
+            "tag": "paused",
+            "count": 0
+          },
+          {
+            "tag": "stalled",
+            "count": 1
+          },
+          {
+            "tag": "world",
+            "count": 0
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://tracker.example.com:80",
+            "hostname": "tracker.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F18_search_dots_underscores",
+      "filter": {
+        "status": "all",
+        "category": null,
+        "tag": null,
+        "tracker": null,
+        "search": "downloading.torrent"
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f01"
+        ],
+        "filtered_count": 1,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "docs": 1
+        },
+        "tag_counts": {
+          "4k": 0,
+          "a": 0,
+          "audio": 0,
+          "b": 0,
+          "broken": 0,
+          "force": 0,
+          "linux": 0,
+          "paused": 0,
+          "stalled": 0,
+          "world": 0
+        },
+        "tracker_counts": {
+          "udp://tracker.example.com:80": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 1
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 0
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 0
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 0
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 0
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 0
+          },
+          {
+            "tag": "paused",
+            "count": 0
+          },
+          {
+            "tag": "stalled",
+            "count": 0
+          },
+          {
+            "tag": "world",
+            "count": 0
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://tracker.example.com:80",
+            "hostname": "tracker.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F19_downloading_docs_stalled_tag",
+      "filter": {
+        "status": "downloading",
+        "category": "docs",
+        "tag": "stalled",
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f15",
+          "f02"
+        ],
+        "filtered_count": 2,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "docs": 2
+        },
+        "tag_counts": {
+          "4k": 1,
+          "a": 0,
+          "audio": 1,
+          "b": 0,
+          "broken": 0,
+          "force": 0,
+          "linux": 1,
+          "paused": 0,
+          "stalled": 2,
+          "world": 0
+        },
+        "tracker_counts": {
+          "udp://tracker.example.com:80": 2
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 2
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 0
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 0
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 1
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 1
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 1
+          },
+          {
+            "tag": "paused",
+            "count": 0
+          },
+          {
+            "tag": "stalled",
+            "count": 2
+          },
+          {
+            "tag": "world",
+            "count": 0
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://tracker.example.com:80",
+            "hostname": "tracker.example.com",
+            "count": 2
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F20_active_category_tracker",
+      "filter": {
+        "status": "active",
+        "category": "docs",
+        "tag": null,
+        "tracker": "udp://tracker.example.com:80",
+        "search": ""
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f16",
+          "f15",
+          "f02",
+          "f01"
+        ],
+        "filtered_count": 4,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "docs": 4
+        },
+        "tag_counts": {
+          "4k": 0,
+          "a": 0,
+          "audio": 0,
+          "b": 0,
+          "broken": 0,
+          "force": 0,
+          "linux": 0,
+          "paused": 0,
+          "stalled": 2,
+          "world": 0
+        },
+        "tracker_counts": {
+          "udp://tracker.example.com:80": 4,
+          "udp://multi.example.com:80": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 4
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 0
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 0
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 0
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 0
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 0
+          },
+          {
+            "tag": "paused",
+            "count": 0
+          },
+          {
+            "tag": "stalled",
+            "count": 2
+          },
+          {
+            "tag": "world",
+            "count": 0
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://tracker.example.com:80",
+            "hostname": "tracker.example.com",
+            "count": 4
+          },
+          {
+            "tracker_url": "udp://multi.example.com:80",
+            "hostname": "multi.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F21_full_matrix_no_match",
+      "filter": {
+        "status": "errored",
+        "category": "music",
+        "tag": "linux",
+        "tracker": "udp://tracker.example.com:80",
+        "search": "download"
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [],
+        "filtered_count": 0,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {},
+        "tag_counts": {
+          "4k": 0,
+          "a": 0,
+          "audio": 0,
+          "b": 0,
+          "broken": 0,
+          "force": 0,
+          "linux": 0,
+          "paused": 0,
+          "stalled": 0,
+          "world": 0
+        },
+        "tracker_counts": {},
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 0
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 0
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 0
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 0
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 0
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 0
+          },
+          {
+            "tag": "paused",
+            "count": 0
+          },
+          {
+            "tag": "stalled",
+            "count": 0
+          },
+          {
+            "tag": "world",
+            "count": 0
+          }
+        ],
+        "sidebar_trackers": [],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F22_full_matrix_match",
+      "filter": {
+        "status": "downloading",
+        "category": "docs",
+        "tag": "stalled",
+        "tracker": "udp://tracker.example.com:80",
+        "search": "avail"
+      },
+      "sort": {
+        "field": "added_on",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f15"
+        ],
+        "filtered_count": 1,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "docs": 1
+        },
+        "tag_counts": {
+          "4k": 0,
+          "a": 0,
+          "audio": 0,
+          "b": 0,
+          "broken": 0,
+          "force": 0,
+          "linux": 0,
+          "paused": 0,
+          "stalled": 1,
+          "world": 0
+        },
+        "tracker_counts": {
+          "udp://tracker.example.com:80": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 1
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 0
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 0
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 0
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 0
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 0
+          },
+          {
+            "tag": "paused",
+            "count": 0
+          },
+          {
+            "tag": "stalled",
+            "count": 1
+          },
+          {
+            "tag": "world",
+            "count": 0
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://tracker.example.com:80",
+            "hostname": "tracker.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F23_sort_name_asc",
+      "filter": {
+        "status": "all",
+        "category": null,
+        "tag": null,
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "name",
+        "direction": "asc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f15",
+          "f01",
+          "f19",
+          "f11",
+          "f16",
+          "f09",
+          "f10",
+          "f18",
+          "f12",
+          "f20",
+          "f17",
+          "f05",
+          "f06",
+          "f03",
+          "f02",
+          "f04",
+          "f07",
+          "f08",
+          "f13",
+          "f14"
+        ],
+        "filtered_count": 20,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "docs": 6,
+          "videos": 3,
+          "music": 3,
+          "": 4,
+          "iso": 4
+        },
+        "tag_counts": {
+          "4k": 1,
+          "a": 1,
+          "audio": 3,
+          "b": 1,
+          "broken": 2,
+          "force": 2,
+          "linux": 4,
+          "paused": 2,
+          "stalled": 2,
+          "world": 1
+        },
+        "tracker_counts": {
+          "udp://tracker.example.com:80": 4,
+          "http://tracker.example.com/announce": 3,
+          "https://tracker.example.com/announce": 2,
+          "udp://other.example.com:6969": 2,
+          "udp://forced.example.com:80": 2,
+          "udp://broken.example.com:80": 2,
+          "udp://example.com:80": 1,
+          "udp://国際.example.com:6969": 1,
+          "udp://multi.example.com:80": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 6
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 4
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 3
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 3
+          },
+          {
+            "name": "",
+            "save_path": "",
+            "count": 4
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 1
+          },
+          {
+            "tag": "a",
+            "count": 1
+          },
+          {
+            "tag": "audio",
+            "count": 3
+          },
+          {
+            "tag": "b",
+            "count": 1
+          },
+          {
+            "tag": "broken",
+            "count": 2
+          },
+          {
+            "tag": "force",
+            "count": 2
+          },
+          {
+            "tag": "linux",
+            "count": 4
+          },
+          {
+            "tag": "paused",
+            "count": 2
+          },
+          {
+            "tag": "stalled",
+            "count": 2
+          },
+          {
+            "tag": "world",
+            "count": 1
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://tracker.example.com:80",
+            "hostname": "tracker.example.com",
+            "count": 4
+          },
+          {
+            "tracker_url": "http://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 3
+          },
+          {
+            "tracker_url": "udp://broken.example.com:80",
+            "hostname": "broken.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://forced.example.com:80",
+            "hostname": "forced.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://other.example.com:6969",
+            "hostname": "other.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "https://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://国際.example.com:6969",
+            "hostname": "%E5%9B%BD%E9%9A%9B.example.com",
+            "count": 1
+          },
+          {
+            "tracker_url": "udp://example.com:80",
+            "hostname": "example.com",
+            "count": 1
+          },
+          {
+            "tracker_url": "udp://multi.example.com:80",
+            "hostname": "multi.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": false
+      }
+    },
+    {
+      "id": "F24_sort_name_desc",
+      "filter": {
+        "status": "all",
+        "category": null,
+        "tag": null,
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "name",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f14",
+          "f13",
+          "f08",
+          "f07",
+          "f04",
+          "f02",
+          "f03",
+          "f06",
+          "f05",
+          "f17",
+          "f20",
+          "f12",
+          "f18",
+          "f10",
+          "f09",
+          "f16",
+          "f11",
+          "f19",
+          "f01",
+          "f15"
+        ],
+        "filtered_count": 20,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "docs": 6,
+          "videos": 3,
+          "music": 3,
+          "": 4,
+          "iso": 4
+        },
+        "tag_counts": {
+          "4k": 1,
+          "a": 1,
+          "audio": 3,
+          "b": 1,
+          "broken": 2,
+          "force": 2,
+          "linux": 4,
+          "paused": 2,
+          "stalled": 2,
+          "world": 1
+        },
+        "tracker_counts": {
+          "udp://tracker.example.com:80": 4,
+          "http://tracker.example.com/announce": 3,
+          "https://tracker.example.com/announce": 2,
+          "udp://other.example.com:6969": 2,
+          "udp://forced.example.com:80": 2,
+          "udp://broken.example.com:80": 2,
+          "udp://example.com:80": 1,
+          "udp://国際.example.com:6969": 1,
+          "udp://multi.example.com:80": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 6
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 4
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 3
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 3
+          },
+          {
+            "name": "",
+            "save_path": "",
+            "count": 4
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 1
+          },
+          {
+            "tag": "a",
+            "count": 1
+          },
+          {
+            "tag": "audio",
+            "count": 3
+          },
+          {
+            "tag": "b",
+            "count": 1
+          },
+          {
+            "tag": "broken",
+            "count": 2
+          },
+          {
+            "tag": "force",
+            "count": 2
+          },
+          {
+            "tag": "linux",
+            "count": 4
+          },
+          {
+            "tag": "paused",
+            "count": 2
+          },
+          {
+            "tag": "stalled",
+            "count": 2
+          },
+          {
+            "tag": "world",
+            "count": 1
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://tracker.example.com:80",
+            "hostname": "tracker.example.com",
+            "count": 4
+          },
+          {
+            "tracker_url": "http://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 3
+          },
+          {
+            "tracker_url": "udp://broken.example.com:80",
+            "hostname": "broken.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://forced.example.com:80",
+            "hostname": "forced.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://other.example.com:6969",
+            "hostname": "other.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "https://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://国際.example.com:6969",
+            "hostname": "%E5%9B%BD%E9%9A%9B.example.com",
+            "count": 1
+          },
+          {
+            "tracker_url": "udp://example.com:80",
+            "hostname": "example.com",
+            "count": 1
+          },
+          {
+            "tracker_url": "udp://multi.example.com:80",
+            "hostname": "multi.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": false
+      }
+    },
+    {
+      "id": "F25_sort_size_desc_with_filter",
+      "filter": {
+        "status": "downloading",
+        "category": null,
+        "tag": null,
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "size",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f20",
+          "f01",
+          "f02",
+          "f15",
+          "f16",
+          "f18",
+          "f14"
+        ],
+        "filtered_count": 7,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "docs": 6,
+          "music": 1
+        },
+        "tag_counts": {
+          "4k": 1,
+          "a": 0,
+          "audio": 1,
+          "b": 0,
+          "broken": 0,
+          "force": 0,
+          "linux": 1,
+          "paused": 0,
+          "stalled": 2,
+          "world": 1
+        },
+        "tracker_counts": {
+          "udp://tracker.example.com:80": 4,
+          "udp://国際.example.com:6969": 1,
+          "udp://multi.example.com:80": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 6
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 1
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 0
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 1
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 1
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 1
+          },
+          {
+            "tag": "paused",
+            "count": 0
+          },
+          {
+            "tag": "stalled",
+            "count": 2
+          },
+          {
+            "tag": "world",
+            "count": 1
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://tracker.example.com:80",
+            "hostname": "tracker.example.com",
+            "count": 4
+          },
+          {
+            "tracker_url": "udp://国際.example.com:6969",
+            "hostname": "%E5%9B%BD%E9%9A%9B.example.com",
+            "count": 1
+          },
+          {
+            "tracker_url": "udp://multi.example.com:80",
+            "hostname": "multi.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F26_sort_eta_asc",
+      "filter": {
+        "status": "downloading",
+        "category": null,
+        "tag": null,
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "eta",
+        "direction": "asc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f14",
+          "f18",
+          "f20",
+          "f01",
+          "f02",
+          "f15",
+          "f16"
+        ],
+        "filtered_count": 7,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "docs": 6,
+          "music": 1
+        },
+        "tag_counts": {
+          "4k": 1,
+          "a": 0,
+          "audio": 1,
+          "b": 0,
+          "broken": 0,
+          "force": 0,
+          "linux": 1,
+          "paused": 0,
+          "stalled": 2,
+          "world": 1
+        },
+        "tracker_counts": {
+          "udp://tracker.example.com:80": 4,
+          "udp://国際.example.com:6969": 1,
+          "udp://multi.example.com:80": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 6
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 1
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 0
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 1
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 1
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 1
+          },
+          {
+            "tag": "paused",
+            "count": 0
+          },
+          {
+            "tag": "stalled",
+            "count": 2
+          },
+          {
+            "tag": "world",
+            "count": 1
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://tracker.example.com:80",
+            "hostname": "tracker.example.com",
+            "count": 4
+          },
+          {
+            "tracker_url": "udp://国際.example.com:6969",
+            "hostname": "%E5%9B%BD%E9%9A%9B.example.com",
+            "count": 1
+          },
+          {
+            "tracker_url": "udp://multi.example.com:80",
+            "hostname": "multi.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F27_sort_eta_desc",
+      "filter": {
+        "status": "downloading",
+        "category": null,
+        "tag": null,
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "eta",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f02",
+          "f15",
+          "f16",
+          "f01",
+          "f20",
+          "f18",
+          "f14"
+        ],
+        "filtered_count": 7,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "docs": 6,
+          "music": 1
+        },
+        "tag_counts": {
+          "4k": 1,
+          "a": 0,
+          "audio": 1,
+          "b": 0,
+          "broken": 0,
+          "force": 0,
+          "linux": 1,
+          "paused": 0,
+          "stalled": 2,
+          "world": 1
+        },
+        "tracker_counts": {
+          "udp://tracker.example.com:80": 4,
+          "udp://国際.example.com:6969": 1,
+          "udp://multi.example.com:80": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 6
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 0
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 1
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 0
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 1
+          },
+          {
+            "tag": "a",
+            "count": 0
+          },
+          {
+            "tag": "audio",
+            "count": 1
+          },
+          {
+            "tag": "b",
+            "count": 0
+          },
+          {
+            "tag": "broken",
+            "count": 0
+          },
+          {
+            "tag": "force",
+            "count": 0
+          },
+          {
+            "tag": "linux",
+            "count": 1
+          },
+          {
+            "tag": "paused",
+            "count": 0
+          },
+          {
+            "tag": "stalled",
+            "count": 2
+          },
+          {
+            "tag": "world",
+            "count": 1
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://tracker.example.com:80",
+            "hostname": "tracker.example.com",
+            "count": 4
+          },
+          {
+            "tracker_url": "udp://国際.example.com:6969",
+            "hostname": "%E5%9B%BD%E9%9A%9B.example.com",
+            "count": 1
+          },
+          {
+            "tracker_url": "udp://multi.example.com:80",
+            "hostname": "multi.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": true
+      }
+    },
+    {
+      "id": "F28_sort_availability_asc",
+      "filter": {
+        "status": "all",
+        "category": null,
+        "tag": null,
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "availability",
+        "direction": "asc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f12",
+          "f15",
+          "f05",
+          "f07",
+          "f11",
+          "f13",
+          "f16",
+          "f19",
+          "f02",
+          "f01",
+          "f06",
+          "f08",
+          "f09",
+          "f10",
+          "f14",
+          "f17",
+          "f18",
+          "f20",
+          "f04",
+          "f03"
+        ],
+        "filtered_count": 20,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "docs": 6,
+          "videos": 3,
+          "music": 3,
+          "": 4,
+          "iso": 4
+        },
+        "tag_counts": {
+          "4k": 1,
+          "a": 1,
+          "audio": 3,
+          "b": 1,
+          "broken": 2,
+          "force": 2,
+          "linux": 4,
+          "paused": 2,
+          "stalled": 2,
+          "world": 1
+        },
+        "tracker_counts": {
+          "udp://tracker.example.com:80": 4,
+          "http://tracker.example.com/announce": 3,
+          "https://tracker.example.com/announce": 2,
+          "udp://other.example.com:6969": 2,
+          "udp://forced.example.com:80": 2,
+          "udp://broken.example.com:80": 2,
+          "udp://example.com:80": 1,
+          "udp://国際.example.com:6969": 1,
+          "udp://multi.example.com:80": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 6
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 4
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 3
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 3
+          },
+          {
+            "name": "",
+            "save_path": "",
+            "count": 4
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 1
+          },
+          {
+            "tag": "a",
+            "count": 1
+          },
+          {
+            "tag": "audio",
+            "count": 3
+          },
+          {
+            "tag": "b",
+            "count": 1
+          },
+          {
+            "tag": "broken",
+            "count": 2
+          },
+          {
+            "tag": "force",
+            "count": 2
+          },
+          {
+            "tag": "linux",
+            "count": 4
+          },
+          {
+            "tag": "paused",
+            "count": 2
+          },
+          {
+            "tag": "stalled",
+            "count": 2
+          },
+          {
+            "tag": "world",
+            "count": 1
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://tracker.example.com:80",
+            "hostname": "tracker.example.com",
+            "count": 4
+          },
+          {
+            "tracker_url": "http://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 3
+          },
+          {
+            "tracker_url": "udp://broken.example.com:80",
+            "hostname": "broken.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://forced.example.com:80",
+            "hostname": "forced.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://other.example.com:6969",
+            "hostname": "other.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "https://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://国際.example.com:6969",
+            "hostname": "%E5%9B%BD%E9%9A%9B.example.com",
+            "count": 1
+          },
+          {
+            "tracker_url": "udp://example.com:80",
+            "hostname": "example.com",
+            "count": 1
+          },
+          {
+            "tracker_url": "udp://multi.example.com:80",
+            "hostname": "multi.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": false
+      }
+    },
+    {
+      "id": "F29_sort_popularity_desc",
+      "filter": {
+        "status": "all",
+        "category": null,
+        "tag": null,
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "popularity",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f03",
+          "f04",
+          "f10",
+          "f01",
+          "f06",
+          "f14",
+          "f09",
+          "f02",
+          "f20",
+          "f08",
+          "f15",
+          "f18",
+          "f07",
+          "f16",
+          "f05",
+          "f13",
+          "f19",
+          "f11",
+          "f12",
+          "f17"
+        ],
+        "filtered_count": 20,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "docs": 6,
+          "videos": 3,
+          "music": 3,
+          "": 4,
+          "iso": 4
+        },
+        "tag_counts": {
+          "4k": 1,
+          "a": 1,
+          "audio": 3,
+          "b": 1,
+          "broken": 2,
+          "force": 2,
+          "linux": 4,
+          "paused": 2,
+          "stalled": 2,
+          "world": 1
+        },
+        "tracker_counts": {
+          "udp://tracker.example.com:80": 4,
+          "http://tracker.example.com/announce": 3,
+          "https://tracker.example.com/announce": 2,
+          "udp://other.example.com:6969": 2,
+          "udp://forced.example.com:80": 2,
+          "udp://broken.example.com:80": 2,
+          "udp://example.com:80": 1,
+          "udp://国際.example.com:6969": 1,
+          "udp://multi.example.com:80": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 6
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 4
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 3
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 3
+          },
+          {
+            "name": "",
+            "save_path": "",
+            "count": 4
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 1
+          },
+          {
+            "tag": "a",
+            "count": 1
+          },
+          {
+            "tag": "audio",
+            "count": 3
+          },
+          {
+            "tag": "b",
+            "count": 1
+          },
+          {
+            "tag": "broken",
+            "count": 2
+          },
+          {
+            "tag": "force",
+            "count": 2
+          },
+          {
+            "tag": "linux",
+            "count": 4
+          },
+          {
+            "tag": "paused",
+            "count": 2
+          },
+          {
+            "tag": "stalled",
+            "count": 2
+          },
+          {
+            "tag": "world",
+            "count": 1
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://tracker.example.com:80",
+            "hostname": "tracker.example.com",
+            "count": 4
+          },
+          {
+            "tracker_url": "http://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 3
+          },
+          {
+            "tracker_url": "udp://broken.example.com:80",
+            "hostname": "broken.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://forced.example.com:80",
+            "hostname": "forced.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://other.example.com:6969",
+            "hostname": "other.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "https://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://国際.example.com:6969",
+            "hostname": "%E5%9B%BD%E9%9A%9B.example.com",
+            "count": 1
+          },
+          {
+            "tracker_url": "udp://example.com:80",
+            "hostname": "example.com",
+            "count": 1
+          },
+          {
+            "tracker_url": "udp://multi.example.com:80",
+            "hostname": "multi.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": false
+      }
+    },
+    {
+      "id": "F30_sort_ratio_desc",
+      "filter": {
+        "status": "all",
+        "category": null,
+        "tag": null,
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "ratio",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f03",
+          "f10",
+          "f17",
+          "f04",
+          "f06",
+          "f08",
+          "f01",
+          "f09",
+          "f14",
+          "f18",
+          "f20",
+          "f02",
+          "f15",
+          "f05",
+          "f07",
+          "f11",
+          "f13",
+          "f19",
+          "f12",
+          "f16"
+        ],
+        "filtered_count": 20,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "docs": 6,
+          "videos": 3,
+          "music": 3,
+          "": 4,
+          "iso": 4
+        },
+        "tag_counts": {
+          "4k": 1,
+          "a": 1,
+          "audio": 3,
+          "b": 1,
+          "broken": 2,
+          "force": 2,
+          "linux": 4,
+          "paused": 2,
+          "stalled": 2,
+          "world": 1
+        },
+        "tracker_counts": {
+          "udp://tracker.example.com:80": 4,
+          "http://tracker.example.com/announce": 3,
+          "https://tracker.example.com/announce": 2,
+          "udp://other.example.com:6969": 2,
+          "udp://forced.example.com:80": 2,
+          "udp://broken.example.com:80": 2,
+          "udp://example.com:80": 1,
+          "udp://国際.example.com:6969": 1,
+          "udp://multi.example.com:80": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 6
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 4
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 3
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 3
+          },
+          {
+            "name": "",
+            "save_path": "",
+            "count": 4
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 1
+          },
+          {
+            "tag": "a",
+            "count": 1
+          },
+          {
+            "tag": "audio",
+            "count": 3
+          },
+          {
+            "tag": "b",
+            "count": 1
+          },
+          {
+            "tag": "broken",
+            "count": 2
+          },
+          {
+            "tag": "force",
+            "count": 2
+          },
+          {
+            "tag": "linux",
+            "count": 4
+          },
+          {
+            "tag": "paused",
+            "count": 2
+          },
+          {
+            "tag": "stalled",
+            "count": 2
+          },
+          {
+            "tag": "world",
+            "count": 1
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://tracker.example.com:80",
+            "hostname": "tracker.example.com",
+            "count": 4
+          },
+          {
+            "tracker_url": "http://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 3
+          },
+          {
+            "tracker_url": "udp://broken.example.com:80",
+            "hostname": "broken.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://forced.example.com:80",
+            "hostname": "forced.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://other.example.com:6969",
+            "hostname": "other.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "https://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://国際.example.com:6969",
+            "hostname": "%E5%9B%BD%E9%9A%9B.example.com",
+            "count": 1
+          },
+          {
+            "tracker_url": "udp://example.com:80",
+            "hostname": "example.com",
+            "count": 1
+          },
+          {
+            "tracker_url": "udp://multi.example.com:80",
+            "hostname": "multi.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": false
+      }
+    },
+    {
+      "id": "F31_sort_priority_desc",
+      "filter": {
+        "status": "all",
+        "category": null,
+        "tag": null,
+        "tracker": null,
+        "search": ""
+      },
+      "sort": {
+        "field": "priority",
+        "direction": "desc"
+      },
+      "expected": {
+        "sorted_hashes": [
+          "f05",
+          "f01",
+          "f02",
+          "f07",
+          "f09",
+          "f11",
+          "f12",
+          "f13",
+          "f14",
+          "f15",
+          "f16",
+          "f18",
+          "f19",
+          "f20",
+          "f03",
+          "f04",
+          "f06",
+          "f08",
+          "f10",
+          "f17"
+        ],
+        "filtered_count": 20,
+        "total_dl_speed": 460000,
+        "total_ul_speed": 225000,
+        "status_counts": {
+          "all": 20,
+          "downloading": 7,
+          "seeding": 3,
+          "completed": 5,
+          "stopped": 4,
+          "active": 10,
+          "inactive": 6,
+          "running": 9,
+          "stalled": 3,
+          "stalled_uploading": 1,
+          "stalled_downloading": 2,
+          "errored": 2
+        },
+        "category_counts": {
+          "docs": 6,
+          "videos": 3,
+          "music": 3,
+          "": 4,
+          "iso": 4
+        },
+        "tag_counts": {
+          "4k": 1,
+          "a": 1,
+          "audio": 3,
+          "b": 1,
+          "broken": 2,
+          "force": 2,
+          "linux": 4,
+          "paused": 2,
+          "stalled": 2,
+          "world": 1
+        },
+        "tracker_counts": {
+          "udp://tracker.example.com:80": 4,
+          "http://tracker.example.com/announce": 3,
+          "https://tracker.example.com/announce": 2,
+          "udp://other.example.com:6969": 2,
+          "udp://forced.example.com:80": 2,
+          "udp://broken.example.com:80": 2,
+          "udp://example.com:80": 1,
+          "udp://国際.example.com:6969": 1,
+          "udp://multi.example.com:80": 1
+        },
+        "sidebar_categories": [
+          {
+            "name": "docs",
+            "save_path": "/data/docs",
+            "count": 6
+          },
+          {
+            "name": "iso",
+            "save_path": "/data/iso",
+            "count": 4
+          },
+          {
+            "name": "music",
+            "save_path": "/data/music",
+            "count": 3
+          },
+          {
+            "name": "videos",
+            "save_path": "/data/videos",
+            "count": 3
+          },
+          {
+            "name": "",
+            "save_path": "",
+            "count": 4
+          }
+        ],
+        "sidebar_tags": [
+          {
+            "tag": "4k",
+            "count": 1
+          },
+          {
+            "tag": "a",
+            "count": 1
+          },
+          {
+            "tag": "audio",
+            "count": 3
+          },
+          {
+            "tag": "b",
+            "count": 1
+          },
+          {
+            "tag": "broken",
+            "count": 2
+          },
+          {
+            "tag": "force",
+            "count": 2
+          },
+          {
+            "tag": "linux",
+            "count": 4
+          },
+          {
+            "tag": "paused",
+            "count": 2
+          },
+          {
+            "tag": "stalled",
+            "count": 2
+          },
+          {
+            "tag": "world",
+            "count": 1
+          }
+        ],
+        "sidebar_trackers": [
+          {
+            "tracker_url": "udp://tracker.example.com:80",
+            "hostname": "tracker.example.com",
+            "count": 4
+          },
+          {
+            "tracker_url": "http://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 3
+          },
+          {
+            "tracker_url": "udp://broken.example.com:80",
+            "hostname": "broken.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://forced.example.com:80",
+            "hostname": "forced.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://other.example.com:6969",
+            "hostname": "other.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "https://tracker.example.com/announce",
+            "hostname": "tracker.example.com",
+            "count": 2
+          },
+          {
+            "tracker_url": "udp://国際.example.com:6969",
+            "hostname": "%E5%9B%BD%E9%9A%9B.example.com",
+            "count": 1
+          },
+          {
+            "tracker_url": "udp://example.com:80",
+            "hostname": "example.com",
+            "count": 1
+          },
+          {
+            "tracker_url": "udp://multi.example.com:80",
+            "hostname": "multi.example.com",
+            "count": 1
+          }
+        ],
+        "is_filtered": false
+      }
+    }
+  ],
+  "sort_cases": [
+    {
+      "id": "S001_added_on_asc",
+      "field": "added_on",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S002_added_on_desc",
+      "field": "added_on",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f20",
+        "f19",
+        "f18",
+        "f17",
+        "f16",
+        "f15",
+        "f14",
+        "f13",
+        "f12",
+        "f11",
+        "f10",
+        "f09",
+        "f08",
+        "f07",
+        "f06",
+        "f05",
+        "f04",
+        "f03",
+        "f02",
+        "f01"
+      ]
+    },
+    {
+      "id": "S003_amount_left_asc",
+      "field": "amount_left",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S004_amount_left_desc",
+      "field": "amount_left",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S005_availability_asc",
+      "field": "availability",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f12",
+        "f15",
+        "f05",
+        "f07",
+        "f11",
+        "f13",
+        "f16",
+        "f19",
+        "f02",
+        "f01",
+        "f06",
+        "f08",
+        "f09",
+        "f10",
+        "f14",
+        "f17",
+        "f18",
+        "f20",
+        "f04",
+        "f03"
+      ]
+    },
+    {
+      "id": "S006_availability_desc",
+      "field": "availability",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f03",
+        "f04",
+        "f01",
+        "f06",
+        "f08",
+        "f09",
+        "f10",
+        "f14",
+        "f17",
+        "f18",
+        "f20",
+        "f02",
+        "f05",
+        "f07",
+        "f11",
+        "f13",
+        "f16",
+        "f19",
+        "f12",
+        "f15"
+      ]
+    },
+    {
+      "id": "S007_category_asc",
+      "field": "category",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f07",
+        "f08",
+        "f13",
+        "f19",
+        "f01",
+        "f02",
+        "f15",
+        "f16",
+        "f18",
+        "f20",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f05",
+        "f06",
+        "f14",
+        "f03",
+        "f04",
+        "f17"
+      ]
+    },
+    {
+      "id": "S008_category_desc",
+      "field": "category",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f03",
+        "f04",
+        "f17",
+        "f05",
+        "f06",
+        "f14",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f01",
+        "f02",
+        "f15",
+        "f16",
+        "f18",
+        "f20",
+        "f07",
+        "f08",
+        "f13",
+        "f19"
+      ]
+    },
+    {
+      "id": "S009_completed_asc",
+      "field": "completed",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S010_completed_desc",
+      "field": "completed",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S011_completion_on_asc",
+      "field": "completion_on",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S012_completion_on_desc",
+      "field": "completion_on",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S013_dl_limit_asc",
+      "field": "dl_limit",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S014_dl_limit_desc",
+      "field": "dl_limit",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S015_downloaded_asc",
+      "field": "downloaded",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S016_downloaded_desc",
+      "field": "downloaded",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S017_downloaded_session_asc",
+      "field": "downloaded_session",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S018_downloaded_session_desc",
+      "field": "downloaded_session",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S019_dlspeed_asc",
+      "field": "dlspeed",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f15",
+        "f17",
+        "f19",
+        "f18",
+        "f16",
+        "f14",
+        "f20",
+        "f01",
+        "f09"
+      ]
+    },
+    {
+      "id": "S020_dlspeed_desc",
+      "field": "dlspeed",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f09",
+        "f01",
+        "f20",
+        "f14",
+        "f16",
+        "f18",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f15",
+        "f17",
+        "f19"
+      ]
+    },
+    {
+      "id": "S021_eta_asc",
+      "field": "eta",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f09",
+        "f14",
+        "f05",
+        "f18",
+        "f20",
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f06",
+        "f07",
+        "f08",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f15",
+        "f16",
+        "f17",
+        "f19"
+      ]
+    },
+    {
+      "id": "S022_eta_desc",
+      "field": "eta",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f02",
+        "f03",
+        "f04",
+        "f06",
+        "f07",
+        "f08",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f15",
+        "f16",
+        "f17",
+        "f19",
+        "f01",
+        "f20",
+        "f05",
+        "f18",
+        "f14",
+        "f09"
+      ]
+    },
+    {
+      "id": "S023_force_start_asc",
+      "field": "force_start",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20",
+        "f09",
+        "f10"
+      ]
+    },
+    {
+      "id": "S024_force_start_desc",
+      "field": "force_start",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f09",
+        "f10",
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S025_last_activity_asc",
+      "field": "last_activity",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S026_last_activity_desc",
+      "field": "last_activity",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S027_name_asc",
+      "field": "name",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f15",
+        "f01",
+        "f19",
+        "f11",
+        "f16",
+        "f09",
+        "f10",
+        "f18",
+        "f12",
+        "f20",
+        "f17",
+        "f05",
+        "f06",
+        "f03",
+        "f02",
+        "f04",
+        "f07",
+        "f08",
+        "f13",
+        "f14"
+      ]
+    },
+    {
+      "id": "S028_name_desc",
+      "field": "name",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f14",
+        "f13",
+        "f08",
+        "f07",
+        "f04",
+        "f02",
+        "f03",
+        "f06",
+        "f05",
+        "f17",
+        "f20",
+        "f12",
+        "f18",
+        "f10",
+        "f09",
+        "f16",
+        "f11",
+        "f19",
+        "f01",
+        "f15"
+      ]
+    },
+    {
+      "id": "S029_num_complete_asc",
+      "field": "num_complete",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S030_num_complete_desc",
+      "field": "num_complete",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S031_num_incomplete_asc",
+      "field": "num_incomplete",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S032_num_incomplete_desc",
+      "field": "num_incomplete",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S033_num_leechs_asc",
+      "field": "num_leechs",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S034_num_leechs_desc",
+      "field": "num_leechs",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S035_num_seeds_asc",
+      "field": "num_seeds",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S036_num_seeds_desc",
+      "field": "num_seeds",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S037_popularity_asc",
+      "field": "popularity",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f11",
+        "f12",
+        "f17",
+        "f19",
+        "f13",
+        "f05",
+        "f16",
+        "f07",
+        "f18",
+        "f15",
+        "f08",
+        "f20",
+        "f02",
+        "f09",
+        "f14",
+        "f06",
+        "f01",
+        "f10",
+        "f04",
+        "f03"
+      ]
+    },
+    {
+      "id": "S038_popularity_desc",
+      "field": "popularity",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f03",
+        "f04",
+        "f10",
+        "f01",
+        "f06",
+        "f14",
+        "f09",
+        "f02",
+        "f20",
+        "f08",
+        "f15",
+        "f18",
+        "f07",
+        "f16",
+        "f05",
+        "f13",
+        "f19",
+        "f11",
+        "f12",
+        "f17"
+      ]
+    },
+    {
+      "id": "S039_priority_asc",
+      "field": "priority",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f03",
+        "f04",
+        "f06",
+        "f08",
+        "f10",
+        "f17",
+        "f01",
+        "f02",
+        "f07",
+        "f09",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f18",
+        "f19",
+        "f20",
+        "f05"
+      ]
+    },
+    {
+      "id": "S040_priority_desc",
+      "field": "priority",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f05",
+        "f01",
+        "f02",
+        "f07",
+        "f09",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f18",
+        "f19",
+        "f20",
+        "f03",
+        "f04",
+        "f06",
+        "f08",
+        "f10",
+        "f17"
+      ]
+    },
+    {
+      "id": "S041_progress_asc",
+      "field": "progress",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S042_progress_desc",
+      "field": "progress",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S043_ratio_asc",
+      "field": "ratio",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f12",
+        "f16",
+        "f05",
+        "f07",
+        "f11",
+        "f13",
+        "f19",
+        "f02",
+        "f15",
+        "f01",
+        "f09",
+        "f14",
+        "f18",
+        "f20",
+        "f06",
+        "f08",
+        "f04",
+        "f03",
+        "f10",
+        "f17"
+      ]
+    },
+    {
+      "id": "S044_ratio_desc",
+      "field": "ratio",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f03",
+        "f10",
+        "f17",
+        "f04",
+        "f06",
+        "f08",
+        "f01",
+        "f09",
+        "f14",
+        "f18",
+        "f20",
+        "f02",
+        "f15",
+        "f05",
+        "f07",
+        "f11",
+        "f13",
+        "f19",
+        "f12",
+        "f16"
+      ]
+    },
+    {
+      "id": "S045_ratio_limit_asc",
+      "field": "ratio_limit",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f02",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f11",
+        "f12",
+        "f13",
+        "f16",
+        "f19",
+        "f01",
+        "f03",
+        "f04",
+        "f09",
+        "f10",
+        "f14",
+        "f15",
+        "f17",
+        "f18",
+        "f20"
+      ]
+    },
+    {
+      "id": "S046_ratio_limit_desc",
+      "field": "ratio_limit",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f03",
+        "f04",
+        "f09",
+        "f10",
+        "f14",
+        "f15",
+        "f17",
+        "f18",
+        "f20",
+        "f02",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f11",
+        "f12",
+        "f13",
+        "f16",
+        "f19"
+      ]
+    },
+    {
+      "id": "S047_save_path_asc",
+      "field": "save_path",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S048_save_path_desc",
+      "field": "save_path",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S049_seeding_time_asc",
+      "field": "seeding_time",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S050_seeding_time_desc",
+      "field": "seeding_time",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S051_seen_complete_asc",
+      "field": "seen_complete",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S052_seen_complete_desc",
+      "field": "seen_complete",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S053_size_asc",
+      "field": "size",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f19",
+        "f13",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f14",
+        "f01",
+        "f02",
+        "f15",
+        "f16",
+        "f18",
+        "f11",
+        "f12",
+        "f03",
+        "f04",
+        "f17",
+        "f20",
+        "f09",
+        "f10"
+      ]
+    },
+    {
+      "id": "S054_size_desc",
+      "field": "size",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f09",
+        "f10",
+        "f20",
+        "f03",
+        "f04",
+        "f17",
+        "f11",
+        "f12",
+        "f01",
+        "f02",
+        "f15",
+        "f16",
+        "f18",
+        "f14",
+        "f07",
+        "f08",
+        "f05",
+        "f06",
+        "f13",
+        "f19"
+      ]
+    },
+    {
+      "id": "S055_state_asc",
+      "field": "state",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f14",
+        "f16",
+        "f18",
+        "f20",
+        "f11",
+        "f09",
+        "f10",
+        "f12",
+        "f05",
+        "f06",
+        "f02",
+        "f15",
+        "f04",
+        "f07",
+        "f13",
+        "f19",
+        "f08",
+        "f03",
+        "f17"
+      ]
+    },
+    {
+      "id": "S056_state_desc",
+      "field": "state",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f03",
+        "f17",
+        "f08",
+        "f07",
+        "f13",
+        "f19",
+        "f04",
+        "f02",
+        "f15",
+        "f06",
+        "f05",
+        "f12",
+        "f10",
+        "f09",
+        "f11",
+        "f01",
+        "f14",
+        "f16",
+        "f18",
+        "f20"
+      ]
+    },
+    {
+      "id": "S057_tags_asc",
+      "field": "tags",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f16",
+        "f18",
+        "f19",
+        "f13",
+        "f05",
+        "f06",
+        "f11",
+        "f12",
+        "f09",
+        "f10",
+        "f03",
+        "f04",
+        "f17",
+        "f20",
+        "f07",
+        "f08",
+        "f02",
+        "f15",
+        "f14"
+      ]
+    },
+    {
+      "id": "S058_tags_desc",
+      "field": "tags",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f14",
+        "f02",
+        "f15",
+        "f07",
+        "f08",
+        "f20",
+        "f03",
+        "f04",
+        "f17",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f05",
+        "f06",
+        "f13",
+        "f01",
+        "f16",
+        "f18",
+        "f19"
+      ]
+    },
+    {
+      "id": "S059_time_active_asc",
+      "field": "time_active",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S060_time_active_desc",
+      "field": "time_active",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S061_total_size_asc",
+      "field": "total_size",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f19",
+        "f13",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f14",
+        "f01",
+        "f02",
+        "f15",
+        "f16",
+        "f18",
+        "f11",
+        "f12",
+        "f03",
+        "f04",
+        "f17",
+        "f20",
+        "f09",
+        "f10"
+      ]
+    },
+    {
+      "id": "S062_total_size_desc",
+      "field": "total_size",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f09",
+        "f10",
+        "f20",
+        "f03",
+        "f04",
+        "f17",
+        "f11",
+        "f12",
+        "f01",
+        "f02",
+        "f15",
+        "f16",
+        "f18",
+        "f14",
+        "f07",
+        "f08",
+        "f05",
+        "f06",
+        "f13",
+        "f19"
+      ]
+    },
+    {
+      "id": "S063_tracker_asc",
+      "field": "tracker",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f19",
+        "f03",
+        "f04",
+        "f17",
+        "f05",
+        "f06",
+        "f18",
+        "f11",
+        "f12",
+        "f13",
+        "f09",
+        "f10",
+        "f20",
+        "f07",
+        "f08",
+        "f01",
+        "f02",
+        "f15",
+        "f16",
+        "f14"
+      ]
+    },
+    {
+      "id": "S064_tracker_desc",
+      "field": "tracker",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f14",
+        "f01",
+        "f02",
+        "f15",
+        "f16",
+        "f07",
+        "f08",
+        "f20",
+        "f09",
+        "f10",
+        "f13",
+        "f11",
+        "f12",
+        "f18",
+        "f05",
+        "f06",
+        "f03",
+        "f04",
+        "f17",
+        "f19"
+      ]
+    },
+    {
+      "id": "S065_up_limit_asc",
+      "field": "up_limit",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S066_up_limit_desc",
+      "field": "up_limit",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S067_uploaded_asc",
+      "field": "uploaded",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S068_uploaded_desc",
+      "field": "uploaded",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S069_uploaded_session_asc",
+      "field": "uploaded_session",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S070_uploaded_session_desc",
+      "field": "uploaded_session",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f03",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f10",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f17",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    },
+    {
+      "id": "S071_upspeed_asc",
+      "field": "upspeed",
+      "direction": "asc",
+      "expected_sorted_hashes": [
+        "f01",
+        "f02",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f18",
+        "f19",
+        "f20",
+        "f03",
+        "f17",
+        "f10"
+      ]
+    },
+    {
+      "id": "S072_upspeed_desc",
+      "field": "upspeed",
+      "direction": "desc",
+      "expected_sorted_hashes": [
+        "f10",
+        "f17",
+        "f03",
+        "f01",
+        "f02",
+        "f04",
+        "f05",
+        "f06",
+        "f07",
+        "f08",
+        "f09",
+        "f11",
+        "f12",
+        "f13",
+        "f14",
+        "f15",
+        "f16",
+        "f18",
+        "f19",
+        "f20"
+      ]
+    }
+  ],
+  "tracker_hostname_cases": [
+    {
+      "id": "T01_udp",
+      "url": "udp://tracker.example.com:80",
+      "expected_hostname": "tracker.example.com"
+    },
+    {
+      "id": "T02_http",
+      "url": "http://tracker.example.com/announce",
+      "expected_hostname": "tracker.example.com"
+    },
+    {
+      "id": "T03_https",
+      "url": "https://tracker.example.com/announce",
+      "expected_hostname": "tracker.example.com"
+    },
+    {
+      "id": "T04_schemeless",
+      "url": "tracker.example.com:80/announce",
+      "expected_hostname": "tracker.example.com"
+    },
+    {
+      "id": "T05_empty",
+      "url": "",
+      "expected_hostname": null
+    },
+    {
+      "id": "T06_whitespace",
+      "url": "   ",
+      "expected_hostname": null
+    },
+    {
+      "id": "T07_invalid",
+      "url": "not a real url",
+      "expected_hostname": null
+    },
+    {
+      "id": "T08_idn",
+      "url": "udp://国際.example.com:6969",
+      "expected_hostname": "%E5%9B%BD%E9%9A%9B.example.com"
+    },
+    {
+      "id": "T09_udp_other",
+      "url": "udp://other.example.com:6969",
+      "expected_hostname": "other.example.com"
+    },
+    {
+      "id": "T10_udp_forced",
+      "url": "udp://forced.example.com:80",
+      "expected_hostname": "forced.example.com"
+    },
+    {
+      "id": "T11_udp_broken",
+      "url": "udp://broken.example.com:80",
+      "expected_hostname": "broken.example.com"
+    },
+    {
+      "id": "T12_udp_multi",
+      "url": "udp://multi.example.com:80",
+      "expected_hostname": "multi.example.com"
+    }
+  ]
+}

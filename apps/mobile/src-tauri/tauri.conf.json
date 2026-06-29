@@ -1,0 +1,60 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "Taurent",
+  "version": "1.0.0",
+  "identifier": "com.taurent.mobile",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420",
+    "beforeDevCommand": "pnpm run dev",
+    "beforeBuildCommand": "pnpm run build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Taurent",
+        "width": 390,
+        "height": 844,
+        "minWidth": 320,
+        "minHeight": 568,
+        "resizable": true,
+        "fullscreen": false,
+        "visible": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; connect-src 'self' http://*:* https://*:*; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; script-src 'self'"
+    },
+    "withGlobalTauri": true
+  },
+  "bundle": {
+    "active": true,
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "category": "Utility",
+    "shortDescription": "Remote client for qBittorrent",
+    "longDescription": "A mobile remote client for qBittorrent Web UI with torrent management, server management, and more.",
+    "iOS": {
+      "developmentTeam": "${APPLE_TEAM_ID}",
+      "minimumSystemVersion": "14.0"
+    },
+    "android": {
+      "minSdkVersion": 24
+    }
+  },
+  "plugins": {
+    "deep-link": {
+      "mobile": [
+        {
+          "scheme": ["taurent"],
+          "appLink": false
+        }
+      ]
+    }
+  }
+}
