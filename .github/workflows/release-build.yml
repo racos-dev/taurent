@@ -204,7 +204,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p artifacts/release/desktop
-          find target -type f \( \
+          find target/release/bundle -type f \( \
             -name '*.AppImage' -o \
             -name '*.AppImage.tar.gz' -o \
             -name '*.AppImage.tar.gz.sig' -o \
