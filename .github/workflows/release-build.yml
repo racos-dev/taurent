@@ -313,6 +313,7 @@ jobs:
       - name: Publish release assets
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ needs.release-preflight.outputs.release_tag }}
         shell: bash
         run: |
@@ -334,5 +335,5 @@ jobs:
             gh release edit "$RELEASE_TAG" --title "$RELEASE_TAG" --latest --draft=false
             gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
           else
-            gh release create "$RELEASE_TAG" "${assets[@]}" --verify-tag --title "$RELEASE_TAG" --notes "Automated unsigned release build for $RELEASE_TAG." --latest
+            gh release create "$RELEASE_TAG" "${assets[@]}" --title "$RELEASE_TAG" --notes "Automated unsigned release build for $RELEASE_TAG." --latest
           fi
