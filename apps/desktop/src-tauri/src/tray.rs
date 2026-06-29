@@ -412,16 +412,22 @@ fn build_tray_icon(_app: &tauri::App) -> (Image<'static>, bool) {
     #[cfg(target_os = "macos")]
     {
         let icon_bytes = include_bytes!("../icons/tray-template.rgba");
-        return (Image::new(icon_bytes, 64, 64).to_owned(), true);
+        (Image::new(icon_bytes, 64, 64).to_owned(), true)
     }
 
     #[cfg(not(target_os = "macos"))]
     {
-        let icon = _app.default_window_icon().cloned().unwrap_or_else(|| {
-            log::warn!("default window icon unavailable; falling back to template tray icon");
-            let icon_bytes = include_bytes!("../icons/tray-template.rgba");
-            Image::new(icon_bytes, 64, 64).to_owned()
-        });
+        let icon = _app
+            .default_window_icon()
+            .map(|img| {
+                let rgba = img.rgba().to_vec();
+                Image::new_owned(rgba, img.width(), img.height())
+            })
+            .unwrap_or_else(|| {
+                log::warn!("default window icon unavailable; falling back to template tray icon");
+                let icon_bytes = include_bytes!("../icons/tray-template.rgba");
+                Image::new(icon_bytes, 64, 64).to_owned()
+            });
         (icon, false)
     }
 }
