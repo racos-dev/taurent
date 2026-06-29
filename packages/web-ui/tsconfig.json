@@ -1,0 +1,37 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "noEmit": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "paths": {
+      "@taurent/shared": ["../shared/src"],
+      "@taurent/shared/*": ["../shared/src/*"]
+    }
+  },
+  "include": [
+    "src/**/*",
+    "package.json",
+    "../shared/src/types/qbittorrent.ts",
+    "../shared/src/utils/formatters.ts",
+    "../shared/src/components/Input/index.ts",
+    "../shared/src/components/Input/types.ts",
+    "../shared/src/components/Input/Input.web.tsx",
+    "../shared/src/components/Button/index.ts",
+    "../shared/src/components/Button/types.ts",
+    "../shared/src/components/Button/Button.web.tsx",
+    "../shared/src/settings/**/*.ts",
+    "../shared/src/theme/**/*.ts"
+  ],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.test.tsx"]
+}

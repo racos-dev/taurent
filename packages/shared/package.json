@@ -1,0 +1,52 @@
+{
+  "name": "@taurent/shared",
+  "version": "1.0.0",
+  "private": true,
+  "author": "racos.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/racos-dev/taurent.git",
+    "directory": "packages/shared"
+  },
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./stores": "./src/stores/index.ts",
+    "./stores/*": "./src/stores/*",
+    "./utils/*": "./src/utils/*",
+    "./types/*": "./src/types/*",
+    "./schemas/*": "./src/schemas/*",
+    "./settings": "./src/settings/index.ts",
+    "./theme/*": "./src/theme/*",
+    "./icons": "./src/icons/index.ts",
+    "./platform/*": "./src/platform/*",
+    "./tailwind.preset": "./tailwind.preset.mts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage.enabled"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.2",
+    "@types/react": "^19.2.17",
+    "@vitest/coverage-v8": "4.1.9",
+    "react": "^19.2.7",
+    "tailwindcss": "^4.3.1",
+    "typescript": "~6.0.3",
+    "vitest": "4.1.9"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.21.0",
+    "tailwind-merge": "^3.6.0",
+    "zod": "^4.4.3",
+    "zustand": "^5.0.14"
+  },
+  "peerDependencies": {
+    "@types/react": "^19.2.17",
+    "react": "^19.2.7"
+  }
+}

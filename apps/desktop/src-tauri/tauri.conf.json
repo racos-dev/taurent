@@ -1,0 +1,63 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "Taurent",
+  "version": "1.0.0",
+  "identifier": "com.taurent.desktop",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "pnpm run dev",
+    "beforeBuildCommand": "pnpm run build"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Taurent",
+        "create": false,
+        "width": 1024,
+        "height": 768,
+        "minWidth": 800,
+        "minHeight": 600,
+        "maxWidth": 3840,
+        "maxHeight": 2160,
+        "resizable": true,
+        "fullscreen": false,
+        "visible": false,
+        "backgroundColor": "#002b36ff"
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; connect-src 'self' http://*:* https://*:*; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; script-src 'self'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "fileAssociations": [
+      {
+        "ext": ["torrent"],
+        "name": "Torrent File",
+        "description": "BitTorrent torrent file",
+        "mimeType": "application/x-bittorrent",
+        "role": "Editor"
+      }
+    ],
+    "macOS": {
+      "entitlements": "entitlements/desktop.desktop.entitlements"
+    }
+  },
+  "plugins": {
+    "window": {
+      "all": true
+    },
+    "opener": {}
+  }
+}

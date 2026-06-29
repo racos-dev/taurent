@@ -1,0 +1,29 @@
+@import '@taurent/shared/theme/themes.css';
+@import "tailwindcss";
+
+@config "../tailwind.config.js";
+@source "./**/*.{js,ts,jsx,tsx}";
+@source "../../../packages/web-ui/src/**/*.{js,ts,jsx,tsx}";
+@source "../../../packages/shared/src/**/*.{js,ts,jsx,tsx}";
+
+/* App-level base styles only.
+ * All theme class definitions and shared scrollbar styles are in the shared themes.css import above.
+ */
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--color-background);
+  color: var(--color-text-primary);
+}
+
+#root {
+  height: 100%;
+  overflow: hidden;
+}

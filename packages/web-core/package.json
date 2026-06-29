@@ -1,0 +1,51 @@
+{
+  "name": "@taurent/web-core",
+  "version": "1.0.0",
+  "private": true,
+  "author": "racos.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/racos-dev/taurent.git",
+    "directory": "packages/web-core"
+  },
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/server/index.ts",
+    "./query": "./src/query/index.ts",
+    "./hooks": "./src/hooks/index.ts",
+    "./session": "./src/session/index.ts",
+    "./torrents": "./src/torrents/index.ts",
+    "./screens": "./src/screens/index.ts",
+    "./sync": "./src/sync/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage.enabled --coverage.reportOnFailure",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@taurent/bridge": "workspace:*",
+    "@taurent/shared": "workspace:*",
+    "@tanstack/react-query": "^5.101.0"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.3.0",
+    "@types/node": "^24.13.2",
+    "@types/react": "^19.2.17",
+    "@vitejs/plugin-react": "^6.0.2",
+    "@vitest/coverage-v8": "4.1.9",
+    "react": "^19.2.7",
+    "react-router-dom": "^7.18.0",
+    "typescript": "~6.0.3",
+    "vitest": "4.1.9"
+  },
+  "peerDependencies": {
+    "@types/react": "^19.2.17",
+    "react": "^19.2.7",
+    "react-router-dom": "^7.18.0"
+  }
+}

@@ -1,0 +1,143 @@
+name: PR CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  js-quality:
+    name: JS Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Enable pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 11.0.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter taurent exec playwright install --with-deps chromium
+
+      - name: Check app versions
+        run: node scripts/ci/check-versions.mjs
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test:unit
+
+      - name: Renderer e2e
+        run: pnpm desktop:renderer:e2e
+
+  rust-quality:
+    name: Rust Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@1.90.0
+        with:
+          components: rustfmt, clippy
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: rust-quality-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install Linux deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf build-essential curl wget file
+
+      - name: Rustfmt check
+        run: cargo fmt --all --check
+
+      - name: Cargo check
+        run: cargo check --workspace --locked -p qb-core && cargo check --workspace --locked --features desktop -p qb-tauri
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets --locked -p qb-core && cargo clippy --workspace --all-targets --locked --features desktop -p qb-tauri
+
+  native-smoke:
+    name: Desktop Tauri Smoke (Linux)
+    needs: [js-quality, rust-quality]
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Enable pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 11.0.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@1.90.0
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: rust-smoke-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Linux deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf build-essential curl wget file libxdo-dev libssl-dev webkit2gtk-driver xvfb
+
+      - name: Build desktop Tauri app for smoke
+        run: pnpm --filter taurent tauri build --no-bundle --features webdriver
+
+      - name: Run native Tauri smoke
+        run: xvfb-run -a pnpm --filter taurent exec tsx scripts/e2e/runner.ts --skip-build
+
+      - name: Upload native Tauri diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: desktop-tauri-e2e-artifacts
+          path: artifacts/desktop/tauri-e2e
+          if-no-files-found: warn
+
+      - name: Upload native smoke perf artifact
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: desktop-tauri-perf
+          path: artifacts/desktop/perf/native-smoke.json
+          if-no-files-found: warn

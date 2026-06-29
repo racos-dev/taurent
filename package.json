@@ -1,0 +1,71 @@
+{
+  "name": "@taurent/workspace",
+  "private": true,
+  "author": "racos.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/racos-dev/taurent.git"
+  },
+  "packageManager": "pnpm@11.0.0",
+  "scripts": {
+    "desktop": "pnpm --filter taurent dev",
+    "desktop:dev": "pnpm --filter taurent tauri:dev",
+    "desktop:build": "pnpm --filter taurent build",
+    "desktop:typecheck": "pnpm --filter taurent typecheck",
+    "desktop:analyze": "pnpm --filter taurent analyze",
+    "desktop:perf": "pnpm --filter taurent perf",
+    "desktop:perf:baseline": "pnpm --filter taurent perf:baseline",
+    "desktop:perf:compare": "pnpm --filter taurent perf:compare",
+    "desktop:perf:check": "pnpm --filter taurent perf:check",
+    "desktop:test": "pnpm --filter taurent test",
+    "test:unit": "pnpm --filter @taurent/shared test && pnpm --filter @taurent/bridge test && pnpm --filter @taurent/web-core test && pnpm --filter taurent test",
+    "desktop:test:browser": "pnpm --filter taurent test:browser",
+    "desktop:renderer:e2e": "pnpm --filter taurent renderer:e2e",
+    "desktop:tauri:e2e": "pnpm --filter taurent tauri:e2e",
+    "desktop:icons:check": "node apps/desktop/scripts/icons/sync-tray-rgba.mjs",
+    "desktop:ci": "node scripts/ci/check-versions.mjs && pnpm lint && pnpm typecheck && pnpm --filter taurent build && pnpm --filter taurent-mobile build && pnpm test:unit && pnpm --filter taurent renderer:e2e",
+    "desktop:ci:native": "pnpm --filter taurent tauri:e2e",
+    "test:coverage": "bash scripts/ci/runs-coverage.sh",
+    "mobile:dev": "pnpm --filter taurent-mobile tauri:dev",
+    "mobile:dev:ios": "pnpm --filter taurent-mobile tauri:dev:ios",
+    "mobile:dev:android": "pnpm --filter taurent-mobile tauri:dev:android",
+    "mobile:build": "pnpm --filter taurent-mobile build",
+    "mobile:typecheck": "pnpm --filter taurent-mobile typecheck",
+    "mobile:test": "pnpm --filter taurent-mobile test",
+    "mobile:smoke": "pnpm --filter taurent-mobile smoke",
+    "mobile:renderer:e2e": "pnpm --filter taurent-mobile renderer:e2e",
+    "mobile:renderer:e2e:ui": "pnpm --filter taurent-mobile renderer:e2e:ui",
+    "lint": "pnpm -r --if-present lint",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "ci:local": "node scripts/ci/check-versions.mjs && pnpm lint && pnpm typecheck && pnpm test:unit",
+    "ci:rust": "cargo fmt --all --check && cargo check --workspace --locked -p qb-core && cargo check --workspace --locked --features desktop -p qb-tauri && cargo clippy --workspace --all-targets --locked -p qb-core && cargo clippy --workspace --all-targets --locked --features desktop -p qb-tauri",
+    "ci:local:full": "pnpm ci:local && pnpm ci:rust && pnpm --filter taurent build && pnpm --filter taurent-mobile build && pnpm mobile:test && pnpm desktop:renderer:e2e",
+    "ci:pre-commit": "node scripts/ci/check-versions.mjs && node apps/desktop/scripts/icons/sync-tray-rgba.mjs && cargo fmt --all --check && pnpm lint",
+    "ci:pre-push": "pnpm ci:local",
+    "version:app": "node scripts/version-app.mjs",
+    "postinstall": "simple-git-hooks"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.5.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.3",
+    "globals": "^17.7.0",
+    "simple-git-hooks": "^2.13.1",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.62.0"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm ci:pre-commit",
+    "pre-push": "pnpm ci:pre-push"
+  },
+  "engines": {
+    "node": ">=24.0.0",
+    "pnpm": ">=11.0.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}

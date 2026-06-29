@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "types": ["vite/client"],
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": false,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+
+    "paths": {
+      "@/*": ["./src/*"],
+      "@taurent/bridge": ["../../packages/bridge/src"],
+      "@taurent/bridge/*": ["../../packages/bridge/src/*"],
+      "@taurent/shared": ["../../packages/shared/src"],
+      "@taurent/shared/*": ["../../packages/shared/src/*"],
+      "@taurent/web-core": ["../../packages/web-core/src"],
+      "@taurent/web-core/*": ["../../packages/web-core/src/*"],
+      "@taurent/web-ui": ["../../packages/web-ui/src"],
+      "@taurent/web-ui/*": ["../../packages/web-ui/src/*"]
+    }
+  },
+  "include": ["src"]
+}

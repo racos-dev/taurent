@@ -1,0 +1,56 @@
+# crates/qb-core/
+
+## Responsibility
+
+Platform-agnostic Rust library providing the core building blocks for communicating with qBittorrent's Web API. Contains HTTP client helpers, authentication logic, session management, server domain types, typed DTO parsers, wire-format normalization, capability resolution, and accumulator-based sync primitives. Has zero Tauri or OS-level dependencies.
+
+## Design
+
+**Crate structure** (`lib.rs` declares `pub mod capability, client, dto, error, normalize, server, session, sync` with extensive re-exports of all DTO types and parser functions):
+
+| Module | Role |
+|---|---|---|
+| `dto` | Typed DTO parsers migrated from TypeScript: `parse_torrent_list` → `Vec<TorrentDto>`, `parse_torrent_properties` → `TorrentPropertiesDto`, `parse_torrent_trackers` → `Vec<TrackerDto>`, `parse_torrent_files` → `Vec<TorrentFileDto>`, `parse_categories` → `Categories` (BTreeMap), `parse_tags` → `Vec<String>` (strict: rejects non-string entries), `parse_sync_torrent_peers` → `SyncTorrentPeers`, `parse_search_start_id` → `i32`, `parse_search_statuses` → `Vec<SearchStatusDto>`, `parse_search_results` → `SearchResultsDto`, `parse_search_plugins` → `Vec<SearchPluginDto>`, `parse_transfer_info` → `TransferInfoDto`, `parse_build_info` → `BuildInfoDto`, `parse_preferences` → `PreferencesDto`, `parse_rss_items` → `Vec<RssItemDto>` (handles 3 legacy shapes), `parse_rss_rules` → `Vec<RssRuleDto>` (handles keyed and wrapped-array shapes), `parse_webseeds` → `Vec<WebSeedDto>`. DTO types: TorrentDto (40+ fields, drift-tolerant), TorrentPropertiesDto (30+ fields), CategoryDto, Categories, TrackerDto, TorrentFileDto (with `piece_range: [i64; 2]`), SearchStatusDto, SearchResultDto, SearchResultsDto, SearchPluginDto, SearchPluginCategoryDto, RssItemDto, RssRuleDto, SyncTorrentPeers, SyncTorrentPeersPeerData (all-`Option` fields), TransferInfoDto, BuildInfoDto, WebSeedDto, PreferencesDto (~207 fields with `deserialize_loose_number` for v4/v5 compatibility), PreferencesUpdateDto (all `Option<T>`, `skip_serializing_if`). Maindata row DTOs: `MaindataTorrentRow`, `MaindataCategoryRow`, `MaindataServerState` (all `Option<T>` fields with `#[serde(flatten)] unknown` catch-all for version drift). |
+| `normalize` | Wire-format normalization helpers (no Tauri dependencies): `join_tags`/`split_tags` (comma-joined), `join_categories`/`split_categories` (newline-joined), `build_add_torrent_options` (URL/file multipart field construction with `\n`-joined URLs and `savepath` wire format, supports `contentLayout`, `stopCondition`, `addToTop` fields). |
+| `capability` | Server capability resolution types: `CapabilityState` (tri-state `Confirmed`/`Unsupported`/`Unknown` with `#[serde(rename_all = "lowercase")]`), `ResolvedCapabilities` (`supports_search`, `supports_rss`, `supports_pause_resume`, `#[serde(rename_all = "snake_case")]`), `parse_version`, `api_version_meets`, `resolve_capabilities` (accepts `Option<bool>` probe args where `None` = probe failed). |
+| `client` | Low-level HTTP functions: `normalize_server_url()` (strips `/api/v2` suffix, ensures scheme), `validate_server_url_format()`, `qb_auth_headers()` (Cookie/Origin/Referer), `qbittorrent_login()` (10s timeout, returns `(Client, cookie)`), `qb_get()`, `qb_post_form()`, `qb_post_multipart()` (30s timeout), `qb_probe()` (returns `ProbeResponse` without erroring on non-2xx), `qb_sync_maindata()` (incremental sync with `rid`), RSS operations (`qb_get_rss_items`, `qb_get_rss_rules`, `qb_add_rss_feed`, `qb_set_rss_feed_url`, `qb_remove_rss_item`, `qb_set_rss_rule`, `qb_rename_rss_rule`, `qb_remove_rss_rule`), `is_network_error()`. Uses `reqwest::Client`. |
+| `error` | `BackendError` enum with 6 structured variants: `Network`, `Http` (status + body_snippet, truncated to 200 chars), `Auth`, `Parse`, `InvalidResponse`, `Other`. Implements `From<reqwest::Error>` (classifies timeout/connect as Network), `From<serde_json::Error>` (Parse), `From<std::io::Error>` (Network). Classification helpers: `is_network()`, `is_http()`, `is_auth()`, `is_parse()`, `is_http_403()`, `is_network_error()`. `is_network_error_message()` for string-based detection. `BackendResult<T>` type alias. `Display` impl for logging. |
+| `session` | `SessionManager` — stateful session holder with generation-based change tracking. `SessionState` (serializable to frontend) vs internal state (credentials, HTTP client, cookie). `ServerIdentity` holds credentials (never serialized to frontend). `SafeServerSummary` is the renderer-safe subset. `SessionStatus` enum: `Disconnected`, `Connecting`, `Connected`, `Error`. Methods: `connect()`, `set_connecting()`, `disconnect()`, `reconnect()`, `switch_server()`, `set_error()`, `clear_error()`, `teardown()`, `refresh_session()`. Every mutation increments `session_generation`. |
+| `server` | Domain DTOs: `ServerRecord` (internal, password `#[serde(skip)]`), `SavedServerSummary` (renderer-safe, no password), `ActiveServerSummary`, `AddServerInput`, `UpdateServerInput` (partial update with `Option` fields), `ServerCredentialsInput`, `PathMapping`, `TestConnectionResult`. `CredentialStatus` enum: `Stored`, `SessionOnly`, `Missing`, `Unavailable`, `NotRequested`, `Unknown`. `NormalizeServerUrlInput`, `NormalizeServerUrlOutput`, `ProbeServerSchemeResult`, `ServerValidationResult`. |
+| `sync` | Accumulator-based maindata sync primitives. `MaindataAccumulator` + `MaindataSnapshot` for full/incremental delta merge using typed DTOs (`MaindataTorrentRow`, `MaindataCategoryRow`, `MaindataServerState`). `MaindataSyncHealth` state machine (`Idle`→`Healthy`↔`Degraded`→`Retrying`). `SyncDelta::parse` validates RID, container structure, removal/tag arrays, full_update normalization. `try_deserialize_*` helpers for tolerant deserialization. Files: `accumulator.rs`, `health.rs`, `mod.rs`. |
+| `workspace` | Pure Rust `WorkspaceViewEngine` that mirrors the JS derivation pipeline (`torrentFilter`, `sortTorrents`, `deriveTorrentList`). 5 passes per request — main filter+sort+totals, plus four cross-filtered facet passes (status/category/tag/tracker each ignoring their own dimension). Locale-aware 35-field sort via `icu_collator` with per-locale `CollatorCache` and root-collation fallback on parse failure. Search normalization (`[._-]` → space, case-insensitive), tracker hostname extraction via `url::Url`. `WorkspaceView` output with `PartialEq` short-circuit (cheap fields first, `sorted_hashes` last). Re-exported as `pub mod workspace` from `lib.rs`. Files: `mod.rs`, `view.rs`, `filter.rs`, `sort.rs`, `facets.rs`, `fixture.rs`, `tests.rs`. |
+
+**Key patterns**:
+
+- **Generation counter**: `SessionManager.state.session_generation` increments on every state transition. The frontend uses this to detect stale data after reconnection or server restart.
+- **Credential safety**: `ServerIdentity.password` and `ServerRecord.password` are never serialized to the frontend. `SafeServerSummary` is the renderer-safe subset.
+- **`refresh_session()`**: Silently replaces the HTTP client and cookie without bumping the generation, allowing the backend to recover from stale sessions (e.g. after qBittorrent restarts) without alerting the frontend.
+- **qBittorrent v5+ compatibility**: `SessionState.supports_pause_resume` tracks whether the server supports legacy `/pause`/`/resume` endpoints or requires `/stop`/`/start`.
+- **Drift-tolerant DTOs**: All DTO fields are `Option<T>` or use `#[serde(default)]` to handle version drift. `PreferencesDto` uses `deserialize_loose_number` for v4/v5 enum field compatibility.
+- **`parse_response_bytes()`**: Tries JSON parsing first; falls back to raw UTF-8 string. Handles qBittorrent endpoints that return plain text (`"Ok."`).
+
+## Flow
+
+```
+Renderer → Tauri Command → SessionManager (lock) → qb-core client function → reqwest → qBittorrent API
+                                                  ↓
+                                            SessionState returned to renderer
+```
+
+Authentication flow:
+1. `qbittorrent_login()` POSTs credentials to `/api/v2/auth/login` with a 10-second timeout.
+2. Extracts the `Set-Cookie` header (SID cookie).
+3. Returns a `reqwest::Client` (30-second timeout) and the cookie string for subsequent authenticated requests.
+
+Sync flow:
+1. `qb_sync_maindata()` sends GET to `/api/v2/sync/maindata?rid=<last_rid>`.
+2. Returns `(rid, serde_json::Value)` where `rid` is the new sync point.
+3. `MaindataAccumulator` applies full or incremental updates to `MaindataSnapshot`.
+4. `MaindataSyncHealth` state machine tracks success/failure for exponential backoff.
+
+## Integration
+
+- **Upstream dependency**: `qb-tauri` calls `qb-core` functions directly.
+- **No Tauri imports**: The crate is deliberately free of `tauri` and OS-specific dependencies.
+- **Error propagation**: `BackendError` flows up to `qb-tauri`'s `CommandError` via `From` impls, ultimately serialized as `String` to the Tauri frontend.
+- **Sync integration**: `MaindataAccumulator` is used by `qb-tauri/src/sync/manager.rs` for the `LiveSyncManager` Tokio actor.

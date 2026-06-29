@@ -1,0 +1,49 @@
+{
+  "name": "@taurent/bridge",
+  "version": "1.0.0",
+  "private": true,
+  "author": "racos.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/racos-dev/taurent.git",
+    "directory": "packages/bridge"
+  },
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./types": "./src/types.ts",
+    "./events": "./src/events.ts",
+    "./contracts": "./src/contracts/index.ts",
+    "./contracts/capabilities": "./src/contracts/capabilities.ts",
+    "./transport": "./src/transport/index.ts",
+    "./transport/tauri": "./src/transport/tauriTransport.ts",
+    "./adapters": "./src/adapters/index.ts",
+    "./adapters/desktop": "./src/adapters/desktop.ts",
+    "./desktop/notification": "./src/desktop/notification.ts",
+    "./adapters/mobile-tauri": "./src/adapters/mobile-tauri.ts",
+    "./platform": "./src/platform.ts",
+    "./web": "./src/web.ts",
+    "./logging": "./src/logging.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@taurent/shared": "workspace:*",
+    "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/plugin-log": "^2.8.0",
+    "@tauri-apps/plugin-notification": "^2.3.3",
+    "@tauri-apps/plugin-shell": "^2.3.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.2",
+    "typescript": "~6.0.3",
+    "vitest": "4.1.9"
+  }
+}
