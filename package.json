@@ -54,7 +54,7 @@
     "globals": "^17.7.0",
     "simple-git-hooks": "^2.13.1",
     "typescript": "~6.0.3",
-    "typescript-eslint": "^8.62.0"
+    "typescript-eslint": "^8.62.1"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm ci:pre-commit",
