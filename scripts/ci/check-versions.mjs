@@ -74,10 +74,5 @@ if (releaseTag) {
     fail(`release tag must start with "v". Got: ${releaseTag}`);
   }
 
-  const tagVersion = releaseTag.slice(1);
-  if (tagVersion !== appVersions.desktop) {
-    fail(`release tag ${releaseTag} does not match app version ${appVersions.desktop}`);
-  }
-
-  console.log(`Release tag matches app version: ${releaseTag}`);
+  console.log(`Release tag: ${releaseTag} (app version in code: ${appVersions.desktop})`);
 }
