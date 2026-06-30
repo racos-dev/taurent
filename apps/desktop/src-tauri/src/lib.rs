@@ -624,6 +624,8 @@ pub fn run() {
         tauri_plugin_autostart::MacosLauncher::LaunchAgent,
         None,
     ));
+    let builder = builder.plugin(tauri_plugin_process::init());
+    let builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
     builder
         .manage(create_session_state())
         .manage(PendingTorrentFiles::new())

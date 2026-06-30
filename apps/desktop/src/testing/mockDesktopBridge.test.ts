@@ -12,6 +12,7 @@
 //     re-emission on maindata state changes.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { AppUpdateInfo } from '@taurent/bridge/contracts';
 import type {
   MaindataSyncChangedEvent,
   RustCapabilitiesResponse,
@@ -27,6 +28,8 @@ interface AutomationControl {
   reset: () => void;
   clearRecordedCalls: () => void;
   getRecordedCalls: () => Array<{ name: string; args: unknown[] }>;
+  setUpdateAvailable: (update?: Partial<AppUpdateInfo> | null) => void;
+  setUpdateError: (message: string | null) => void;
 }
 
 interface AutomationWindow {
@@ -135,6 +138,47 @@ describe('mockDesktopBridge', () => {
       unsubscribe();
       automation.emitMaindataSyncChanged(makeEvent(1));
       expect(listener).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('updater mock', () => {
+    it('returns null when no update is configured', async () => {
+      await expect(bridge.checkForUpdate()).resolves.toBeNull();
+      expect(automation.getRecordedCalls().map((call) => call.name)).toContain('checkForUpdate');
+    });
+
+    it('returns configured update info and emits install progress', async () => {
+      automation.setUpdateAvailable({ version: '2.0.0' });
+
+      await expect(bridge.checkForUpdate()).resolves.toMatchObject({ version: '2.0.0' });
+
+      const progress = vi.fn();
+      await bridge.downloadAndInstallUpdate(progress);
+
+      expect(progress.mock.calls.map((call) => call[0].event)).toEqual([
+        'Started',
+        'Progress',
+        'Progress',
+        'Finished',
+      ]);
+      expect(automation.getRecordedCalls().map((call) => call.name)).toEqual([
+        'checkForUpdate',
+        'downloadAndInstallUpdate',
+      ]);
+    });
+
+    it('surfaces update check failures and records relaunch calls', async () => {
+      automation.setUpdateError('updater unavailable');
+
+      await expect(bridge.checkForUpdate()).rejects.toThrow('updater unavailable');
+
+      automation.setUpdateError(null);
+      await bridge.relaunchApp();
+
+      expect(automation.getRecordedCalls().map((call) => call.name)).toEqual([
+        'checkForUpdate',
+        'relaunchApp',
+      ]);
     });
   });
 

@@ -18,6 +18,7 @@ import { AuxWindowLayout } from './windows/layout/AuxWindowLayout';
 import { DialogWindowLayout } from './windows/layout/DialogWindowLayout';
 import { MainWindowLayout } from './windows/layout/MainWindowLayout';
 import { RootErrorBoundary } from './components/RootErrorBoundary';
+import { AppUpdateBanner } from './components/AppUpdateBanner';
 import { queryClient } from './queryClient';
 import { SearchFocusProvider } from './contexts/SearchFocusProvider';
 import { useFocusSearch } from './contexts/useSearchFocusHooks';
@@ -135,6 +136,7 @@ function DesktopMainWindowRoot() {
   return (
     <>
       <MainWindowOperationNotifications />
+      <AppUpdateBanner />
       <MainWindowLayout>
         <AuthBoundary />
       </MainWindowLayout>

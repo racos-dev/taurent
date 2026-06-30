@@ -33,6 +33,7 @@
   },
   "bundle": {
     "active": true,
+    "createUpdaterArtifacts": true,
     "targets": "all",
     "icon": [
       "icons/32x32.png",
@@ -55,6 +56,12 @@
     }
   },
   "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDk3MDIxNUZCQjhGQUFDNzUKUldSMXJQcTQreFVDbDBoMmRacE5WckNucFVlSzZ2QmN4N3Mzc0pvWGlTUGtqRkNmK3h4Vld4aUoK",
+      "endpoints": [
+        "https://github.com/racos-dev/taurent/releases/latest/download/latest.json"
+      ]
+    },
     "window": {
       "all": true
     },

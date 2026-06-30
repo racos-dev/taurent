@@ -139,6 +139,7 @@ jobs:
           cargo clippy --workspace --all-targets --locked --features mobile -p qb-tauri
 
   desktop-build:
+    environment: release
     name: Desktop Build (${{ matrix.name }})
     needs: release-preflight
     runs-on: ${{ matrix.runner }}
@@ -218,6 +219,8 @@ jobs:
           VITE_APP_VERSION: ${{ needs.release-preflight.outputs.app_version }}
           VITE_RELEASE_TAG: ${{ needs.release-preflight.outputs.release_tag }}
           VITE_GIT_SHA: ${{ needs.release-preflight.outputs.git_sha }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           projectPath: apps/desktop
           args: ${{ matrix.tauriArgs }}
@@ -228,6 +231,7 @@ jobs:
           mkdir -p artifacts/release/desktop
           find target -type f ! -path '*/build/*' \( \
             -name '*.AppImage' -o \
+            -name '*.AppImage.sig' -o \
             -name '*.AppImage.tar.gz' -o \
             -name '*.AppImage.tar.gz.sig' -o \
             -name '*.deb' -o \
@@ -235,7 +239,9 @@ jobs:
             -name '*.dmg' -o \
             -name '*.app.tar.gz' -o \
             -name '*.app.tar.gz.sig' -o \
-            -name '*.exe' \
+            -name '*.exe' -o \
+            -name '*.exe.sig' -o \
+            -name 'latest.json' \
           \) -print -exec cp {} artifacts/release/desktop/ \;
           test -n "$(find artifacts/release/desktop -type f -print -quit)"
 
@@ -375,7 +381,7 @@ jobs:
           fi
 
           edit_flags=(--title "$RELEASE_TAG" --draft=false)
-          create_flags=(--title "$RELEASE_TAG" --notes "Automated unsigned release build for $RELEASE_TAG.")
+          create_flags=(--title "$RELEASE_TAG" --notes "Automated release build for $RELEASE_TAG.")
           if [[ "$IS_PRERELEASE" == "true" ]]; then
             edit_flags+=(--prerelease)
             create_flags+=(--prerelease --latest=false)

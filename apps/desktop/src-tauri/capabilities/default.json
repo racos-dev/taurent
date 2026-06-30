@@ -52,6 +52,8 @@
     "secure-storage:allow-remove-item",
     "autostart:allow-enable",
     "autostart:allow-disable",
-    "autostart:allow-is-enabled"
+    "autostart:allow-is-enabled",
+    "updater:default",
+    "process:allow-restart"
   ]
 }

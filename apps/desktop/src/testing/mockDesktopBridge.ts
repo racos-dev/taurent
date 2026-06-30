@@ -7,7 +7,12 @@
 //
 // Delta injection via window.__TAURENT_AUTOMATION__.injectDelta().
 
-import type { DesktopBridge, ResolveResult } from '@taurent/bridge/contracts/interfaces';
+import type {
+  AppUpdateInfo,
+  AppUpdateProgress,
+  DesktopBridge,
+  ResolveResult,
+} from '@taurent/bridge/contracts/interfaces';
 import type {
   AddServerInput,
   AddTorrentOptions,
@@ -44,6 +49,7 @@ const APP_SCENARIOS = [
   'saved-server-credential-unavailable',
 ] as const;
 type AppScenario = (typeof APP_SCENARIOS)[number];
+type UpdateScenario = 'none' | 'available' | 'error';
 
 interface RecordedCall {
   name: string;
@@ -53,6 +59,35 @@ interface RecordedCall {
 interface MutationFailureConfig {
   operation: string;
   error: string;
+}
+
+const DEFAULT_UPDATE: AppUpdateInfo = {
+  currentVersion: '1.0.0',
+  version: '1.1.0',
+  date: '2026-07-01T00:00:00.000Z',
+  body: 'Mock update release notes.',
+};
+
+function isUpdateScenario(value: string): value is UpdateScenario {
+  return value === 'none' || value === 'available' || value === 'error';
+}
+
+function getUpdateScenario(): UpdateScenario {
+  if (typeof window === 'undefined') return 'none';
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlScenario = urlParams.get('mockUpdate');
+    if (urlScenario && isUpdateScenario(urlScenario)) {
+      return urlScenario;
+    }
+    const stored = window.localStorage.getItem('taurent:mock-update');
+    if (stored && isUpdateScenario(stored)) {
+      return stored;
+    }
+  } catch {
+    // ignore
+  }
+  return 'none';
 }
 
 const DEFAULT_SERVER: SavedServerSummary = {
@@ -295,6 +330,8 @@ let _serverTestResult: TestConnectionResult = { success: true };
 let _healthCheckResult = true;
 let _recordedCalls: RecordedCall[] = [];
 let _nextMutationFailure: MutationFailureConfig | null = null;
+let _availableUpdate: AppUpdateInfo | null = getUpdateScenario() === 'available' ? { ...DEFAULT_UPDATE } : null;
+let _updateError: string | null = getUpdateScenario() === 'error' ? 'Mock update check failed.' : null;
 
 // Maindata sync listeners for qBClient.addMaindataSyncListener
 const _maindataSyncListeners = new Set<(event: MaindataSyncChangedEvent) => void>();
@@ -407,6 +444,8 @@ interface AutomationControl {
   syncCallCount: () => number;
   getRecordedCalls: () => RecordedCall[];
   clearRecordedCalls: () => void;
+  setUpdateAvailable: (update?: Partial<AppUpdateInfo> | null) => void;
+  setUpdateError: (message: string | null) => void;
   setNextMutationFailure: (operation: string, error: string) => void;
   getPendingMutationFailure: () => { operation: string; error: string } | null;
   clearMutationFaults: () => void;
@@ -540,6 +579,13 @@ const _ctrl: AutomationControl = {
   clearRecordedCalls: () => {
     _recordedCalls = [];
   },
+  setUpdateAvailable: (update: Partial<AppUpdateInfo> | null = DEFAULT_UPDATE) => {
+    _availableUpdate = update ? { ...DEFAULT_UPDATE, ...update } : null;
+    _updateError = null;
+  },
+  setUpdateError: (message: string | null) => {
+    _updateError = message;
+  },
   setNextMutationFailure: (operation: string, error: string) => {
     _nextMutationFailure = { operation, error };
   },
@@ -615,6 +661,8 @@ const _ctrl: AutomationControl = {
     _pendingDelta = null;
     _recordedCalls = [];
     _nextMutationFailure = null;
+    _availableUpdate = null;
+    _updateError = null;
     _syncDelayMs = 0;
     _syncErrorRemaining = 0;
     _syncMalformedRemaining = 0;
@@ -1613,6 +1661,30 @@ function createMockBridge(): DesktopBridge {
     },
     async revealLocalItem(_path: string): Promise<void> {
       return;
+    },
+    async checkForUpdate(): Promise<AppUpdateInfo | null> {
+      recordCall('checkForUpdate', []);
+      if (_updateError) {
+        throw new Error(_updateError);
+      }
+      return _availableUpdate ? { ..._availableUpdate } : null;
+    },
+    async downloadAndInstallUpdate(onProgress?: (event: AppUpdateProgress) => void): Promise<void> {
+      recordCall('downloadAndInstallUpdate', []);
+      if (_updateError) {
+        throw new Error(_updateError);
+      }
+      if (!_availableUpdate) {
+        throw new Error('No update is available.');
+      }
+
+      onProgress?.({ event: 'Started', contentLength: 100 });
+      onProgress?.({ event: 'Progress', chunkLength: 40, downloaded: 40, contentLength: 100 });
+      onProgress?.({ event: 'Progress', chunkLength: 60, downloaded: 100, contentLength: 100 });
+      onProgress?.({ event: 'Finished', downloaded: 100, contentLength: 100 });
+    },
+    async relaunchApp(): Promise<void> {
+      recordCall('relaunchApp', []);
     },
 
     syncMenuState(state: import('@taurent/bridge/contracts/interfaces').NativeMenuState) {
