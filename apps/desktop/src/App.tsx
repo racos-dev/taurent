@@ -11,6 +11,7 @@ import { FiltersScreen } from './screens/FiltersScreen';
 import { DialogHostScreen } from './screens/DialogHostScreen';
 import { useKeyboardShortcuts } from './hooks/shell/useKeyboardShortcuts';
 import { useTorrentFileOpen } from './hooks/shell/useTorrentFileOpen';
+import { useMagnetLinkOpen } from './hooks/shell/useMagnetLinkOpen';
 import { useDisableWebviewContextMenu } from './hooks/shell/useDisableWebviewContextMenu';
 import { ThemeProvider } from './theme/ThemeProvider';
 import { AuthBoundary } from './auth/AuthBoundary';
@@ -50,6 +51,7 @@ function ProtectedLayout() {
   const focusSearch = useFocusSearch();
   useKeyboardShortcuts({ onFocusSearch: focusSearch });
   useTorrentFileOpen();
+  useMagnetLinkOpen();
   return (
     <AppShell>
       <Outlet />

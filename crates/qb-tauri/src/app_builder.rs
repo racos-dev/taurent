@@ -10,12 +10,13 @@ pub const DESKTOP_SERVER_STORE_FILE: &str = ".servers.dat";
 /// Server store filename for the mobile target.
 pub const MOBILE_SERVER_STORE_FILE: &str = ".mobile-settings.dat";
 
-/// Add plugins shared by all platforms (store, http, notification).
+/// Add plugins shared by all platforms (store, http, notification, deep-link).
 pub fn add_shared_plugins<R: tauri::Runtime>(builder: Builder<R>) -> Builder<R> {
     builder
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_deep_link::init())
 }
 
 /// Windows that are fixed-size and must not have their geometry restored.
@@ -67,13 +68,12 @@ pub fn add_desktop_plugins<R: tauri::Runtime>(builder: Builder<R>) -> Builder<R>
     builder
 }
 
-/// Add mobile-only plugins (fs, dialog, deep-link, shell, secure-storage).
+/// Add mobile-only plugins (fs, dialog, shell, secure-storage).
 #[cfg(feature = "mobile")]
 pub fn add_mobile_plugins<R: tauri::Runtime>(builder: Builder<R>) -> Builder<R> {
     builder
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_secure_storage::init())
 }

@@ -8,6 +8,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use tauri::webview::PageLoadEvent;
 use tauri::{AppHandle, Emitter, Listener, Manager};
+use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_store::StoreExt;
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 
@@ -604,6 +605,38 @@ impl TorrentsFileOpen {
     }
 }
 
+// ─── Magnet link open handler ─────────────────────────────────────────────────
+
+struct MagnetLinkOpen;
+
+impl MagnetLinkOpen {
+    /// Enqueue magnet URLs, focus main window, and emit `magnet-link-open` event
+    /// with the genuinely new URLs that were not previously seen this session.
+    fn handle_urls(app: &tauri::AppHandle, raw_urls: Vec<String>, emit: bool) {
+        let magnet_urls: Vec<String> = raw_urls
+            .into_iter()
+            .filter(|url| url.starts_with("magnet:?"))
+            .collect();
+
+        if magnet_urls.is_empty() {
+            return;
+        }
+
+        let pending = app.state::<PendingMagnetLinks>();
+        let new_urls = pending.enqueue(magnet_urls);
+
+        if new_urls.is_empty() {
+            return;
+        }
+
+        show_main_window(app);
+
+        if emit {
+            let _ = app.emit("magnet-link-open", new_urls);
+        }
+    }
+}
+
 mod commands;
 
 use commands::{categories, menu, preferences, servers, tags, torrents, transfer};
@@ -611,6 +644,7 @@ use download_completion_notifications::{
     get_download_completion_notifications_enabled, set_download_completion_notifications_enabled,
 };
 use qb_tauri::app_builder::{add_desktop_plugins, add_shared_plugins, DESKTOP_SERVER_STORE_FILE};
+use qb_tauri::magnet_links::PendingMagnetLinks;
 use qb_tauri::server_repo::init_and_manage_repository;
 use qb_tauri::session::create_session_state;
 use qb_tauri::sync::{create_sync_manager_registry, setup_sync_lifecycle};
@@ -627,6 +661,7 @@ pub fn run() {
     builder
         .manage(create_session_state())
         .manage(PendingTorrentFiles::new())
+        .manage(PendingMagnetLinks::new())
         .manage(PendingNativeUiActions::new())
         .manage(PendingViewActions::new())
         .manage(ViewListenersReady::new())
@@ -759,6 +794,7 @@ pub fn run() {
             menu::sync_menu_state,
             menu::exit_app,
             get_pending_torrent_files,
+            qb_tauri::magnet_links::get_pending_magnet_links,
             get_pending_native_ui_actions,
             get_pending_view_actions,
             set_view_listeners_ready,
@@ -884,6 +920,25 @@ pub fn run() {
             );
             app.handle().plugin(tauri_plugin_shell::init())?;
 
+            // Register deep-link handler for magnet URLs arriving while the app is running.
+            {
+                let handle = app.handle().clone();
+                let _ = app.deep_link().on_open_url(move |event| {
+                    let urls: Vec<String> = event.urls().iter().map(|u| u.to_string()).collect();
+                    MagnetLinkOpen::handle_urls(&handle, urls, true);
+                });
+            }
+
+            // Check if the app was started via a deep link (cold-start).
+            {
+                let handle = app.handle();
+                if let Ok(Some(urls)) = app.deep_link().get_current() {
+                    let url_strings: Vec<String> = urls.iter().map(|u| u.to_string()).collect();
+                    let pending = handle.state::<PendingMagnetLinks>();
+                    pending.enqueue(url_strings);
+                }
+            }
+
             // Register single-instance plugin to handle .torrent file opens from a second instance.
             // Queue + emit because renderer may not be listening yet (cold-start case).
             app.handle()
@@ -891,10 +946,11 @@ pub fn run() {
                     let cwd = Path::new(&cwd);
                     TorrentsFileOpen::handle_raw_paths(
                         app,
-                        args,
+                        args.clone(),
                         Some(cwd),
                         true, // emit
                     );
+                    MagnetLinkOpen::handle_urls(app, args, true);
                 }))?;
 
             // Handle RunEvent::Opened on macOS when the app is already running and receives

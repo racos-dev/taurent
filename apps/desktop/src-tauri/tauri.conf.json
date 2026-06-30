@@ -58,6 +58,11 @@
     "window": {
       "all": true
     },
-    "opener": {}
+    "opener": {},
+    "deep-link": {
+      "desktop": {
+        "schemes": ["magnet"]
+      }
+    }
   }
 }

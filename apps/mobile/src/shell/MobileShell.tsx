@@ -12,6 +12,7 @@ import type { CSSProperties } from 'react';
 import { WorkspaceFrame } from '@taurent/web-ui';
 import { Icon } from '../ui/Icon';
 import { MobileConnectionBanner } from './MobileConnectionBanner';
+import { useMagnetLinkOpen } from '../hooks/useMagnetLinkOpen';
 
 const MOBILE_TAB_BAR_SAFE_HEIGHT = 'calc(4rem + var(--sab, 0px))';
 
@@ -63,6 +64,7 @@ function MobileTabBar() {
 }
 
 export function MobileShell() {
+  useMagnetLinkOpen();
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-background" style={mobileShellStyle}>
       <MobileConnectionBanner />
