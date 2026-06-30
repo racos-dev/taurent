@@ -1,8 +1,21 @@
 // Desktop bridge adapter
 import { createTauriTransport } from '../transport/tauriTransport';
 import type { Transport } from '../transport/transport';
-import type { DesktopBridge, NativeMenuState, NativeUiAction, ResolveResult } from '../contracts/interfaces';
-export type { NativeMenuState, NativeUiAction, ResolveResult } from '../contracts/interfaces';
+import type {
+  AppUpdateInfo,
+  AppUpdateProgress,
+  DesktopBridge,
+  NativeMenuState,
+  NativeUiAction,
+  ResolveResult,
+} from '../contracts/interfaces';
+export type {
+  AppUpdateInfo,
+  AppUpdateProgress,
+  NativeMenuState,
+  NativeUiAction,
+  ResolveResult,
+} from '../contracts/interfaces';
 import type {
   SessionSnapshot,
   SessionStatus,
@@ -525,6 +538,21 @@ export function createDesktopBridge(transport?: Transport): DesktopBridge {
 
     async sessionHealthCheck(): Promise<boolean> {
       return session.sessionHealthCheck();
+    },
+
+    async checkForUpdate(): Promise<AppUpdateInfo | null> {
+      const updater = await import('../desktop/updater');
+      return updater.checkForUpdate();
+    },
+
+    async downloadAndInstallUpdate(onProgress?: (event: AppUpdateProgress) => void): Promise<void> {
+      const updater = await import('../desktop/updater');
+      return updater.downloadAndInstallUpdate(onProgress);
+    },
+
+    async relaunchApp(): Promise<void> {
+      const updater = await import('../desktop/updater');
+      return updater.relaunchApp();
     },
 
     async sessionSwitchServer(

@@ -24,6 +24,7 @@
     "./adapters": "./src/adapters/index.ts",
     "./adapters/desktop": "./src/adapters/desktop.ts",
     "./desktop/notification": "./src/desktop/notification.ts",
+    "./desktop/updater": "./src/desktop/updater.ts",
     "./adapters/mobile-tauri": "./src/adapters/mobile-tauri.ts",
     "./platform": "./src/platform.ts",
     "./web": "./src/web.ts",
@@ -39,7 +40,9 @@
     "@tauri-apps/api": "^2.11.1",
     "@tauri-apps/plugin-log": "^2.8.0",
     "@tauri-apps/plugin-notification": "^2.3.3",
-    "@tauri-apps/plugin-shell": "^2.3.5"
+    "@tauri-apps/plugin-process": "^2.3.1",
+    "@tauri-apps/plugin-shell": "^2.3.5",
+    "@tauri-apps/plugin-updater": "^2.10.1"
   },
   "devDependencies": {
     "@types/node": "^24.13.2",

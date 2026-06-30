@@ -39,6 +39,8 @@ qb-tauri = { path = "../../../crates/qb-tauri", features = ["desktop"] }
 urlencoding = "2"
 tokio = { version = "1", features = ["rt-multi-thread", "sync", "time"] }
 tauri-plugin-webdriver = { version = "0.2.1", optional = true }
+tauri-plugin-updater = "2.10.1"
+tauri-plugin-process = "2.3.1"
 
 [features]
 webdriver = ["tauri-plugin-webdriver"]

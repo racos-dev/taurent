@@ -1,4 +1,4 @@
-import { copyFileSync, mkdirSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, relative, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -6,9 +6,15 @@ const RELEASE_TAG_PATTERN = /^v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.
 
 const REQUIRED_SUFFIXES = new Set([
   'macos-arm64.dmg',
+  'macos-arm64.app.tar.gz',
+  'macos-arm64.app.tar.gz.sig',
   'macos-x64.dmg',
+  'macos-x64.app.tar.gz',
+  'macos-x64.app.tar.gz.sig',
   'windows-x64-setup.exe',
+  'windows-x64-setup.exe.sig',
   'linux-x64.AppImage',
+  'linux-x64.AppImage.sig',
   'linux-x64.deb',
   'linux-x64.rpm',
   'android-universal-unsigned.apk',
@@ -40,21 +46,57 @@ function classifyAsset(sourceDir, file, releaseTag) {
   const fileName = basename(file);
   const lowerName = fileName.toLowerCase();
 
-  if (artifact === 'taurent-macos-apple-silicon' && lowerName.endsWith('.dmg')) {
-    return `Taurent-${releaseTag}-macos-arm64.dmg`;
+  if (artifact === 'taurent-macos-apple-silicon') {
+    if (lowerName.endsWith('.dmg')) {
+      return `Taurent-${releaseTag}-macos-arm64.dmg`;
+    }
+
+    if (lowerName.endsWith('.app.tar.gz.sig')) {
+      return `Taurent-${releaseTag}-macos-arm64.app.tar.gz.sig`;
+    }
+
+    if (lowerName.endsWith('.app.tar.gz')) {
+      return `Taurent-${releaseTag}-macos-arm64.app.tar.gz`;
+    }
   }
 
-  if (artifact === 'taurent-macos-intel' && lowerName.endsWith('.dmg')) {
-    return `Taurent-${releaseTag}-macos-x64.dmg`;
+  if (artifact === 'taurent-macos-intel') {
+    if (lowerName.endsWith('.dmg')) {
+      return `Taurent-${releaseTag}-macos-x64.dmg`;
+    }
+
+    if (lowerName.endsWith('.app.tar.gz.sig')) {
+      return `Taurent-${releaseTag}-macos-x64.app.tar.gz.sig`;
+    }
+
+    if (lowerName.endsWith('.app.tar.gz')) {
+      return `Taurent-${releaseTag}-macos-x64.app.tar.gz`;
+    }
   }
 
   if (artifact === 'taurent-windows' && lowerName.endsWith('.exe') && lowerName.includes('setup')) {
     return `Taurent-${releaseTag}-windows-x64-setup.exe`;
   }
 
+  if (artifact === 'taurent-windows' && lowerName.endsWith('.exe.sig') && lowerName.includes('setup')) {
+    return `Taurent-${releaseTag}-windows-x64-setup.exe.sig`;
+  }
+
   if (artifact === 'taurent-linux') {
     if (fileName.endsWith('.AppImage')) {
       return `Taurent-${releaseTag}-linux-x64.AppImage`;
+    }
+
+    if (fileName.endsWith('.AppImage.sig')) {
+      return `Taurent-${releaseTag}-linux-x64.AppImage.sig`;
+    }
+
+    if (fileName.endsWith('.AppImage.tar.gz.sig')) {
+      return `Taurent-${releaseTag}-linux-x64.AppImage.tar.gz.sig`;
+    }
+
+    if (fileName.endsWith('.AppImage.tar.gz')) {
+      return `Taurent-${releaseTag}-linux-x64.AppImage.tar.gz`;
     }
 
     if (lowerName.endsWith('.deb')) {
@@ -71,6 +113,42 @@ function classifyAsset(sourceDir, file, releaseTag) {
   }
 
   return '';
+}
+
+function updaterPlatform({ targetName, signatureName }) {
+  return {
+    signature: readFileSync(signatureName, 'utf8').trim(),
+    url: `https://github.com/racos-dev/taurent/releases/download/${targetName.releaseTag}/${targetName.asset}`,
+  };
+}
+
+function buildUpdaterManifest(selected, releaseTag) {
+  const signaturePath = (suffix) => selected.get(`Taurent-${releaseTag}-${suffix}.sig`);
+  const target = (asset) => ({ releaseTag, asset: `Taurent-${releaseTag}-${asset}` });
+
+  return {
+    version: releaseTag.slice(1),
+    pub_date: new Date().toISOString(),
+    platforms: {
+      'darwin-aarch64': updaterPlatform({
+        targetName: target('macos-arm64.app.tar.gz'),
+        signatureName: signaturePath('macos-arm64.app.tar.gz'),
+      }),
+      'darwin-x86_64': updaterPlatform({
+        targetName: target('macos-x64.app.tar.gz'),
+        signatureName: signaturePath('macos-x64.app.tar.gz'),
+      }),
+      'linux-x86_64': updaterPlatform({
+        targetName: target('linux-x64.AppImage'),
+        signatureName: signaturePath('linux-x64.AppImage'),
+      }),
+      'windows-x86_64': updaterPlatform({
+        targetName: target('windows-x64-setup.exe'),
+        signatureName: signaturePath('windows-x64-setup.exe'),
+      }),
+    },
+    notes: `Taurent ${releaseTag.slice(1)} release.`,
+  };
 }
 
 export function prepareReleaseAssets({
@@ -128,6 +206,11 @@ export function prepareReleaseAssets({
     copyFileSync(source, target);
     copied.push(targetName);
   }
+
+  const latestJson = buildUpdaterManifest(selected, releaseTag);
+  writeFileSync(join(outputDir, 'latest.json'), `${JSON.stringify(latestJson, null, 2)}\n`);
+  copied.push('latest.json');
+  copied.sort((a, b) => a.localeCompare(b));
 
   return { copied, skipped };
 }

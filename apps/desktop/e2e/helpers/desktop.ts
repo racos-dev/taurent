@@ -21,6 +21,13 @@ interface DesktopAutomation {
   reset(): void;
   clearRecordedCalls(): void;
   getRecordedCalls(): RecordedCall[];
+  setUpdateAvailable(update?: Partial<{
+    currentVersion: string;
+    version: string;
+    date: string | null;
+    body: string | null;
+  }> | null): void;
+  setUpdateError(message: string | null): void;
   setNextMutationFailure(operation: string, error: string): void;
   getPendingMutationFailure(): { operation: string; error: string } | null;
   syncCallCount(): number;

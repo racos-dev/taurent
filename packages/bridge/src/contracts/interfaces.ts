@@ -5,6 +5,18 @@ export type ResolveResult =
   | { kind: 'resolved'; localPath: string }
   | { kind: 'unmapped'; serverPath: string };
 
+export interface AppUpdateInfo {
+  currentVersion: string;
+  version: string;
+  date: string | null;
+  body: string | null;
+}
+
+export type AppUpdateProgress =
+  | { event: 'Started'; contentLength: number | null }
+  | { event: 'Progress'; chunkLength: number; downloaded: number; contentLength: number | null }
+  | { event: 'Finished'; downloaded: number; contentLength: number | null };
+
 import { BridgeCapabilities } from './capabilities';
 
 import type {
@@ -366,6 +378,12 @@ export interface DesktopBridge extends SessionLifecycleBridge {
   openLocalPath(path: string): Promise<void>;
   /** Reveal a local item in the native file explorer (Rust). Falls back to opening the containing directory on Linux. */
   revealLocalItem(path: string): Promise<void>;
+  /** Check the configured updater endpoint for a stable desktop app update. */
+  checkForUpdate(): Promise<AppUpdateInfo | null>;
+  /** Download and install the previously checked update, reporting download progress when available. */
+  downloadAndInstallUpdate(onProgress?: (event: AppUpdateProgress) => void): Promise<void>;
+  /** Relaunch the app after an installed update is ready. */
+  relaunchApp(): Promise<void>;
 }
 
 /// Dynamic menu state synced from the frontend to the native macOS app menu.
