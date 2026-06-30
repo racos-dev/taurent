@@ -146,7 +146,6 @@ Important details:
 - Taurent needs broad HTTP access because users connect to self-hosted qBittorrent instances on arbitrary hosts and ports.
 - Desktop file-opening permissions exist so torrent content paths can be opened or revealed from the UI.
 
-Report vulnerabilities privately. See [SECURITY.md](SECURITY.md).
 
 ## Contributing
 
