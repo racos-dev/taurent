@@ -42,7 +42,7 @@
     "ci:local:full": "pnpm ci:local && pnpm ci:rust && pnpm --filter taurent build && pnpm --filter taurent-mobile build && pnpm mobile:test && pnpm desktop:renderer:e2e",
     "ci:pre-commit": "node scripts/ci/check-versions.mjs && node apps/desktop/scripts/icons/sync-tray-rgba.mjs && cargo fmt --all --check && pnpm lint",
     "ci:pre-push": "pnpm ci:local",
-    "test:scripts": "node --test scripts/version-app.test.mjs scripts/ci/check-versions.test.mjs scripts/release/prepare-release-assets.test.mjs",
+    "test:scripts": "node --test scripts/version-app.test.mjs scripts/ci/check-versions.test.mjs scripts/ci/write-pr-ci-summary.test.mjs scripts/release/prepare-release-assets.test.mjs",
     "version:app": "node scripts/version-app.mjs",
     "postinstall": "simple-git-hooks"
   },

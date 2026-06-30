@@ -39,19 +39,39 @@ jobs:
         run: pnpm --filter taurent exec playwright install --with-deps chromium
 
       - name: Check app versions
+        id: check-versions
         run: node scripts/ci/check-versions.mjs
 
       - name: Lint
+        id: lint
         run: pnpm lint
 
       - name: Typecheck
+        id: typecheck
         run: pnpm typecheck
 
       - name: Unit tests
+        id: unit-tests
         run: pnpm test:unit
 
       - name: Renderer e2e
+        id: renderer-e2e
         run: pnpm desktop:renderer:e2e
+
+      - name: Write summary
+        if: always()
+        env:
+          CI_JOB_KIND: js-quality
+          CI_JOB_RESULT: ${{ job.status }}
+          CI_STEP_OUTCOMES: >-
+            {
+              "check-versions": "${{ steps.check-versions.outcome }}",
+              "lint": "${{ steps.lint.outcome }}",
+              "typecheck": "${{ steps.typecheck.outcome }}",
+              "unit-tests": "${{ steps.unit-tests.outcome }}",
+              "renderer-e2e": "${{ steps.renderer-e2e.outcome }}"
+            }
+        run: node scripts/ci/write-pr-ci-summary.mjs
 
   rust-quality:
     name: Rust Quality
@@ -76,13 +96,39 @@ jobs:
           sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf build-essential curl wget file
 
       - name: Rustfmt check
+        id: rustfmt-check
         run: cargo fmt --all --check
 
-      - name: Cargo check
-        run: cargo check --workspace --locked -p qb-core && cargo check --workspace --locked --features desktop -p qb-tauri
+      - name: Cargo check (core)
+        id: cargo-check-core
+        run: cargo check --workspace --locked -p qb-core
 
-      - name: Clippy
-        run: cargo clippy --workspace --all-targets --locked -p qb-core && cargo clippy --workspace --all-targets --locked --features desktop -p qb-tauri
+      - name: Cargo check (tauri)
+        id: cargo-check-tauri
+        run: cargo check --workspace --locked --features desktop -p qb-tauri
+
+      - name: Clippy (core)
+        id: clippy-core
+        run: cargo clippy --workspace --all-targets --locked -p qb-core
+
+      - name: Clippy (tauri)
+        id: clippy-tauri
+        run: cargo clippy --workspace --all-targets --locked --features desktop -p qb-tauri
+
+      - name: Write summary
+        if: always()
+        env:
+          CI_JOB_KIND: rust-quality
+          CI_JOB_RESULT: ${{ job.status }}
+          CI_STEP_OUTCOMES: >-
+            {
+              "rustfmt-check": "${{ steps.rustfmt-check.outcome }}",
+              "cargo-check-core": "${{ steps.cargo-check-core.outcome }}",
+              "cargo-check-tauri": "${{ steps.cargo-check-tauri.outcome }}",
+              "clippy-core": "${{ steps.clippy-core.outcome }}",
+              "clippy-tauri": "${{ steps.clippy-tauri.outcome }}"
+            }
+        run: node scripts/ci/write-pr-ci-summary.mjs
 
   native-smoke:
     name: Desktop Tauri Smoke (Linux)
@@ -121,9 +167,11 @@ jobs:
           sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf build-essential curl wget file libxdo-dev libssl-dev webkit2gtk-driver xvfb dbus-x11 at-spi2-core
 
       - name: Build desktop Tauri app for smoke
+        id: build-smoke
         run: pnpm --filter taurent tauri build --no-bundle --features webdriver
 
       - name: Run native Tauri smoke
+        id: run-smoke
         env:
           GDK_BACKEND: x11
           NO_AT_BRIDGE: '1'
@@ -131,6 +179,14 @@ jobs:
           LIBGL_ALWAYS_SOFTWARE: '1'
         run: |
           xvfb-run -a --server-args="-screen 0 1280x1024x24 -ac +extension GLX +render -noreset" dbus-run-session -- pnpm --filter taurent exec tsx scripts/e2e/runner.ts --skip-build
+
+      - name: Write summary
+        if: always()
+        env:
+          CI_JOB_KIND: native-smoke
+          CI_JOB_RESULT: ${{ job.status }}
+          CI_PERF_ARTIFACT_PATH: artifacts/desktop/perf/native-smoke.json
+        run: node scripts/ci/write-pr-ci-summary.mjs
 
       - name: Upload native Tauri diagnostics
         if: failure()
@@ -147,3 +203,22 @@ jobs:
           name: desktop-tauri-perf
           path: artifacts/desktop/perf/native-smoke.json
           if-no-files-found: warn
+
+  pr-ci-summary:
+    name: PR CI Summary
+    needs: [js-quality, rust-quality, native-smoke]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Write aggregate summary
+        env:
+          CI_JOB_KIND: aggregate
+          CI_JS_RESULT: ${{ needs.js-quality.result }}
+          CI_RUST_RESULT: ${{ needs.rust-quality.result }}
+          CI_SMOKE_RESULT: ${{ needs.native-smoke.result }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node scripts/ci/write-pr-ci-summary.mjs
