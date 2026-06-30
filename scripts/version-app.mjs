@@ -22,7 +22,7 @@ const cargoFiles = [
   'apps/mobile/src-tauri/Cargo.toml',
 ];
 
-const cargoLockPackages = ['taurent', 'taurent-mobile'];
+const cargoLockPackages = new Set(['taurent', 'taurent-mobile']);
 
 function replaceVersion(file, pattern, replacement) {
   const contents = readFileSync(file, 'utf8');
@@ -35,12 +35,37 @@ function replaceVersion(file, pattern, replacement) {
   writeFileSync(file, next);
 }
 
-function replaceCargoLockPackageVersion(packageName) {
+function replaceCargoLockPackageVersions() {
   const file = 'Cargo.lock';
   const contents = readFileSync(file, 'utf8');
-  const pattern = new RegExp(`(\\[\\[package\\]\\]\\nname = "${packageName}"\\nversion = ")[^"\\n]+(")`);
+  const seenPackages = new Set();
 
-  replaceVersion(file, pattern, `$1${version}$2`);
+  const next = contents
+    .split(/(?=^\[\[package\]\]$)/m)
+    .map((block) => {
+      const packageName = block.match(/^name\s*=\s*"([^"\n]+)"$/m)?.[1] ?? '';
+      if (!cargoLockPackages.has(packageName)) {
+        return block;
+      }
+
+      const versionPattern = /^version\s*=\s*"[^"\n]+"/m;
+      if (!versionPattern.test(block)) {
+        console.error(`Could not find Cargo.lock version for package ${packageName}`);
+        process.exit(1);
+      }
+
+      seenPackages.add(packageName);
+      return block.replace(versionPattern, `version = "${version}"`);
+    })
+    .join('');
+
+  writeFileSync(file, next);
+
+  for (const packageName of cargoLockPackages) {
+    if (!seenPackages.has(packageName)) {
+      console.warn(`Cargo.lock does not contain package ${packageName}; skipped lockfile version update.`);
+    }
+  }
 }
 
 for (const file of jsonFiles) {
@@ -51,8 +76,6 @@ for (const file of cargoFiles) {
   replaceVersion(file, /^version\s*=\s*["'][^"'\n]+["']/m, `version = "${version}"`);
 }
 
-for (const packageName of cargoLockPackages) {
-  replaceCargoLockPackageVersion(packageName);
-}
+replaceCargoLockPackageVersions();
 
 console.log(`Updated Taurent app version to ${version}`);
