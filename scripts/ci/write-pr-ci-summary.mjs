@@ -19,6 +19,7 @@ export function statusEmoji(status) {
 
 export function escapeMarkdown(str) {
   return String(str)
+    .replace(/\\/g, '\\\\')
     .replace(/\|/g, '\\|')
     .replace(/\*/g, '\\*')
     .replace(/`/g, '\\`')
