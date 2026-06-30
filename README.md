@@ -21,7 +21,7 @@ It is designed for people who already run qBittorrent with the Web UI enabled an
 
 ## Project Status
 
-Recommended first public version: `0.9.0-beta.1`.
+Recommended version is latest from: https://github.com/racos-dev/taurent/releases
 
 Taurent is currently best described as a public beta:
 
