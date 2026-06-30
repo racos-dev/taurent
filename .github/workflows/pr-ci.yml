@@ -118,13 +118,19 @@ jobs:
       - name: Install Linux deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf build-essential curl wget file libxdo-dev libssl-dev webkit2gtk-driver xvfb
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf build-essential curl wget file libxdo-dev libssl-dev webkit2gtk-driver xvfb dbus-x11 at-spi2-core
 
       - name: Build desktop Tauri app for smoke
         run: pnpm --filter taurent tauri build --no-bundle --features webdriver
 
       - name: Run native Tauri smoke
-        run: xvfb-run -a pnpm --filter taurent exec tsx scripts/e2e/runner.ts --skip-build
+        env:
+          GDK_BACKEND: x11
+          NO_AT_BRIDGE: '1'
+          WEBKIT_DISABLE_COMPOSITING_MODE: '1'
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: |
+          dbus-run-session -- xvfb-run -a --server-args="-screen 0 1280x1024x24 -ac +extension GLX +render -noreset" pnpm --filter taurent exec tsx scripts/e2e/runner.ts --skip-build
 
       - name: Upload native Tauri diagnostics
         if: failure()
