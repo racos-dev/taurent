@@ -1,62 +1,137 @@
 # Taurent
 
-Taurent is a beta qBittorrent remote client built with Tauri, React, and Rust.
+**A native, open-source remote client for qBittorrent.**
 
-It is designed for people who already run qBittorrent with the Web UI enabled and want a native-feeling desktop or mobile client for managing transfers, search, RSS, server profiles, and common qBittorrent settings.
+Taurent is a desktop and mobile qBittorrent remote client built with Tauri, React, and Rust. It connects to an existing qBittorrent Web UI server and gives you a native-feeling app for managing transfers, search, RSS, server profiles, and common qBittorrent settings.
 
-<img width="1080" height="515" alt="image" src="https://github.com/user-attachments/assets/7a4aca06-f750-4ccd-8d89-8123de7e2631" />
-> Beta status: Taurent is usable enough for early testers, but it is not a stable 1.0 release. Expect rough edges, unsigned builds, incomplete mobile distribution, and occasional behavior changes between beta releases.
+> **Beta:** Taurent is ready for early testers, but it is not a stable 1.0 release yet. Expect rough edges, unsigned builds, and behavior changes between beta releases.
+
+<p align="center">
+  <img
+    src="https://github.com/user-attachments/assets/b3f4c17a-e746-4e1e-b83d-0bd2c7a247de"
+    alt="Taurent desktop overview"
+    width="900"
+  />
+</p>
+
+<p align="center">
+  <img
+    src="https://github.com/user-attachments/assets/10a4027f-c064-406d-90b4-23f07a37e419"
+    alt="Taurent mobile torrent list"
+    width="260"
+  />
+  <img
+    src="https://github.com/user-attachments/assets/8349c43b-84a0-4e02-ac17-115095f14921"
+    alt="Taurent mobile torrent details"
+    width="260"
+  />
+  <img
+    src="https://github.com/user-attachments/assets/155b1a64-a986-44b4-8165-44145a4935b0"
+    alt="Taurent mobile settings"
+    width="260"
+  />
+</p>
+
+
+## Why Taurent?
+
+qBittorrent’s Web UI is powerful, but it still lives in a browser tab. Taurent is for people who already run qBittorrent on a server, NAS, seedbox, or home machine and want a dedicated app for day-to-day torrent management across desktop and mobile.
+
+Taurent is:
+
+* **Remote-first** — connect to qBittorrent through its Web UI API.
+* **Native-feeling** — desktop integrations, tray support, file associations, notifications, and utility windows.
+* **Mobile-friendly** — a touch-focused interface for managing qBittorrent from your phone.
+* **Multi-server friendly** — save and switch between multiple qBittorrent profiles.
+* **Privacy-conscious** — no intentional telemetry; your configured servers and credentials stay local.
+* **FOSS** — open source, MIT licensed, and built in public.
+
+Taurent is **not** a standalone BitTorrent client. You still need qBittorrent running somewhere with the Web UI enabled.
+
+## Download
+
+Get the latest beta from the [GitHub Releases](../../releases) page.
+
+Current beta notes:
+
+* Linux, macOS, and Windows builds are produced by GitHub Actions.
+* Some packaged builds may be unsigned.
+* macOS and Windows may show unsigned-app warnings.
+* Android APKs are available as beta artifacts for testing.
+* iOS support exists in the Tauri mobile workspace, but is not currently distributed through the App Store.
 
 ## Features
 
-- Connect to a remote qBittorrent Web UI server.
-- Manage torrents: add, pause, resume, delete, rename, recheck, reannounce, move, and adjust limits.
-- Browse live transfer state with status, category, tag, and tracker filters.
-- Inspect torrent details, trackers, peers, files, and general properties.
-- Manage categories, tags, transfer limits, queueing, privacy, and other qBittorrent preferences.
-- Use qBittorrent search and RSS features when the connected server supports them.
-- Save multiple server profiles with credentials stored through platform secure storage when available.
-- Desktop native integrations: tray menu, torrent file association, multiple utility windows, notifications, and local path mapping.
-- Mobile renderer with touch-focused screens for Android/iOS-oriented Tauri mobile builds.
+### Torrent management
 
-## Project Status
+* Add torrents and magnet links.
+* Pause, resume, delete, rename, recheck, and reannounce torrents.
+* Move torrents and adjust per-torrent limits.
+* Inspect torrent details, files, trackers, peers, and properties.
 
-Recommended version is latest from: https://github.com/racos-dev/taurent/releases
+### Organization
 
-Taurent is currently best described as a public beta:
+* Filter by status, category, tag, and tracker.
+* Manage categories and tags.
+* Configure common qBittorrent preferences.
+* Adjust transfer limits, queueing, privacy, and related settings.
 
-- Desktop is the primary target.
-- Linux, macOS, and Windows builds are produced by GitHub Actions.
-- Android APKs are built as unsigned beta artifacts.
-- iOS is present in the Tauri mobile workspace but is not a public distribution target yet.
-- Packaged builds may be unsigned unless release notes say otherwise.
+### Themes
+
+* Switch between multiple built-in themes.
+* Included themes: Solarized, Catppuccin, Gruvbox, Midnight, Nord, Dracula, Tokyo Night, Monokai, and One Dark.
+* Pick a look that fits your desktop, terminal, or mobile setup.
+
+### Search and RSS
+
+* Use qBittorrent search when the connected server supports it.
+* Manage RSS features when available on the connected server.
+
+### Server profiles
+
+* Save multiple qBittorrent Web UI connections.
+* Store credentials with platform secure storage when available.
+* Fall back safely when secure storage is unavailable.
+
+### Desktop integrations
+
+* Tray menu.
+* `.torrent` file association.
+* Native notifications.
+* Multiple utility windows.
+* Local path mapping.
+* Open or reveal torrent content paths from the UI.
+
+### Mobile app
+
+Taurent includes a polished, touch-focused mobile interface designed for managing qBittorrent from a phone or tablet. The mobile app shares the same core qBittorrent integration as the desktop app while adapting the experience for smaller screens and touch navigation.
+
+Android builds are available for beta testing. iOS support exists in the codebase, but public iOS distribution is not available yet.
 
 ## Requirements
 
 To use Taurent, you need:
 
-- qBittorrent with Web UI enabled.
-- Network access from the device running Taurent to your qBittorrent Web UI URL.
-- A qBittorrent username and password.
+* qBittorrent with the Web UI enabled.
+* Network access from your device to the qBittorrent Web UI URL.
+* A qBittorrent username and password.
 
-To build from source, you need:
+To build Taurent from source, you need:
 
-- Node.js `>=24.0.0`
-- pnpm `>=11.0.0`
-- Rust `1.90.0`
-- Platform dependencies required by Tauri 2
+* Node.js `>=24.0.0`
+* pnpm `>=11.0.0`
+* Rust `1.90.0`
+* Platform dependencies required by Tauri 2
 
-## Install
+## Getting started
 
-For beta builds, use the latest GitHub Release once release artifacts are published.
+1. Enable the Web UI in qBittorrent.
+2. Make sure the device running Taurent can reach your qBittorrent Web UI URL.
+3. Download Taurent from [Releases](../../releases), or build it from source.
+4. Add a server profile in Taurent using your qBittorrent Web UI URL, username, and password.
+5. Start managing your torrents from Taurent.
 
-Current beta caveats:
-
-- macOS and Windows builds may show unsigned-app warnings.
-- Android APKs are unsigned and intended for testing.
-- If an artifact is not available for your platform, build from source.
-
-## Build From Source
+## Build from source
 
 Install dependencies:
 
@@ -88,9 +163,7 @@ Run the mobile renderer in development mode:
 pnpm mobile:dev
 ```
 
-Mobile native commands are long-lived Tauri processes. Prefer bounded runs when using them for verification.
-
-## Verification
+## Development checks
 
 Common checks:
 
@@ -113,13 +186,13 @@ Desktop renderer E2E:
 pnpm desktop:renderer:e2e
 ```
 
-Native desktop smoke:
+Native desktop smoke test:
 
 ```bash
 pnpm desktop:tauri:e2e
 ```
 
-## Repository Layout
+## Repository layout
 
 ```text
 apps/desktop          Tauri desktop app shell
@@ -134,41 +207,34 @@ crates/qb-tauri       Rust Tauri commands, state, sync, and platform glue
 
 The app boundaries are intentionally strict: app shells stay thin, shared UI stays presentational, `packages/bridge` is the frontend/native boundary, and Rust owns qBittorrent HTTP/session behavior.
 
-## Security And Privacy
+## Privacy and security
 
-Taurent connects directly to qBittorrent Web UI servers that you configure. It does not intentionally collect telemetry.
+Taurent connects directly to the qBittorrent Web UI servers that you configure. It does not intentionally collect telemetry.
 
 Important details:
 
-- Server metadata is stored locally.
-- Saved passwords use platform secure storage when available.
-- If secure storage is unavailable, Taurent may keep credentials only for the current session and warn you.
-- Taurent needs broad HTTP access because users connect to self-hosted qBittorrent instances on arbitrary hosts and ports.
-- Desktop file-opening permissions exist so torrent content paths can be opened or revealed from the UI.
+* Server metadata is stored locally.
+* Saved passwords use platform secure storage when available.
+* If secure storage is unavailable, Taurent may keep credentials only for the current session and warn you.
+* Taurent needs broad HTTP access because users connect to self-hosted qBittorrent instances on arbitrary hosts and ports.
+* Desktop file-opening permissions exist so torrent content paths can be opened or revealed from the UI.
 
+Please report security issues privately according to the project’s security policy.
 
 ## Contributing
 
-Bug reports, platform testing, docs fixes, and focused pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a PR.
+Bug reports, platform testing, documentation fixes, and focused pull requests are welcome.
 
 Good first contributions:
 
-- Test a beta artifact on your OS and report install/runtime issues.
-- Improve installation docs for a platform you use.
-- Add screenshots or short demo clips.
-- File focused bugs with qBittorrent version, OS, Taurent version, and reproduction steps.
+* Test a beta build on your operating system and report install/runtime issues.
+* Improve platform-specific installation docs.
+* Add screenshots or short demo clips.
+* File focused bugs with your qBittorrent version, OS, Taurent version, and reproduction steps.
 
-## Roadmap
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
 
-Near-term beta priorities:
-
-- Public release polish: screenshots, signed/notarized builds where possible, clearer install docs.
-- More real-world platform testing.
-- Better mobile packaging story.
-- Tighter docs around supported qBittorrent versions and feature availability.
-- Continued hardening of native permissions and release automation.
-
-## Name And Affiliation
+## Name and affiliation
 
 Taurent is not affiliated with qBittorrent. qBittorrent is a separate open-source project.
 
