@@ -159,7 +159,7 @@ jobs:
           - name: Windows
             artifact: taurent-windows
             runner: windows-latest
-            tauriArgs: ''
+            tauriArgs: --bundles nsis
             rustTargets: x86_64-pc-windows-msvc
           - name: Linux
             artifact: taurent-linux
@@ -235,7 +235,6 @@ jobs:
             -name '*.dmg' -o \
             -name '*.app.tar.gz' -o \
             -name '*.app.tar.gz.sig' -o \
-            -name '*.msi' -o \
             -name '*.exe' \
           \) -print -exec cp {} artifacts/release/desktop/ \;
           test -n "$(find artifacts/release/desktop -type f -print -quit)"
