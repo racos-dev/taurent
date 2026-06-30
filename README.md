@@ -4,6 +4,7 @@ Taurent is a beta qBittorrent remote client built with Tauri, React, and Rust.
 
 It is designed for people who already run qBittorrent with the Web UI enabled and want a native-feeling desktop or mobile client for managing transfers, search, RSS, server profiles, and common qBittorrent settings.
 
+<img width="1080" height="515" alt="image" src="https://github.com/user-attachments/assets/7a4aca06-f750-4ccd-8d89-8123de7e2631" />
 > Beta status: Taurent is usable enough for early testers, but it is not a stable 1.0 release. Expect rough edges, unsigned builds, incomplete mobile distribution, and occasional behavior changes between beta releases.
 
 ## Features
