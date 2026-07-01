@@ -51,7 +51,7 @@
     "deep-link": {
       "mobile": [
         {
-          "scheme": ["taurent"],
+          "scheme": ["magnet"],
           "appLink": false
         }
       ]

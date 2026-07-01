@@ -27,6 +27,7 @@ tauri-plugin-store = "2.4.3"
 tauri-plugin-http = { version = "2.5.9", features = ["unsafe-headers"] }
 tauri-plugin-clipboard-manager = "2.3.2"
 tauri-plugin-notification = "2.3.3"
+tauri-plugin-deep-link = "2.4.9"
 tauri-plugin-dialog = "2.7.1"
 tauri-plugin-shell = "2.3.5"
 tauri-plugin-opener = "2.5.4"

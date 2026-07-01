@@ -33,6 +33,7 @@
     "@taurent/web-ui": "workspace:*",
     "@tanstack/react-query": "^5.101.0",
     "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/plugin-deep-link": "^2.4.9",
     "@tauri-apps/plugin-dialog": "^2.7.1",
     "@tauri-apps/plugin-fs": "^2.5.1",
     "@tauri-apps/plugin-http": "^2.5.9",

@@ -13,7 +13,7 @@ path = "src/lib.rs"
 
 [features]
 default = []
-desktop = ["dep:tauri-plugin-clipboard-manager", "dep:tauri-plugin-window-state", "dep:tauri-plugin-dialog", "dep:tauri-plugin-shell", "dep:tauri-plugin-opener"]
+desktop = ["dep:tauri-plugin-clipboard-manager", "dep:tauri-plugin-window-state", "dep:tauri-plugin-dialog", "dep:tauri-plugin-shell", "dep:tauri-plugin-opener", "dep:tauri-plugin-deep-link"]
 mobile = ["dep:tauri-plugin-fs", "dep:tauri-plugin-dialog", "dep:tauri-plugin-deep-link", "dep:tauri-plugin-shell"]
 
 [dependencies]

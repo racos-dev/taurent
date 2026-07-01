@@ -7,10 +7,12 @@ use qb_tauri::commands::preferences;
 use qb_tauri::commands::tags;
 use qb_tauri::commands::torrents as qb_torrents;
 use qb_tauri::commands::transfer;
+use qb_tauri::magnet_links::PendingMagnetLinks;
 use qb_tauri::server_repo::init_and_manage_repository;
 use qb_tauri::session::create_session_state;
 use qb_tauri::sync::{create_sync_manager_registry, setup_sync_lifecycle};
-use tauri::Manager;
+use tauri::{Emitter, Manager};
+use tauri_plugin_deep_link::DeepLinkExt;
 
 use torrents::{add_tags, add_torrent, remove_tags, set_category};
 
@@ -18,6 +20,7 @@ use torrents::{add_tags, add_torrent, remove_tags, set_category};
 pub fn run() {
     let builder = add_shared_plugins(add_mobile_plugins(tauri::Builder::default()))
         .manage(create_session_state())
+        .manage(PendingMagnetLinks::new())
         .setup(|app| {
             // Initialize server repository with mobile-specific store file
             let server_repo = init_and_manage_repository(app.handle(), MOBILE_SERVER_STORE_FILE)
@@ -49,6 +52,29 @@ pub fn run() {
                             let _ = window.set_focus();
                         }
                     }))?;
+            }
+
+            // Register deep-link handler for magnet URLs arriving while the app is running.
+            {
+                let handle = app.handle().clone();
+                let _ = app.deep_link().on_open_url(move |event| {
+                    let urls: Vec<String> = event.urls().iter().map(|u| u.to_string()).collect();
+                    let pending = handle.state::<PendingMagnetLinks>();
+                    let new_urls = pending.enqueue(urls);
+                    if !new_urls.is_empty() {
+                        let _ = handle.emit("magnet-link-open", new_urls);
+                    }
+                });
+            }
+
+            // Check if the app was started via a deep link (cold-start).
+            {
+                let handle = app.handle();
+                if let Ok(Some(urls)) = app.deep_link().get_current() {
+                    let url_strings: Vec<String> = urls.iter().map(|u| u.to_string()).collect();
+                    let pending = handle.state::<PendingMagnetLinks>();
+                    pending.enqueue(url_strings);
+                }
             }
 
             Ok(())
@@ -110,6 +136,7 @@ pub fn run() {
             qb_torrents::get_torrent_trackers,
             qb_torrents::get_torrent_files,
             add_torrent,
+            qb_tauri::magnet_links::get_pending_magnet_links,
             qb_tauri::commands::sync::get_maindata_snapshot,
             qb_tauri::commands::sync::get_maindata_sync_status,
             qb_tauri::commands::sync::start_maindata_sync,
