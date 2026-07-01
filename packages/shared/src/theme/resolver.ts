@@ -107,9 +107,3 @@ export function resolveEffectiveClass(id: string): string {
   return resolveThemeClass(parsed.palette, parsed.variant);
 }
 
-/**
- * Get the default palette/variant for a new desktop installation.
- */
-export function getDefaultThemeSelection(): { palette: ThemePalette; variant: ThemeVariant } {
-  return { palette: 'solarized', variant: 'dark' };
-}

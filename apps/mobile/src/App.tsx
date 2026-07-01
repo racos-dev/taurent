@@ -88,7 +88,7 @@ function AppNotifications() {
 function AppContent() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="solarized-dark">
+      <ThemeProvider defaultTheme="catppuccin">
         <ControlDensityProvider>
           <ServerManagerProvider>
             <QBClientProvider>

@@ -161,7 +161,7 @@ function AppContent() {
 
   return (
     <SearchFocusProvider>
-      <ThemeProvider defaultTheme="solarized-dark">
+      <ThemeProvider defaultTheme="catppuccin">
         <ServerManagerProvider>
           <QBClientProvider>
             <AppNotifications />
