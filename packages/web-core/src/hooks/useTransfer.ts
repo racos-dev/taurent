@@ -372,3 +372,44 @@ export function useBanPeersWithPeerInvalidation({
     },
   });
 }
+
+// ---------------------------------------------------------------------------
+// Add peers
+// ---------------------------------------------------------------------------
+
+/**
+ * Options for adding peers to a torrent.
+ */
+export interface UseAddPeersOptions {
+  scope: QueryScope;
+  /** Adds the given peers (`host:port`) to the torrent identified by `hash`. */
+  mutationFn: (peers: string[]) => Promise<unknown>;
+  onSuccess?: () => void;
+}
+
+/**
+ * Hook for manually adding peers to a torrent.
+ *
+ * Maps to qBittorrent's `torrents/addPeers`. On success it invalidates the
+ * torrent's peers query so the newly added peers surface in the peers list.
+ *
+ * @param hash - The torrent hash whose peers should be invalidated after add.
+ */
+export function useAddPeersWithPeerInvalidation({
+  scope,
+  mutationFn,
+  hash,
+  onSuccess,
+}: UseAddPeersOptions & { hash: string }) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn,
+    onSuccess: () => {
+      if (hash) {
+        invalidateTorrentPeers(queryClient, scope, hash);
+      }
+      onSuccess?.();
+    },
+  });
+}

@@ -135,6 +135,8 @@ export interface DesktopTorrentBridge extends TorrentBridgeBase {
   setFirstLastPiecePriority(hashes: string[], value: boolean): Promise<OperationResponse>;
   setSuperSeeding(hashes: string[], value: boolean): Promise<OperationResponse>;
   exportTorrent(hash: string, savePath: string): Promise<OperationResponse>;
+  /** Add one or more peers (`host:port`) to the given torrents. */
+  addPeers(hashes: string[], peers: string[]): Promise<OperationResponse>;
 }
 
 // Transfer bridge - speed limits and transfer info

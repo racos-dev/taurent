@@ -327,6 +327,10 @@ export function createDesktopBridge(transport?: Transport): DesktopBridge {
     return t.invoke<OperationResponse>('export_torrent', { hash, savePath });
   }
 
+  async function cmdAddPeers(hashes: string[], peers: string[]): Promise<OperationResponse> {
+    return t.invoke<OperationResponse>('add_peers', { hashes, peers });
+  }
+
   // Transfer commands
   async function cmdGetTransferInfo(): Promise<TransferInfoResponse> {
     return t.invoke('get_transfer_info');
@@ -769,6 +773,10 @@ export function createDesktopBridge(transport?: Transport): DesktopBridge {
 
       async exportTorrent(hash: string, savePath: string): Promise<OperationResponse> {
         return cmdExportTorrent(hash, savePath);
+      },
+
+      async addPeers(hashes: string[], peers: string[]): Promise<OperationResponse> {
+        return cmdAddPeers(hashes, peers);
       },
     },
 

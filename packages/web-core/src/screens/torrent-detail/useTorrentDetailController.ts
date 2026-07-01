@@ -48,6 +48,11 @@ export interface AddTrackerMutation {
   mutate: (vars: { hash: string; urls: string }, opts?: { onSuccess?: () => void }) => void;
 }
 
+export interface AddPeersMutation {
+  isPending: boolean;
+  mutateAsync: (peers: string[]) => Promise<unknown>;
+}
+
 export interface TorrentDetailControllerOptions {
   /** Torrent hash from route params */
   hash: string;
@@ -63,6 +68,8 @@ export interface TorrentDetailControllerOptions {
   addTrackerMutation: AddTrackerMutation;
   /** Ban peers mutation from useBanPeersWithPeerInvalidation() */
   banPeersMutation?: BanPeersMutation;
+  /** Add peers mutation from useAddPeersWithPeerInvalidation() */
+  addPeersMutation?: AddPeersMutation;
   /** Called by the delete handler after successful deletion */
   onNavigateBack: () => void;
 }
@@ -95,6 +102,14 @@ export interface TorrentDetailControllerResult {
   closeAddTracker: () => void;
   handleAddTrackerSubmit: () => void;
 
+  // ─── Peer add flow ────────────────────────────────────────────────────────
+  showAddPeers: boolean;
+  newPeers: string;
+  setNewPeers: (peers: string) => void;
+  toggleAddPeers: () => void;
+  closeAddPeers: () => void;
+  handleAddPeersSubmit: () => void;
+
   // ─── Dialog helpers ───────────────────────────────────────────────────────
   openDeleteDialog: () => void;
   closeDeleteDialog: () => void;
@@ -122,6 +137,7 @@ export interface TorrentDetailControllerResult {
   decreasePriorityIsPending: boolean;
   addTrackerIsPending: boolean;
   banPeersIsPending: boolean;
+  addPeersIsPending: boolean;
 
   // ─── Action handlers ──────────────────────────────────────────────────────
   handlePauseResume: () => Promise<void>;
@@ -158,6 +174,30 @@ function sortFiles(files: TorrentFile[] | null): TorrentFile[] {
   });
 }
 
+/**
+ * Parse a free-form peer input string into a de-duplicated list of `host:port`
+ * entries. Peers may be separated by newlines, commas, or whitespace. Entries
+ * without a port are ignored, mirroring qBittorrent's `host:port` requirement.
+ */
+export function parsePeerList(input: string): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const raw of input.split(/[\n,\s]+/)) {
+    const peer = raw.trim();
+    if (!peer) continue;
+    // Require a port: the last colon must be followed by digits. This keeps
+    // both IPv4 (`1.2.3.4:6881`) and bracketed IPv6 (`[::1]:6881`) valid.
+    const lastColon = peer.lastIndexOf(':');
+    if (lastColon <= 0 || lastColon === peer.length - 1) continue;
+    const port = peer.slice(lastColon + 1);
+    if (!/^\d+$/.test(port)) continue;
+    if (seen.has(peer)) continue;
+    seen.add(peer);
+    result.push(peer);
+  }
+  return result;
+}
+
 // ─── Controller ───────────────────────────────────────────────────────────────
 
 export function useTorrentDetailController({
@@ -168,6 +208,7 @@ export function useTorrentDetailController({
   actions,
   addTrackerMutation,
   banPeersMutation,
+  addPeersMutation,
   onNavigateBack,
 }: TorrentDetailControllerOptions): TorrentDetailControllerResult {
   // ─── Tab state ─────────────────────────────────────────────────────────────
@@ -188,6 +229,10 @@ export function useTorrentDetailController({
   // ─── Tracker add state ─────────────────────────────────────────────────────
   const [showAddTracker, setShowAddTracker] = useState(false);
   const [newTrackerUrl, setNewTrackerUrl] = useState('');
+
+  // ─── Peer add state ────────────────────────────────────────────────────────
+  const [showAddPeers, setShowAddPeers] = useState(false);
+  const [newPeers, setNewPeers] = useState('');
 
   // ─── Derived values ────────────────────────────────────────────────────────
   const isPaused = displayStatus === 'paused';
@@ -237,6 +282,25 @@ export function useTorrentDetailController({
       { onSuccess: () => closeAddTracker() }
     );
   }, [hash, newTrackerUrl, addTrackerMutation, closeAddTracker]);
+
+  // ─── Peer add helpers ──────────────────────────────────────────────────────
+  const toggleAddPeers = useCallback(() => {
+    setShowAddPeers((prev) => !prev);
+  }, []);
+
+  const closeAddPeers = useCallback(() => {
+    setShowAddPeers(false);
+    setNewPeers('');
+  }, []);
+
+  const handleAddPeersSubmit = useCallback(() => {
+    if (!hash || !addPeersMutation || addPeersMutation.isPending) return;
+    const peers = parsePeerList(newPeers);
+    if (peers.length === 0) return;
+    void addPeersMutation.mutateAsync(peers).then(() => {
+      closeAddPeers();
+    });
+  }, [hash, newPeers, addPeersMutation, closeAddPeers]);
 
   // ─── Dialog helpers ───────────────────────────────────────────────────────
   const openDeleteDialog = useCallback(() => setShowDeleteDialog(true), []);
@@ -435,6 +499,12 @@ export function useTorrentDetailController({
     toggleAddTracker,
     closeAddTracker,
     handleAddTrackerSubmit,
+    showAddPeers,
+    newPeers,
+    setNewPeers,
+    toggleAddPeers,
+    closeAddPeers,
+    handleAddPeersSubmit,
     openDeleteDialog,
     closeDeleteDialog,
     openRenameDialog,
@@ -459,6 +529,7 @@ export function useTorrentDetailController({
     decreasePriorityIsPending: actions.decreasePriority?.isPending ?? false,
     addTrackerIsPending: addTrackerMutation.isPending,
     banPeersIsPending: banPeersMutation?.isPending ?? false,
+    addPeersIsPending: addPeersMutation?.isPending ?? false,
     handlePauseResume,
     handleRecheck,
     handleReannounce,

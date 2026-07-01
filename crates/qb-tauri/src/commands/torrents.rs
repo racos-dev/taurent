@@ -1023,6 +1023,44 @@ pub async fn add_trackers(
     })
 }
 
+/// Add one or more peers to the given torrents.
+///
+/// Maps to `/api/v2/torrents/addPeers`. Both `hashes` and `peers` are sent as
+/// pipe-separated (`|`) lists; each peer is a `host:port` pair.
+#[tauri::command]
+pub async fn add_peers(
+    state: State<'_, SessionStateHandle>,
+    app: tauri::AppHandle,
+    hashes: Vec<String>,
+    peers: Vec<String>,
+) -> Result<OperationResponse, String> {
+    let request = capture_request_context(&state)?;
+    let gen = request.session_generation;
+    let server_id = request.server_id.clone();
+
+    let hashes_param = hashes.join("|");
+    let peers_param = peers.join("|");
+
+    let path = "/api/v2/torrents/addPeers";
+    let _ = qb_post(
+        &state,
+        path,
+        &[
+            ("hashes", hashes_param.as_str()),
+            ("peers", peers_param.as_str()),
+        ],
+    )
+    .await?;
+
+    emit_resource_invalidated(&app, gen, server_id.clone(), "torrents".to_string());
+
+    Ok(OperationResponse {
+        session_generation: gen,
+        server_id,
+        success: true,
+    })
+}
+
 #[tauri::command]
 pub async fn edit_tracker(
     state: State<'_, SessionStateHandle>,

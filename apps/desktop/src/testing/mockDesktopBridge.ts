@@ -1231,6 +1231,7 @@ function createMockBridge(): DesktopBridge {
       setFirstLastPiecePriority() { return Promise.resolve(OK()); },
       setSuperSeeding() { return Promise.resolve(OK()); },
       exportTorrent() { return Promise.resolve(OK()); },
+      addPeers() { return Promise.resolve(OK()); },
     },
 
     // ── Transfer ──────────────────────────────────────────────────────────────
