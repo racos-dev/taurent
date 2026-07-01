@@ -26,16 +26,16 @@ export interface ThemePaletteMetadata {
  */
 export const THEME_OPTIONS: ThemePaletteMetadata[] = [
   {
-    palette: 'solarized',
-    label: 'Solarized',
-    description: 'Classic precision color scheme',
+    palette: 'catppuccin',
+    label: 'Catppuccin',
+    description: 'Soothing pastel theme',
     darkOnly: false,
     variants: ['light', 'dark'],
   },
   {
-    palette: 'catppuccin',
-    label: 'Catppuccin',
-    description: 'Soothing pastel theme',
+    palette: 'solarized',
+    label: 'Solarized',
+    description: 'Classic precision color scheme',
     darkOnly: false,
     variants: ['light', 'dark'],
   },

@@ -147,9 +147,9 @@ function readConfigFromStorage(defaultTheme: string): ThemeConfig {
 
       return {
         mode: savedMode as ThemeMode,
-        systemPalette: savedSystemPalette as ThemePalette ?? 'solarized',
-        manualPalette: savedManualPalette as ThemePalette ?? 'solarized',
-        manualVariant: savedManualVariant ?? 'dark',
+        systemPalette: savedSystemPalette as ThemePalette ?? 'catppuccin',
+        manualPalette: savedManualPalette as ThemePalette ?? 'catppuccin',
+        manualVariant: savedManualVariant ?? getSystemScheme(),
         accent: savedAccent && /^#[0-9a-f]{6}$/i.test(savedAccent) ? savedAccent as AccentPreference : null,
       };
     }
@@ -161,9 +161,9 @@ function readConfigFromStorage(defaultTheme: string): ThemeConfig {
   const parsed = parseThemeId(defaultTheme);
   return {
     mode: 'system',
-    systemPalette: parsed?.palette ?? 'solarized',
-    manualPalette: parsed?.palette ?? 'solarized',
-    manualVariant: parsed?.variant ?? 'dark',
+    systemPalette: parsed?.palette ?? 'catppuccin',
+    manualPalette: parsed?.palette ?? 'catppuccin',
+    manualVariant: parsed?.variant ?? getSystemScheme(),
     accent: null,
   };
 }
@@ -173,7 +173,7 @@ export interface ThemeProviderProps {
   defaultTheme?: string;
 }
 
-export function ThemeProvider({ children, defaultTheme = 'solarized-dark' }: ThemeProviderProps) {
+export function ThemeProvider({ children, defaultTheme = 'catppuccin' }: ThemeProviderProps) {
   // Initialize synchronously from localStorage — no async effect needed.
   // This ensures the initial themeClass matches what the inline init script set,
   // preventing any flash of a wrong theme on first render.

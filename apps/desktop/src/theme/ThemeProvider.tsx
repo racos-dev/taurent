@@ -25,7 +25,7 @@ function getThemeEventSignature(event: ThemeChangedEvent) {
  * 1. Wraps the shared web-ui ThemeProvider (which reads/writes localStorage synchronously)
  * 2. Synchronizes theme changes across Tauri desktop windows via theme-changed events
  */
-export function ThemeProvider({ children, defaultTheme = 'solarized-dark' }: { children: ReactNode; defaultTheme?: string }) {
+export function ThemeProvider({ children, defaultTheme = 'catppuccin' }: { children: ReactNode; defaultTheme?: string }) {
   return (
     <SharedThemeProvider defaultTheme={defaultTheme}>
       <DesktopThemeEventBridge />
