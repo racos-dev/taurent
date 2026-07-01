@@ -10,7 +10,7 @@ import { useLiveTorrentByHash } from '../../hooks/torrents/useLiveTorrentByHash'
 import { useTorrentActions } from '../../hooks/torrents/useTorrentActions';
 import { useMutation } from '@tanstack/react-query';
 import { BridgeAdapter } from '@taurent/bridge/adapters/desktop'
-import { useBanPeersWithPeerInvalidation } from '@taurent/web-core/hooks';
+import { useBanPeersWithPeerInvalidation, useAddPeersWithPeerInvalidation } from '@taurent/web-core/hooks';
 import { useSelectedTorrentDetailSync } from '@taurent/web-core/sync';
 import { useQBClient, useMaindataState } from '../../connection';
 import {
@@ -226,6 +226,13 @@ export function DetailPanel() {
     hash: panelTorrentHash ?? '',
   });
 
+  // ─── Add peers mutation ─────────────────────────────────────────────────────
+  const addPeersMutation = useAddPeersWithPeerInvalidation({
+    scope: { serverId, sessionGeneration, isConnected },
+    mutationFn: (peers) => BridgeAdapter.torrents.addPeers([panelTorrentHash ?? ''], peers),
+    hash: panelTorrentHash ?? '',
+  });
+
   // ─── Edit tracker mutation ────────────────────────────────────────────────
   const editTrackerMutation = useMutation({
     mutationFn: (vars: { hash: string; origUrl: string; newUrl: string }) =>
@@ -355,6 +362,10 @@ export function DetailPanel() {
     banPeersMutation: {
       isPending: banPeersMutation.isPending,
       mutateAsync: banPeersMutation.mutateAsync,
+    },
+    addPeersMutation: {
+      isPending: addPeersMutation.isPending,
+      mutateAsync: addPeersMutation.mutateAsync,
     },
     onNavigateBack: () => {
       setPanelTorrentHash(null);
@@ -569,13 +580,44 @@ export function DetailPanel() {
             </div>
           )}
           {shellTab === 'peers' && (
-            <>
+            <div className="flex min-h-0 flex-1 flex-col gap-2">
               <PeersTabCoordinator
                 paneOpen={Boolean(panelTorrentHash)}
                 activeTab={shellTab}
                 peersRefetch={peersRefetch}
                 selectedTorrentHash={panelTorrentHash}
               />
+              {/* Peer add UI */}
+              {controller.showAddPeers ? (
+                <div className="flex items-center gap-2 rounded-sm border border-border bg-surface p-2">
+                  <Input
+                    type="text"
+                    value={controller.newPeers}
+                    onChange={controller.setNewPeers}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { controller.handleAddPeersSubmit(); } }}
+                    placeholder="host:port, host:port (e.g. 1.2.3.4:6881)"
+                    className="min-w-0 flex-1"
+                    disabled={controller.addPeersIsPending}
+                    size="sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={controller.handleAddPeersSubmit}
+                    disabled={controller.addPeersIsPending || !controller.newPeers.trim()}
+                    className="shrink-0 rounded-sm border border-primary bg-primary px-2 py-1 text-xs font-medium text-text-on-primary transition-colors enabled:hover:bg-primary/90 disabled:cursor-not-allowed disabled:text-text-disabled disabled:bg-bg-disabled disabled:text-text-disabled disabled:border-border-disabled"
+                  >
+                    Add
+                  </button>
+                  <button
+                    type="button"
+                    onClick={controller.closeAddPeers}
+                    disabled={controller.addPeersIsPending}
+                    className="shrink-0 rounded-sm border border-border px-2 py-1 text-xs font-medium text-text-secondary transition-colors enabled:hover:bg-surface-interactive disabled:cursor-not-allowed disabled:text-text-disabled disabled:bg-bg-disabled disabled:text-text-disabled disabled:border-border-disabled"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : null}
               <TorrentDetailsPeersSection
                 variant="desktop"
                 peers={peers as PeerRow[] | undefined}
@@ -583,11 +625,11 @@ export function DetailPanel() {
                 error={peersError}
                 onRetry={peersRefetch}
                 onBanPeer={controller.handleBanPeer}
-                onAddPeers={undefined}
+                onAddPeers={controller.toggleAddPeers}
                 onCopyPeerAddress={handleCopyPeerAddress}
                 banPeerIsPending={controller.banPeersIsPending}
               />
-            </>
+            </div>
           )}
           {shellTab === 'httpSources' && (
             <TorrentDetailsHttpSourcesSection
