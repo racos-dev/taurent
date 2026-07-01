@@ -97,6 +97,10 @@ function isRecoverableWebDriverTransportError(error: unknown): boolean {
     'socket hang up',
     'fetch failed',
     'terminated',
+    'unable to connect',
+    'browser driver is running',
+    'service failed to start',
+    'rejecting any connections',
   ].some((needle) => normalized.includes(needle));
 }
 

@@ -58,6 +58,10 @@ function isRecoverableSessionError(error: unknown): boolean {
     'socket hang up',
     'terminated',
     'timeout',
+    'unable to connect',
+    'browser driver is running',
+    'service failed to start',
+    'rejecting any connections',
   ].some((needle) => message.includes(needle));
 }
 
