@@ -204,21 +204,4 @@ jobs:
           path: artifacts/desktop/perf/native-smoke.json
           if-no-files-found: warn
 
-  pr-ci-summary:
-    name: PR CI Summary
-    needs: [js-quality, rust-quality, native-smoke]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
 
-      - name: Write aggregate summary
-        env:
-          CI_JOB_KIND: aggregate
-          CI_JS_RESULT: ${{ needs.js-quality.result }}
-          CI_RUST_RESULT: ${{ needs.rust-quality.result }}
-          CI_SMOKE_RESULT: ${{ needs.native-smoke.result }}
-          GITHUB_RUN_ID: ${{ github.run_id }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-        run: node scripts/ci/write-pr-ci-summary.mjs

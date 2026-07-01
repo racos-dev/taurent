@@ -8,7 +8,7 @@ CI validation scripts covering two concerns: version consistency across workspac
 
 Three independent entrypoints: `check-versions.mjs` (Node), `runs-coverage.sh` (shell), and `write-pr-ci-summary.mjs` (Node). They share no library, run in isolation, and exit non-zero on failure so CI fails the build.
 
-- `write-pr-ci-summary.mjs`: Writes compact Markdown job summaries to `GITHUB_STEP_SUMMARY` for `pr-ci.yml` jobs. Supports js-quality, rust-quality, native-smoke, and aggregate lanes.
+- `write-pr-ci-summary.mjs`: Writes compact Markdown job summaries to `GITHUB_STEP_SUMMARY` for `pr-ci.yml` jobs. Supports js-quality, rust-quality, and native-smoke lanes.
 
 ## Flow
 
