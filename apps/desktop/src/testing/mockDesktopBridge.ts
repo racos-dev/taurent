@@ -1196,6 +1196,30 @@ function createMockBridge(): DesktopBridge {
       editTracker() { return Promise.resolve(OK()); },
       removeTrackers() { return Promise.resolve(OK()); },
       getWebSeeds() { return Promise.resolve({ webseeds: [], session_generation: GEN, server_id: null }); },
+      addWebSeeds(hash: string, urls: string) {
+        recordCall('torrents.addWebSeeds', [hash, urls]);
+        const error = maybeFail('torrents.addWebSeeds');
+        if (error) {
+          return Promise.reject(error);
+        }
+        return Promise.resolve(OK());
+      },
+      editWebSeed(hash: string, origUrl: string, newUrl: string) {
+        recordCall('torrents.editWebSeed', [hash, origUrl, newUrl]);
+        const error = maybeFail('torrents.editWebSeed');
+        if (error) {
+          return Promise.reject(error);
+        }
+        return Promise.resolve(OK());
+      },
+      removeWebSeeds(hash: string, urls: string) {
+        recordCall('torrents.removeWebSeeds', [hash, urls]);
+        const error = maybeFail('torrents.removeWebSeeds');
+        if (error) {
+          return Promise.reject(error);
+        }
+        return Promise.resolve(OK());
+      },
       setDownloadLimit(hashes: string[], limit: number) {
         recordCall('torrents.setDownloadLimit', [hashes, limit]);
         const error = maybeFail('torrents.setDownloadLimit');
@@ -1344,6 +1368,7 @@ function createMockBridge(): DesktopBridge {
             supports_search: 'unknown' as const,
             supports_rss: 'unknown' as const,
             supports_pause_resume: 'unknown' as const,
+            supports_webseed_management: 'confirmed' as const,
           },
         });
       },

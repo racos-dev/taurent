@@ -316,6 +316,7 @@ export interface RustResolvedCapabilities {
   supports_search: CapabilityState;
   supports_rss: CapabilityState;
   supports_pause_resume: CapabilityState;
+  supports_webseed_management: CapabilityState;
 }
 
 /**

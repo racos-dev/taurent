@@ -12,12 +12,16 @@ import {
   useTorrentProperties,
   useTorrentTrackers,
   useTorrentPeers,
+  useTorrentWebSeeds,
 } from '../hooks/useTorrentDetails';
 import { useTorrents } from '../hooks';
-import { useMaindataState } from '../connection';
+import { useMaindataState, useQBClient } from '../connection';
 import { useTorrentDetailController } from '@taurent/web-core/screens';
 import { TorrentDetailScreenBody } from '@taurent/web-ui';
 import { StateCard, ScreenHeader, Button } from '@taurent/web-ui';
+import { toast } from '@taurent/web-ui/components/shared/Toast/toast';
+import { formatUserMessageForContext } from '@taurent/shared/utils/error';
+import type { WebSeed } from '@taurent/shared/types/qbittorrent';
 import { getTorrentDisplayStatus, getStatusColorClass } from '@taurent/shared/utils/torrentStatus';
 import {
   mobileCenteredStateClassName,
@@ -30,6 +34,7 @@ export function TorrentDetailScreen() {
   const navigate = useNavigate();
   const { torrents, isLoading: torrentsLoading } = useTorrents();
   const { maindataState } = useMaindataState();
+  const { capabilities } = useQBClient();
   const getTorrentState = useCallback(
     (h: string) => maindataState?.torrents?.[h]?.state,
     [maindataState],
@@ -52,18 +57,64 @@ export function TorrentDetailScreen() {
   const { properties, isLoading: propertiesLoading, error: propertiesError, refetch: refetchProperties } = useTorrentProperties(hash || '', { getTorrentState });
   const { trackers, isLoading: trackersLoading, error: trackersError, refetch: refetchTrackers } = useTorrentTrackers(hash || '', { getTorrentState });
   const { files, isLoading: filesLoading, error: filesError, refetch: refetchFiles } = useTorrentFiles(hash || '', { getTorrentState });
+  const { webSeeds, isLoading: webSeedsLoading, error: webSeedsError, refetch: refetchWebSeeds } = useTorrentWebSeeds(hash || '', {
+    enabled: Boolean(hash),
+  });
 
   // QBClient is consumed inside useTorrentDetailMutations and useTorrentActions.
-  const { addTrackerMutation, banPeersMutation } = useTorrentDetailMutations({
+  const {
+    addTrackerMutation,
+    banPeersMutation,
+    addHttpSourcesMutation,
+    editHttpSourceMutation,
+    removeHttpSourceMutation,
+  } = useTorrentDetailMutations({
     hash: hash ?? '',
     onRefetchTrackers: () => {
       void refetchTrackers();
+    },
+    onRefetchWebSeeds: () => {
+      void refetchWebSeeds();
     },
   });
 
   const torrent = torrents.find((item) => item.hash === hash) ?? null;
   const displayStatus = torrent ? getTorrentDisplayStatus(torrent) : null;
   const statusBarClass = displayStatus ? getStatusColorClass(displayStatus, 'bar') : null;
+  const supportsWebSeedManagement = capabilities?.supportsWebSeedManagement === true;
+
+  const handleAddHttpSources = useCallback(async (urls: string) => {
+    try {
+      await addHttpSourcesMutation.mutateAsync(urls);
+    } catch (err) {
+      toast.error(formatUserMessageForContext(err, 'torrent-action'), {
+        dedupeKey: 'mobile-detail:add-http-sources',
+      });
+      throw err;
+    }
+  }, [addHttpSourcesMutation]);
+
+  const handleEditHttpSource = useCallback(async (seed: WebSeed, newUrl: string) => {
+    try {
+      await editHttpSourceMutation.mutateAsync({ seed, newUrl });
+    } catch (err) {
+      toast.error(formatUserMessageForContext(err, 'torrent-action'), {
+        dedupeKey: 'mobile-detail:edit-http-source',
+      });
+      throw err;
+    }
+  }, [editHttpSourceMutation]);
+
+  const handleRemoveHttpSource = useCallback(async (seed: WebSeed) => {
+    try {
+      await removeHttpSourceMutation.mutateAsync(seed);
+    } catch (err) {
+      toast.error(formatUserMessageForContext(err, 'torrent-action'), {
+        dedupeKey: 'mobile-detail:remove-http-source',
+      });
+      throw err;
+    }
+  }, [removeHttpSourceMutation]);
 
   const controller = useTorrentDetailController({
     hash: hash ?? '',
@@ -145,6 +196,7 @@ export function TorrentDetailScreen() {
         files={files ?? null}
         trackers={trackers}
         peers={peers}
+        webSeeds={webSeeds}
         statusBarClass={statusBarClass}
         propertiesLoading={propertiesLoading}
         propertiesError={propertiesError}
@@ -154,10 +206,13 @@ export function TorrentDetailScreen() {
         filesError={filesError}
         peersLoading={peersLoading}
         peersError={peersError}
+        webSeedsLoading={webSeedsLoading}
+        webSeedsError={webSeedsError}
         refetchProperties={refetchProperties as () => void | Promise<void>}
         refetchTrackers={refetchTrackers as () => void | Promise<void>}
         refetchFiles={refetchFiles as () => void | Promise<void>}
         refetchPeers={refetchPeers as unknown as () => void | Promise<void>}
+        refetchWebSeeds={refetchWebSeeds as unknown as () => void | Promise<void>}
         activeTab={controller.activeTab}
         setActiveTab={controller.setActiveTab}
         visibleFiles={controller.visibleFiles}
@@ -200,6 +255,10 @@ export function TorrentDetailScreen() {
         decreasePriorityIsPending={controller.decreasePriorityIsPending}
         addTrackerIsPending={controller.addTrackerIsPending}
         banPeersIsPending={controller.banPeersIsPending}
+        addHttpSourcesIsPending={addHttpSourcesMutation.isPending}
+        editHttpSourceIsPending={editHttpSourceMutation.isPending}
+        removeHttpSourceIsPending={removeHttpSourceMutation.isPending}
+        supportsWebSeedManagement={supportsWebSeedManagement}
         handlePauseResume={controller.handlePauseResume}
         handleRecheck={controller.handleRecheck}
         handleReannounce={controller.handleReannounce}
@@ -212,6 +271,9 @@ export function TorrentDetailScreen() {
         handleIncreasePriority={controller.handleIncreasePriority}
         handleDecreasePriority={controller.handleDecreasePriority}
         handleBanPeer={controller.handleBanPeer}
+        handleAddHttpSources={supportsWebSeedManagement ? handleAddHttpSources : undefined}
+        handleEditHttpSource={supportsWebSeedManagement ? handleEditHttpSource : undefined}
+        handleRemoveHttpSource={supportsWebSeedManagement ? handleRemoveHttpSource : undefined}
       />
     </div>
   );

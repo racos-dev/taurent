@@ -1275,7 +1275,12 @@ pub async fn add_webseeds(
     )
     .await?;
 
-    emit_resource_invalidated(&app, gen, server_id.clone(), "torrents".to_string());
+    emit_resource_invalidated(
+        &app,
+        gen,
+        server_id.clone(),
+        format!("torrent-webseeds:{}", hash),
+    );
 
     Ok(OperationResponse {
         session_generation: gen,
@@ -1308,7 +1313,12 @@ pub async fn edit_webseed(
     )
     .await?;
 
-    emit_resource_invalidated(&app, gen, server_id.clone(), "torrents".to_string());
+    emit_resource_invalidated(
+        &app,
+        gen,
+        server_id.clone(),
+        format!("torrent-webseeds:{}", hash),
+    );
 
     Ok(OperationResponse {
         session_generation: gen,
@@ -1336,7 +1346,12 @@ pub async fn remove_webseeds(
     )
     .await?;
 
-    emit_resource_invalidated(&app, gen, server_id.clone(), "torrents".to_string());
+    emit_resource_invalidated(
+        &app,
+        gen,
+        server_id.clone(),
+        format!("torrent-webseeds:{}", hash),
+    );
 
     Ok(OperationResponse {
         session_generation: gen,

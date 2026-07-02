@@ -215,7 +215,8 @@ export function DetailPanel() {
   const desktopActions = useTorrentActions();
 
   // ─── Session scope ─────────────────────────────────────────────────────────
-  const { isConnected, serverId, sessionGeneration } = useQBClient();
+  const { isConnected, serverId, sessionGeneration, capabilities } = useQBClient();
+  const supportsWebSeedManagement = capabilities?.supportsWebSeedManagement === true;
 
   // ─── Add trackers mutation ────────────────────────────────────────────────
   const addTrackerMutation = useMutation({
@@ -797,9 +798,9 @@ export function DetailPanel() {
                 isLoading={webSeedsLoading}
                 error={webSeedsError}
                 onRetry={webSeedsRefetch}
-                onAddHttpSources={toggleAddHttpSources}
-                onEditHttpSource={handleEditHttpSource}
-                onRemoveHttpSource={handleRemoveHttpSource}
+                onAddHttpSources={supportsWebSeedManagement ? toggleAddHttpSources : undefined}
+                onEditHttpSource={supportsWebSeedManagement ? handleEditHttpSource : undefined}
+                onRemoveHttpSource={supportsWebSeedManagement ? handleRemoveHttpSource : undefined}
                 onCopyHttpSourceUrl={handleCopyHttpSourceUrl}
                 removeHttpSourceIsPending={removeHttpSourceMutation.isPending}
               />

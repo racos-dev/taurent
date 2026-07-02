@@ -10,7 +10,7 @@ export const {
   useTorrentTrackers,
   useTorrentFiles,
   useTorrentPeers,
+  useTorrentWebSeeds,
 } = createTorrentDetailHooks({ bridge: BridgeAdapter, scopeProvider: useQBClient });
 
 export type { PeerRow } from '@taurent/web-core/hooks';
-

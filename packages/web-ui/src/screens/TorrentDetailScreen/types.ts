@@ -5,6 +5,7 @@ import type {
   Torrent,
   TorrentProperties,
   TorrentFile,
+  WebSeed,
 } from '@taurent/shared/types/qbittorrent';
 import type { PeerRow } from '../../components/torrents/TorrentDetailsSections/types';
 import type { FilePriorityTarget } from '../../components/torrents/TorrentDetailsSections/types';
@@ -22,6 +23,7 @@ export interface TorrentDetailScreenBodyProps {
   files: TorrentFile[] | null;
   trackers: import('@taurent/shared/types/qbittorrent').Tracker[] | null | undefined;
   peers: PeerRow[] | null | undefined;
+  webSeeds?: WebSeed[] | null | undefined;
   statusBarClass: string | null;
   /** When true, renders a TorrentItem card instead of the TorrentDetailHeader */
   isMobile?: boolean;
@@ -35,12 +37,15 @@ export interface TorrentDetailScreenBodyProps {
   filesError: unknown;
   peersLoading: boolean;
   peersError: unknown;
+  webSeedsLoading?: boolean;
+  webSeedsError?: unknown;
 
   // ── Refetch callbacks ────────────────────────────────────────────────
   refetchProperties: () => unknown;
   refetchTrackers: () => unknown;
   refetchFiles: () => unknown;
   refetchPeers: () => unknown;
+  refetchWebSeeds?: () => unknown;
 
   // ── Controller state ─────────────────────────────────────────────────
   activeTab: DetailTab;
@@ -98,6 +103,10 @@ export interface TorrentDetailScreenBodyProps {
   decreasePriorityIsPending: boolean;
   addTrackerIsPending: boolean;
   banPeersIsPending: boolean;
+  addHttpSourcesIsPending?: boolean;
+  editHttpSourceIsPending?: boolean;
+  removeHttpSourceIsPending?: boolean;
+  supportsWebSeedManagement?: boolean;
 
   // ── Action handlers ───────────────────────────────────────────────────
   handlePauseResume: () => Promise<void>;
@@ -112,4 +121,7 @@ export interface TorrentDetailScreenBodyProps {
   handleIncreasePriority: () => Promise<void>;
   handleDecreasePriority: () => Promise<void>;
   handleBanPeer: (peerKey: string) => Promise<void>;
+  handleAddHttpSources?: (urls: string) => Promise<void>;
+  handleEditHttpSource?: (seed: WebSeed, newUrl: string) => Promise<void>;
+  handleRemoveHttpSource?: (seed: WebSeed) => Promise<void>;
 }

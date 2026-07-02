@@ -205,10 +205,43 @@ function HttpSourceContextMenuOverlay({
 }
 
 // Mobile HTTP sources card
-function MobileHttpSourceCard({ seed }: { seed: WebSeed }) {
+function MobileHttpSourceCard({
+  seed,
+  onEditHttpSource,
+  onRemoveHttpSource,
+  removeHttpSourceIsPending,
+}: {
+  seed: WebSeed;
+  onEditHttpSource?: (seed: WebSeed) => void;
+  onRemoveHttpSource?: (seed: WebSeed) => void;
+  removeHttpSourceIsPending?: boolean;
+}) {
   return (
-    <div className="rounded-sm border border-border bg-surface p-3">
+    <div className="space-y-3 rounded-sm border border-border bg-surface p-3">
       <div className="text-sm text-text-primary break-all">{seed.url}</div>
+      {onEditHttpSource || onRemoveHttpSource ? (
+        <div className="flex flex-wrap items-center gap-2">
+          {onEditHttpSource ? (
+            <button
+              type="button"
+              onClick={() => onEditHttpSource(seed)}
+              className="rounded-sm border border-border px-2 py-1 text-xs font-medium text-text-secondary transition-colors enabled:active:bg-surface-interactive"
+            >
+              Edit
+            </button>
+          ) : null}
+          {onRemoveHttpSource ? (
+            <button
+              type="button"
+              onClick={() => onRemoveHttpSource(seed)}
+              disabled={removeHttpSourceIsPending}
+              className="rounded-sm border border-border px-2 py-1 text-xs font-medium text-text-secondary transition-colors enabled:active:bg-surface-interactive disabled:cursor-not-allowed disabled:text-text-disabled"
+            >
+              Remove
+            </button>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -278,7 +311,13 @@ export const TorrentDetailsHttpSourcesSection = React.memo<TorrentDetailsHttpSou
     return (
       <div className="space-y-3">
         {webSeeds.map((seed, index) => (
-          <MobileHttpSourceCard key={index} seed={seed} />
+          <MobileHttpSourceCard
+            key={seed.url || index}
+            seed={seed}
+            onEditHttpSource={onEditHttpSource}
+            onRemoveHttpSource={onRemoveHttpSource}
+            removeHttpSourceIsPending={removeHttpSourceIsPending}
+          />
         ))}
       </div>
     );

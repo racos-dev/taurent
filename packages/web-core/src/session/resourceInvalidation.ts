@@ -15,6 +15,7 @@ import {
   invalidateTorrentProperties,
   invalidateTorrentTrackers,
   invalidateTorrentFiles,
+  invalidateTorrentWebseeds,
   invalidateTransferInfo,
   invalidateRss,
   invalidateSearch,
@@ -30,6 +31,7 @@ import type { QueryInvalidator } from './sessionController';
  *   "torrent-properties:<hash>"
  *   "torrent-trackers:<hash>"
  *   "torrent-files:<hash>"
+ *   "torrent-webseeds:<hash>"
  *
  * Returns the base resource name and hash, or null if the format is unexpected.
  */
@@ -78,6 +80,9 @@ export function handleResourceInvalidated(
         return;
       case RESOURCE.TORRENT_FILES:
         invalidateTorrentFiles(queryClient, scope, detail.hash);
+        return;
+      case RESOURCE.TORRENT_WEBSEEDS:
+        invalidateTorrentWebseeds(queryClient, scope, detail.hash);
         return;
     }
   }

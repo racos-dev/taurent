@@ -1532,6 +1532,7 @@ function createMockMobileBridge(transport?: Transport): MobileBridge {
             supports_search: 'unknown' as const,
             supports_rss: 'unknown' as const,
             supports_pause_resume: 'unknown' as const,
+            supports_webseed_management: 'confirmed' as const,
           },
         });
       },

@@ -230,6 +230,8 @@ async fn probe_path(
 /// - App version from /api/v2/app/version
 /// - API version from /api/v2/app/webapiVersion
 /// - Probes /api/v2/search/plugins (search) and /api/v2/rss/items (RSS)
+/// - Probes /api/v2/torrents/addWebSeeds without required params to detect
+///   web seed mutation endpoint routing without changing server state.
 /// Preserves tri-state semantics: probe failure + unknown version → Unknown (not Unsupported).
 #[tauri::command]
 pub async fn get_server_capabilities(
@@ -264,11 +266,24 @@ pub async fn get_server_capabilities(
         .map(|(s, _)| (200..300).contains(s))
         .ok();
 
+    let webseed_result = probe_path(&state, "/api/v2/torrents/addWebSeeds").await;
+    let webseed_management_probe_ok: Option<bool> =
+        webseed_result
+            .as_ref()
+            .ok()
+            .and_then(|(status, _)| match *status {
+                401 | 403 => None,
+                404 | 501 => Some(false),
+                500..=599 => None,
+                _ => Some(true),
+            });
+
     let capabilities = resolve_capabilities(
         api_version.as_deref(),
         app_version.as_deref(),
         search_probe_ok,
         rss_probe_ok,
+        webseed_management_probe_ok,
     );
 
     Ok(CapabilitiesResponse {
