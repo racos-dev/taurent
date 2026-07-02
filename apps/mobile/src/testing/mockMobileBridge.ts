@@ -1211,6 +1211,21 @@ function createMockMobileBridge(transport?: Transport): MobileBridge {
         return Promise.resolve({ session_generation: GEN, server_id: null, webseeds: [] });
       },
 
+      addWebSeeds(_hash: string, _urls: string) {
+        recordCall('torrents.addWebSeeds', [_hash, _urls]);
+        return Promise.resolve(OK());
+      },
+
+      editWebSeed(_hash: string, _origUrl: string, _newUrl: string) {
+        recordCall('torrents.editWebSeed', [_hash, _origUrl, _newUrl]);
+        return Promise.resolve(OK());
+      },
+
+      removeWebSeeds(_hash: string, _urls: string) {
+        recordCall('torrents.removeWebSeeds', [_hash, _urls]);
+        return Promise.resolve(OK());
+      },
+
       setDownloadLimit(hashes: string[], limit: number) {
         recordCall('torrents.setDownloadLimit', [hashes, limit]);
         const error = maybeFail('torrents.setDownloadLimit');
