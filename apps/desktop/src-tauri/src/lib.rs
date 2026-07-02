@@ -759,6 +759,7 @@ pub fn run() {
             torrents::probe_search,
             torrents::probe_rss,
             torrents::add_trackers,
+            torrents::add_peers,
             torrents::edit_tracker,
             torrents::remove_trackers,
             torrents::sync_torrent_peers,
