@@ -51,7 +51,7 @@ jobs:
           app_version="${release_tag#v}"
           echo "app_version=$app_version" >> "$GITHUB_OUTPUT"
 
-          if [[ "$app_version" == *-* ]]; then
+          if [[ "$app_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+- ]]; then
             echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
@@ -82,21 +82,6 @@ jobs:
       - name: Apply release tag version
         run: node scripts/version-app.mjs "${{ steps.release.outputs.app_version }}"
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@1.90.0
-        with:
-          components: rustfmt, clippy
-
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          key: rust-release-preflight-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Install Linux deps
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf build-essential curl wget file
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -120,28 +105,66 @@ jobs:
       - name: Mobile unit tests
         run: pnpm mobile:test
 
-      - name: Mobile renderer build
-        run: pnpm mobile:build
+  rust-quality:
+    name: Rust Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve release tag
+        id: release
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            release_tag="${{ inputs.tag }}"
+          else
+            release_tag="${GITHUB_REF_NAME}"
+          fi
+          echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ steps.release.outputs.release_tag }}
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@1.90.0
+        with:
+          components: rustfmt, clippy
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: rust-release-quality-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install Linux deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf build-essential curl wget file
 
       - name: Rustfmt check
         run: cargo fmt --all --check
 
-      - name: Cargo check
-        run: |
-          cargo check --workspace --locked -p qb-core
-          cargo check --workspace --locked --features desktop -p qb-tauri
-          cargo check --workspace --locked --features mobile -p qb-tauri
+      - name: Cargo check (core)
+        run: cargo check --workspace --locked -p qb-core
 
-      - name: Clippy
-        run: |
-          cargo clippy --workspace --all-targets --locked -p qb-core
-          cargo clippy --workspace --all-targets --locked --features desktop -p qb-tauri
-          cargo clippy --workspace --all-targets --locked --features mobile -p qb-tauri
+      - name: Cargo check (tauri desktop)
+        run: cargo check --workspace --locked --features desktop -p qb-tauri
+
+      - name: Cargo check (tauri mobile)
+        run: cargo check --workspace --locked --features mobile -p qb-tauri
+
+      - name: Clippy (core)
+        run: cargo clippy --workspace --all-targets --locked -p qb-core
+
+      - name: Clippy (tauri desktop)
+        run: cargo clippy --workspace --all-targets --locked --features desktop -p qb-tauri
+
+      - name: Clippy (tauri mobile)
+        run: cargo clippy --workspace --all-targets --locked --features mobile -p qb-tauri
 
   desktop-build:
     environment: release
     name: Desktop Build (${{ matrix.name }})
-    needs: release-preflight
+    needs: [release-preflight, rust-quality]
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
@@ -149,7 +172,7 @@ jobs:
         include:
           - name: macOS Intel
             artifact: taurent-macos-intel
-            runner: macos-15-intel
+            runner: macos-15
             tauriArgs: --target x86_64-apple-darwin
             rustTargets: x86_64-apple-darwin
           - name: macOS Apple Silicon
@@ -186,6 +209,11 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: rust-release-desktop-${{ matrix.artifact }}-${{ hashFiles('**/Cargo.lock') }}
+
       - name: Apply release tag version
         run: node scripts/version-app.mjs "${{ needs.release-preflight.outputs.app_version }}"
 
@@ -194,18 +222,13 @@ jobs:
         with:
           targets: ${{ matrix.rustTargets }}
 
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          key: rust-release-desktop-${{ matrix.artifact }}-${{ hashFiles('**/Cargo.lock') }}
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Check app versions
-        env:
-          RELEASE_TAG: ${{ needs.release-preflight.outputs.release_tag }}
-        run: node scripts/ci/check-versions.mjs
+      - name: Resolve build metadata
+        id: build_metadata
+        shell: bash
+        run: echo "git_sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Install Linux deps
         if: matrix.name == 'Linux'
@@ -213,12 +236,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf build-essential curl wget file
 
+      # NOTE: macOS notarization not configured. Users will hit Gatekeeper.
+      # To enable: add APPLE_CERTIFICATE, APPLE_CERTIFICATE_PASSWORD, APPLE_TEAM_ID, APPLE_ID, APPLE_PASSWORD secrets.
       - name: Build desktop Tauri app
-        uses: tauri-apps/tauri-action@v0.6.2
+        uses: tauri-apps/tauri-action@1ddc7b49b13c3038297360482fcb3e058764d7c9
         env:
           VITE_APP_VERSION: ${{ needs.release-preflight.outputs.app_version }}
           VITE_RELEASE_TAG: ${{ needs.release-preflight.outputs.release_tag }}
-          VITE_GIT_SHA: ${{ needs.release-preflight.outputs.git_sha }}
+          VITE_GIT_SHA: ${{ steps.build_metadata.outputs.git_sha }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
@@ -240,8 +265,7 @@ jobs:
             -name '*.app.tar.gz' -o \
             -name '*.app.tar.gz.sig' -o \
             -name '*.exe' -o \
-            -name '*.exe.sig' -o \
-            -name 'latest.json' \
+            -name '*.exe.sig' \
           \) -print -exec cp {} artifacts/release/desktop/ \;
           test -n "$(find artifacts/release/desktop -type f -print -quit)"
 
@@ -251,10 +275,11 @@ jobs:
           name: ${{ matrix.artifact }}
           path: artifacts/release/desktop/*
           if-no-files-found: error
+          retention-days: 1
 
   android-build:
     name: Android Build
-    needs: release-preflight
+    needs: [release-preflight, rust-quality]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -274,6 +299,11 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: rust-release-android-${{ hashFiles('**/Cargo.lock') }}
+
       - name: Apply release tag version
         run: node scripts/version-app.mjs "${{ needs.release-preflight.outputs.app_version }}"
 
@@ -284,11 +314,21 @@ jobs:
           java-version: '17'
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v4
+        uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699
+
+      - name: Cache Android NDK
+        id: ndk-cache
+        uses: actions/cache@v4
+        with:
+          path: /usr/local/lib/android/sdk/ndk/${{ env.ANDROID_NDK_VERSION }}
+          key: android-ndk-${{ runner.os }}-${{ env.ANDROID_NDK_VERSION }}
 
       - name: Install Android NDK
+        if: steps.ndk-cache.outputs.cache-hit != 'true'
+        run: sdkmanager "ndk;${ANDROID_NDK_VERSION}"
+
+      - name: Export Android NDK paths
         run: |
-          sdkmanager "ndk;${ANDROID_NDK_VERSION}"
           echo "NDK_HOME=${ANDROID_HOME}/ndk/${ANDROID_NDK_VERSION}" >> "$GITHUB_ENV"
           echo "ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/${ANDROID_NDK_VERSION}" >> "$GITHUB_ENV"
 
@@ -297,19 +337,17 @@ jobs:
         with:
           targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
 
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          key: rust-release-android-${{ hashFiles('**/Cargo.lock') }}
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Check app versions
-        env:
-          RELEASE_TAG: ${{ needs.release-preflight.outputs.release_tag }}
-        run: node scripts/ci/check-versions.mjs
+      - name: Resolve build metadata
+        id: build_metadata
+        shell: bash
+        run: echo "git_sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
+      # WARNING: tauri android init regenerates gen/android/ from scratch.
+      # Any signing config, Gradle tweaks, or native hooks must be injected AFTER this step.
+      # See plan 03-android-signing.md for keystore injection.
       - name: Regenerate ignored Android project
         run: pnpm --filter taurent-mobile tauri android init
 
@@ -317,7 +355,7 @@ jobs:
         env:
           VITE_APP_VERSION: ${{ needs.release-preflight.outputs.app_version }}
           VITE_RELEASE_TAG: ${{ needs.release-preflight.outputs.release_tag }}
-          VITE_GIT_SHA: ${{ needs.release-preflight.outputs.git_sha }}
+          VITE_GIT_SHA: ${{ steps.build_metadata.outputs.git_sha }}
         run: pnpm --filter taurent-mobile tauri android build --apk
 
       - name: Collect Android release APK
@@ -338,6 +376,18 @@ jobs:
           name: taurent-android-unsigned-release-apk
           path: artifacts/release/android/*.apk
           if-no-files-found: error
+          retention-days: 1
+
+      - name: Upload Android build logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-build-logs
+          path: |
+            apps/mobile/src-tauri/gen/android/app/build/outputs/logs/
+            apps/mobile/src-tauri/gen/android/build/reports/
+          if-no-files-found: ignore
+          retention-days: 3
 
   publish-release:
     name: Publish GitHub Release
@@ -380,19 +430,26 @@ jobs:
             exit 1
           fi
 
-          edit_flags=(--title "$RELEASE_TAG" --draft=false)
+          edit_flags=(--title "$RELEASE_TAG")
           create_flags=(--title "$RELEASE_TAG" --notes "Automated release build for $RELEASE_TAG.")
           if [[ "$IS_PRERELEASE" == "true" ]]; then
             edit_flags+=(--prerelease)
-            create_flags+=(--prerelease --latest=false)
+            create_flags+=(--prerelease)
+          fi
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" || "$IS_PRERELEASE" == "true" ]]; then
+            edit_flags+=(--latest=false)
+            create_flags+=(--latest=false)
           else
             edit_flags+=(--latest)
             create_flags+=(--latest)
           fi
+          create_flags+=(--draft)
 
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release edit "$RELEASE_TAG" "${edit_flags[@]}"
             gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
           else
-            gh release create "$RELEASE_TAG" "${assets[@]}" "${create_flags[@]}"
+            gh release create "$RELEASE_TAG" "${create_flags[@]}"
+            gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
           fi
+          gh release edit "$RELEASE_TAG" --draft=false
