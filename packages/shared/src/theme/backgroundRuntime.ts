@@ -21,14 +21,14 @@ function getSystemThemeVariant(): ThemeVariant {
 export function resolveCurrentThemeBackground(): string {
   try {
     const mode = localStorage.getItem('app_theme_mode');
-    let palette: ThemePalette = 'solarized';
+    let palette: ThemePalette = 'catppuccin';
     let variant: ThemeVariant = getSystemThemeVariant();
 
     if (mode === 'system') {
-      palette = (localStorage.getItem('app_system_palette') ?? 'solarized') as ThemePalette;
+      palette = (localStorage.getItem('app_system_palette') ?? 'catppuccin') as ThemePalette;
       variant = getSystemThemeVariant();
     } else if (mode === 'manual') {
-      palette = (localStorage.getItem('app_manual_palette') ?? 'solarized') as ThemePalette;
+      palette = (localStorage.getItem('app_manual_palette') ?? 'catppuccin') as ThemePalette;
       variant = (localStorage.getItem('app_manual_variant') ?? 'dark') as ThemeVariant;
     }
 
@@ -46,5 +46,5 @@ export function resolveCurrentThemeBackgroundRgba(): [number, number, number, nu
 
 /** Resolve an OS-scheme background for native window creation/chrome. */
 export function resolveSystemThemeBackgroundRgba(): [number, number, number, number] {
-  return hexToRgba(getSystemThemeVariant() === 'dark' ? DEFAULT_THEME_BACKGROUND : getThemeBackground('theme-solarized-light'));
+  return hexToRgba(getSystemThemeVariant() === 'dark' ? DEFAULT_THEME_BACKGROUND : getThemeBackground('theme-catppuccin-latte'));
 }

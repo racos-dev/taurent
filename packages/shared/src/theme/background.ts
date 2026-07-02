@@ -26,7 +26,7 @@ export const THEME_BACKGROUND_COLORS = {
 } as const satisfies Record<string, string>;
 
 /** Default fallback background used when theme resolution fails. */
-export const DEFAULT_THEME_BACKGROUND = '#002b36';
+export const DEFAULT_THEME_BACKGROUND = '#1e1e2e';
 
 /** Convert a hex color string (#rrggbb or #rrggbbaa) to an RGBA tuple for Tauri's Color type. */
 export function hexToRgba(hex: string): [number, number, number, number] {
@@ -52,7 +52,7 @@ export function getThemeBackground(themeClass: string): string {
 export function generateThemeBackgroundStyles(): string {
   const rules: string[] = [`html,body{background-color:${DEFAULT_THEME_BACKGROUND};}`];
   for (const [cls, color] of Object.entries(THEME_BACKGROUND_COLORS)) {
-    if (cls !== 'theme-solarized-dark') {
+    if (cls !== 'theme-catppuccin-mocha') {
       rules.push(`html.${cls}{background-color:${color};}`);
     }
   }
@@ -78,11 +78,11 @@ export function generateThemeInitScript(): string {
     `function c(p,v){if(p==='catppuccin')return 'theme-catppuccin-'+(v==='dark'?'mocha':'latte');` +
     `if(d.indexOf(p)!==-1)return 'theme-'+p;return 'theme-'+p+'-'+v;}` +
     `function s(){return typeof matchMedia==='function'&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}` +
-    `var p='solarized',v=s(),m=localStorage.getItem('app_theme_mode');` +
-    `if(m==='system'){p=localStorage.getItem('app_system_palette')||'solarized';` +
+    `var p='catppuccin',v=s(),m=localStorage.getItem('app_theme_mode');` +
+    `if(m==='system'){p=localStorage.getItem('app_system_palette')||'catppuccin';` +
     `v=s();}` +
-    `else if(m==='manual'){p=localStorage.getItem('app_manual_palette')||'solarized';` +
-    `v=localStorage.getItem('app_manual_variant')||'dark';}` +
+    `else if(m==='manual'){p=localStorage.getItem('app_manual_palette')||'catppuccin';` +
+    `v=localStorage.getItem('app_manual_variant')||s();}` +
     `if(d.indexOf(p)!==-1)v='dark';` +
     `document.documentElement.className=c(p,v);` +
     `}catch(e){}})();`
