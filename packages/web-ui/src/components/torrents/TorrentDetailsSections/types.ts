@@ -129,7 +129,11 @@ export interface TorrentDetailsPeersSectionProps extends SectionStateProps {
 export interface TorrentDetailsHttpSourcesSectionProps extends SectionStateProps {
   variant?: 'desktop' | 'mobile';
   webSeeds: import('@taurent/shared/types/qbittorrent').WebSeed[] | undefined;
+  onAddHttpSources?: () => void;
+  onEditHttpSource?: (seed: import('@taurent/shared/types/qbittorrent').WebSeed) => void;
+  onRemoveHttpSource?: (seed: import('@taurent/shared/types/qbittorrent').WebSeed) => void;
   onCopyHttpSourceUrl?: (seed: import('@taurent/shared/types/qbittorrent').WebSeed) => void;
+  removeHttpSourceIsPending?: boolean;
 }
 
 // Display status types for mobile

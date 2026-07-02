@@ -24,7 +24,7 @@ import {
 import { DesktopTorrentDetailsFilesSection } from '../TorrentDetail/DesktopTorrentDetailsFilesSection';
 import { useTorrentDetailController, type DetailTab } from '@taurent/web-core/screens';
 import type { PeerRow } from '@taurent/web-core/hooks';
-import type { Tracker, TorrentFile } from '@taurent/shared/types/qbittorrent';
+import type { Tracker, TorrentFile, WebSeed } from '@taurent/shared/types/qbittorrent';
 import { openTorrentTextDialogWindow } from '../../windows/dialogs/torrentTextDialogWindow';
 import { openTorrentNumericDialogWindow } from '../../windows/dialogs/torrentNumericDialogWindow';
 import { openTorrentDeleteDialogWindow } from '../../windows/dialogs/torrentDeleteDialogWindow';
@@ -69,6 +69,14 @@ const TABS: Array<{ id: DetailTab; label: string }> = [
 
 function clampHeight(height: number): number {
   return Math.min(MAX_PANEL_HEIGHT, Math.max(MIN_PANEL_HEIGHT, height));
+}
+
+function normalizeHttpSourceUrls(value: string): string {
+  return value
+    .split(/[\n,]+/)
+    .map((url) => url.trim())
+    .filter(Boolean)
+    .join('|');
 }
 
 export function DetailPanel() {
@@ -247,6 +255,25 @@ export function DetailPanel() {
     onSuccess: () => { void trackersRefetch(); },
   });
 
+  // ─── HTTP source mutations ───────────────────────────────────────────────
+  const addHttpSourcesMutation = useMutation({
+    mutationFn: (vars: { hash: string; urls: string }) =>
+      BridgeAdapter.torrents.addWebSeeds(vars.hash, vars.urls),
+    onSuccess: () => { void webSeedsRefetch(); },
+  });
+
+  const editHttpSourceMutation = useMutation({
+    mutationFn: (vars: { hash: string; origUrl: string; newUrl: string }) =>
+      BridgeAdapter.torrents.editWebSeed(vars.hash, vars.origUrl, vars.newUrl),
+    onSuccess: () => { void webSeedsRefetch(); },
+  });
+
+  const removeHttpSourceMutation = useMutation({
+    mutationFn: (vars: { hash: string; urls: string }) =>
+      BridgeAdapter.torrents.removeWebSeeds(vars.hash, vars.urls),
+    onSuccess: () => { void webSeedsRefetch(); },
+  });
+
   // ─── Set file priority mutation ───────────────────────────────────────────
   const setFilePriorityMutation = useMutation({
     mutationFn: (vars: { hash: string; ids: number[]; priority: number }) =>
@@ -294,6 +321,71 @@ export function DetailPanel() {
   const handleCopyHttpSourceUrl = useCallback((seed: { url: string }) => {
     void navigator.clipboard.writeText(seed.url);
   }, []);
+
+  // ─── HTTP source context menu handlers ───────────────────────────────────
+  const [showAddHttpSources, setShowAddHttpSources] = useState(false);
+  const [newHttpSourceUrls, setNewHttpSourceUrls] = useState('');
+  const [editingHttpSource, setEditingHttpSource] = useState<WebSeed | null>(null);
+  const [editHttpSourceUrl, setEditHttpSourceUrl] = useState('');
+
+  const closeAddHttpSources = useCallback(() => {
+    setShowAddHttpSources(false);
+    setNewHttpSourceUrls('');
+  }, []);
+
+  const toggleAddHttpSources = useCallback(() => {
+    setShowAddHttpSources((value) => !value);
+    setEditingHttpSource(null);
+  }, []);
+
+  const handleAddHttpSourcesSubmit = useCallback(() => {
+    const urls = normalizeHttpSourceUrls(newHttpSourceUrls);
+    if (!panelTorrentHash || !urls) return;
+    void addHttpSourcesMutation.mutateAsync({
+      hash: panelTorrentHash,
+      urls,
+    }).then(() => {
+      closeAddHttpSources();
+    }).catch((err) => {
+      toast.error(formatUserMessageForContext(err, 'torrent-action'), {
+        dedupeKey: 'desktop-detail-panel:add-http-sources',
+      });
+    });
+  }, [addHttpSourcesMutation, closeAddHttpSources, newHttpSourceUrls, panelTorrentHash]);
+
+  const handleEditHttpSource = useCallback((seed: WebSeed) => {
+    setEditingHttpSource(seed);
+    setEditHttpSourceUrl(seed.url);
+    setShowAddHttpSources(false);
+  }, []);
+
+  const handleEditHttpSourceSubmit = useCallback(() => {
+    if (!editingHttpSource || !panelTorrentHash || !editHttpSourceUrl.trim()) return;
+    void editHttpSourceMutation.mutateAsync({
+      hash: panelTorrentHash,
+      origUrl: editingHttpSource.url,
+      newUrl: editHttpSourceUrl.trim(),
+    }).then(() => {
+      setEditingHttpSource(null);
+      setEditHttpSourceUrl('');
+    }).catch((err) => {
+      toast.error(formatUserMessageForContext(err, 'torrent-action'), {
+        dedupeKey: 'desktop-detail-panel:edit-http-source',
+      });
+    });
+  }, [editHttpSourceMutation, editHttpSourceUrl, editingHttpSource, panelTorrentHash]);
+
+  const handleRemoveHttpSource = useCallback((seed: WebSeed) => {
+    if (!panelTorrentHash) return;
+    void removeHttpSourceMutation.mutateAsync({
+      hash: panelTorrentHash,
+      urls: seed.url,
+    }).catch((err) => {
+      toast.error(formatUserMessageForContext(err, 'torrent-action'), {
+        dedupeKey: 'desktop-detail-panel:remove-http-source',
+      });
+    });
+  }, [panelTorrentHash, removeHttpSourceMutation]);
 
   // ─── File toggle/priority handlers ────────────────────────────────────────
   const handleFileToggle = useCallback((fileIndex: number, enabled: boolean) => {
@@ -636,14 +728,82 @@ export function DetailPanel() {
             </div>
           )}
           {shellTab === 'httpSources' && (
-            <TorrentDetailsHttpSourcesSection
-              variant="desktop"
-              webSeeds={webSeeds}
-              isLoading={webSeedsLoading}
-              error={webSeedsError}
-              onRetry={webSeedsRefetch}
-              onCopyHttpSourceUrl={handleCopyHttpSourceUrl}
-            />
+            <div className="flex min-h-0 flex-1 flex-col gap-2">
+              {showAddHttpSources ? (
+                <div className="flex items-center gap-2 rounded-sm border border-border bg-surface p-2">
+                  <Input
+                    type="text"
+                    value={newHttpSourceUrls}
+                    onChange={setNewHttpSourceUrls}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { handleAddHttpSourcesSubmit(); } }}
+                    placeholder="https://example.com/file, https://mirror.example.com/file"
+                    className="min-w-0 flex-1"
+                    disabled={addHttpSourcesMutation.isPending}
+                    size="sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddHttpSourcesSubmit}
+                    disabled={addHttpSourcesMutation.isPending || !newHttpSourceUrls.trim()}
+                    className="shrink-0 rounded-sm border border-primary bg-primary px-2 py-1 text-xs font-medium text-text-on-primary transition-colors enabled:hover:bg-primary/90 disabled:cursor-not-allowed disabled:text-text-disabled disabled:bg-bg-disabled disabled:text-text-disabled disabled:border-border-disabled"
+                  >
+                    Add
+                  </button>
+                  <button
+                    type="button"
+                    onClick={closeAddHttpSources}
+                    disabled={addHttpSourcesMutation.isPending}
+                    className="shrink-0 rounded-sm border border-border px-2 py-1 text-xs font-medium text-text-secondary transition-colors enabled:hover:bg-surface-interactive disabled:cursor-not-allowed disabled:text-text-disabled disabled:bg-bg-disabled disabled:text-text-disabled disabled:border-border-disabled"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : null}
+
+              {editingHttpSource ? (
+                <div className="flex items-center gap-2 rounded-sm border border-border bg-surface p-2">
+                  <span className="text-xs text-text-secondary shrink-0">Edit:</span>
+                  <Input
+                    type="text"
+                    value={editHttpSourceUrl}
+                    onChange={setEditHttpSourceUrl}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { handleEditHttpSourceSubmit(); } }}
+                    className="min-w-0 flex-1"
+                    disabled={editHttpSourceMutation.isPending}
+                    size="sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleEditHttpSourceSubmit}
+                    disabled={editHttpSourceMutation.isPending || !editHttpSourceUrl.trim()}
+                    className="shrink-0 rounded-sm border border-primary bg-primary px-2 py-1 text-xs font-medium text-text-on-primary transition-colors enabled:hover:bg-primary/90 disabled:cursor-not-allowed disabled:text-text-disabled disabled:bg-bg-disabled disabled:text-text-disabled disabled:border-border-disabled"
+                  >
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setEditingHttpSource(null); setEditHttpSourceUrl(''); }}
+                    disabled={editHttpSourceMutation.isPending}
+                    className="shrink-0 rounded-sm border border-border px-2 py-1 text-xs font-medium text-text-secondary transition-colors enabled:hover:bg-surface-interactive disabled:cursor-not-allowed disabled:text-text-disabled disabled:bg-bg-disabled disabled:text-text-disabled disabled:border-border-disabled"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : null}
+
+              <TorrentDetailsHttpSourcesSection
+                variant="desktop"
+                webSeeds={webSeeds}
+                isLoading={webSeedsLoading}
+                error={webSeedsError}
+                onRetry={webSeedsRefetch}
+                onAddHttpSources={toggleAddHttpSources}
+                onEditHttpSource={handleEditHttpSource}
+                onRemoveHttpSource={handleRemoveHttpSource}
+                onCopyHttpSourceUrl={handleCopyHttpSourceUrl}
+                removeHttpSourceIsPending={removeHttpSourceMutation.isPending}
+              />
+            </div>
           )}
           {shellTab === 'files' && (
             <div className="flex min-h-0 flex-1 flex-col gap-2">

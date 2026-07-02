@@ -9,12 +9,25 @@ import { StateCard } from '../../shared/StateCard';
 import { RetryButton } from '../../shared/RetryButton';
 
 // Desktop HTTP sources table
-function DesktopHttpSources({ webSeeds, onCopyHttpSourceUrl, onRefresh }: {
+function DesktopHttpSources({
+  webSeeds,
+  onAddHttpSources,
+  onEditHttpSource,
+  onRemoveHttpSource,
+  onCopyHttpSourceUrl,
+  onRefresh,
+  removeHttpSourceIsPending,
+}: {
   webSeeds: WebSeed[];
+  onAddHttpSources?: () => void;
+  onEditHttpSource?: (seed: WebSeed) => void;
+  onRemoveHttpSource?: (seed: WebSeed) => void;
   onCopyHttpSourceUrl?: (seed: WebSeed) => void;
   onRefresh?: () => void;
+  removeHttpSourceIsPending?: boolean;
 }) {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; seed: WebSeed | null } | null>(null);
+  const [activeSeedUrl, setActiveSeedUrl] = useState<string | null>(null);
 
   const columns = React.useMemo<DesktopDetailTableColumn<WebSeed>[]>(() => [
     {
@@ -33,16 +46,17 @@ function DesktopHttpSources({ webSeeds, onCopyHttpSourceUrl, onRefresh }: {
   }, []);
 
   const handleRowContextMenu = useCallback((event: React.MouseEvent<HTMLTableRowElement>, seed: WebSeed) => {
-    if (!onCopyHttpSourceUrl) return;
+    if (!onEditHttpSource && !onRemoveHttpSource && !onCopyHttpSourceUrl) return;
     event.preventDefault();
+    setActiveSeedUrl(seed.url);
     setContextMenu({ x: event.clientX, y: event.clientY, seed });
-  }, [onCopyHttpSourceUrl]);
+  }, [onCopyHttpSourceUrl, onEditHttpSource, onRemoveHttpSource]);
 
   const handleTableContextMenu = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-    if (!onRefresh) return;
+    if (!onAddHttpSources && !onRefresh) return;
     event.preventDefault();
     setContextMenu({ x: event.clientX, y: event.clientY, seed: null });
-  }, [onRefresh]);
+  }, [onAddHttpSources, onRefresh]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -51,7 +65,9 @@ function DesktopHttpSources({ webSeeds, onCopyHttpSourceUrl, onRefresh }: {
         rows={webSeeds}
         rowKey={(seed) => seed.url}
         onRowContextMenu={handleRowContextMenu}
+        onRowClick={(seed) => { setActiveSeedUrl(seed.url); }}
         onTableContextMenu={handleTableContextMenu}
+        activeRowKey={activeSeedUrl ?? undefined}
       />
 
       {contextMenu ? (
@@ -60,21 +76,40 @@ function DesktopHttpSources({ webSeeds, onCopyHttpSourceUrl, onRefresh }: {
           y={contextMenu.y}
           seed={contextMenu.seed}
           onClose={closeContextMenu}
+          onAddHttpSources={onAddHttpSources}
+          onEditHttpSource={onEditHttpSource}
+          onRemoveHttpSource={onRemoveHttpSource}
           onCopyHttpSourceUrl={onCopyHttpSourceUrl}
           onRefresh={onRefresh}
+          removeHttpSourceIsPending={removeHttpSourceIsPending}
         />
       ) : null}
     </div>
   );
 }
 
-function HttpSourceContextMenuOverlay({ x, y, seed, onClose, onCopyHttpSourceUrl, onRefresh }: {
+function HttpSourceContextMenuOverlay({
+  x,
+  y,
+  seed,
+  onClose,
+  onAddHttpSources,
+  onEditHttpSource,
+  onRemoveHttpSource,
+  onCopyHttpSourceUrl,
+  onRefresh,
+  removeHttpSourceIsPending,
+}: {
   x: number;
   y: number;
   seed: WebSeed | null;
   onClose: () => void;
+  onAddHttpSources?: () => void;
+  onEditHttpSource?: (seed: WebSeed) => void;
+  onRemoveHttpSource?: (seed: WebSeed) => void;
   onCopyHttpSourceUrl?: (seed: WebSeed) => void;
   onRefresh?: () => void;
+  removeHttpSourceIsPending?: boolean;
 }) {
   const menuRef = React.useRef<HTMLDivElement>(null);
 
@@ -114,6 +149,37 @@ function HttpSourceContextMenuOverlay({ x, y, seed, onClose, onCopyHttpSourceUrl
       style={{ left: pos.x, top: pos.y }}
       className="fixed z-50 w-52 rounded-md border border-border bg-surface-elevated py-1 shadow-lg select-none"
     >
+      {!seed && onAddHttpSources ? (
+        <button
+          type="button"
+          role="menuitem"
+          onClick={() => { onAddHttpSources(); onClose(); }}
+          className="flex w-full items-center px-2 py-1 text-left text-xs text-text-primary hover:bg-surface-interactive select-none"
+        >
+          Add HTTP sources...
+        </button>
+      ) : null}
+      {seed && onEditHttpSource ? (
+        <button
+          type="button"
+          role="menuitem"
+          onClick={() => { onEditHttpSource(seed); onClose(); }}
+          className="flex w-full items-center px-2 py-1 text-left text-xs text-text-primary hover:bg-surface-interactive select-none"
+        >
+          Edit HTTP source URL...
+        </button>
+      ) : null}
+      {seed && onRemoveHttpSource ? (
+        <button
+          type="button"
+          role="menuitem"
+          disabled={removeHttpSourceIsPending}
+          onClick={() => { onRemoveHttpSource(seed); onClose(); }}
+          className="flex w-full items-center px-2 py-1 text-left text-xs text-text-primary hover:bg-surface-interactive disabled:cursor-not-allowed disabled:text-text-disabled select-none"
+        >
+          Remove HTTP source
+        </button>
+      ) : null}
       {seed && onCopyHttpSourceUrl ? (
         <button
           type="button"
@@ -148,7 +214,18 @@ function MobileHttpSourceCard({ seed }: { seed: WebSeed }) {
 }
 
 export const TorrentDetailsHttpSourcesSection = React.memo<TorrentDetailsHttpSourcesSectionProps>(
-  ({ variant = 'desktop', webSeeds, isLoading, error, onRetry, onCopyHttpSourceUrl }) => {
+  ({
+    variant = 'desktop',
+    webSeeds,
+    isLoading,
+    error,
+    onRetry,
+    onAddHttpSources,
+    onEditHttpSource,
+    onRemoveHttpSource,
+    onCopyHttpSourceUrl,
+    removeHttpSourceIsPending,
+  }) => {
     if (isLoading && !webSeeds) {
       if (variant === 'mobile') {
         return (
@@ -180,7 +257,17 @@ export const TorrentDetailsHttpSourcesSection = React.memo<TorrentDetailsHttpSou
     }
 
     if (variant === 'desktop') {
-      return <DesktopHttpSources webSeeds={webSeeds ?? []} onCopyHttpSourceUrl={onCopyHttpSourceUrl} onRefresh={onRetry} />;
+      return (
+        <DesktopHttpSources
+          webSeeds={webSeeds ?? []}
+          onAddHttpSources={onAddHttpSources}
+          onEditHttpSource={onEditHttpSource}
+          onRemoveHttpSource={onRemoveHttpSource}
+          onCopyHttpSourceUrl={onCopyHttpSourceUrl}
+          onRefresh={onRetry}
+          removeHttpSourceIsPending={removeHttpSourceIsPending}
+        />
+      );
     }
 
     if (!webSeeds || webSeeds.length === 0) {
