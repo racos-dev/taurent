@@ -81,7 +81,7 @@ function getFolderStats(node: FileTreeNode): FolderStats {
   const progress = totalSize > 0 ? totalDone / totalSize : 0;
   const remaining = totalSize - totalDone;
   const avgAvailability = averageKnownFileAvailability(files);
-  const allEnabled = files.every((file) => file.priority > 0);
+  const allEnabled = files.length > 0 && files.every((file) => file.priority > 0);
   const someEnabled = files.some((file) => file.priority > 0);
   const maxPriority = files.reduce((max, file) => Math.max(max, file.priority), 0);
 
@@ -191,13 +191,14 @@ function useLongPress(onLongPress: () => void) {
     onContextMenu: handleContextMenu,
   };
 }
-function DesktopFiles({ files, onFileToggle, onToggleAll, onFilePriority, onFileContextMenu, onFolderContextMenu, onFolderRowClick }: {
+function DesktopFiles({ files, onFileToggle, onToggleAll, onFilePriority, onFileContextMenu, onFolderContextMenu, onFilesContextMenu, onFolderRowClick }: {
   files: TorrentFile[];
   onFileToggle?: (fileIndex: number, enabled: boolean) => void;
   onToggleAll?: (enabled: boolean) => void;
   onFilePriority?: (file: TorrentFile) => void;
   onFileContextMenu?: (event: React.MouseEvent<HTMLTableRowElement>, row: FileDisplayRow) => void;
   onFolderContextMenu?: (event: React.MouseEvent<HTMLTableRowElement>, row: FileDisplayRow) => void;
+  onFilesContextMenu?: (event: React.MouseEvent<HTMLDivElement>) => void;
   onFolderRowClick?: (row: FileDisplayRow) => void;
 }) {
   const tree = useMemo(() => buildFileTree(files), [files]);
@@ -543,6 +544,7 @@ function DesktopFiles({ files, onFileToggle, onToggleAll, onFilePriority, onFile
         onSortChange={handleSortChange}
         onRowClick={(row) => { setActiveRowKey(row.key); }}
         onRowContextMenu={handleRowContextMenu}
+        onTableContextMenu={onFilesContextMenu}
         getRowClassName={(row) => !row.isFolder && row.file?.priority === 0 ? 'opacity-70' : undefined}
       />
     </div>
@@ -768,7 +770,7 @@ function MobileFiles({
 }
 
 export const TorrentDetailsFilesSection = React.memo<TorrentDetailsFilesSectionProps>(
-  ({ variant = 'desktop', files, isLoading, error, onRetry, onFilePriority, onFilePriorityTarget, onFileToggle, onToggleAll, onFileContextMenu, onFolderContextMenu, onFolderRowClick }) => {
+  ({ variant = 'desktop', files, isLoading, error, onRetry, onFilePriority, onFilePriorityTarget, onFileToggle, onToggleAll, onFileContextMenu, onFolderContextMenu, onFilesContextMenu, onFolderRowClick }) => {
     if (isLoading && !files) {
       if (variant === 'mobile') {
         return (
@@ -797,22 +799,17 @@ export const TorrentDetailsFilesSection = React.memo<TorrentDetailsFilesSectionP
       );
     }
 
+    if (variant === 'desktop') {
+      return <DesktopFiles files={files ?? []} onFileToggle={onFileToggle} onToggleAll={onToggleAll} onFilePriority={onFilePriority} onFileContextMenu={onFileContextMenu} onFolderContextMenu={onFolderContextMenu} onFilesContextMenu={onFilesContextMenu} onFolderRowClick={onFolderRowClick} />;
+    }
+
     if (!files || files.length === 0) {
-      if (variant === 'mobile') {
-        return (
-          <StateCard title="No files available" />
-        );
-      }
       return (
         <StateCard title="No files available" />
       );
     }
 
-    if (variant === 'mobile') {
-      return <MobileFiles files={files} onFilePriority={onFilePriority} onFilePriorityTarget={onFilePriorityTarget} />;
-    }
-
-    return <DesktopFiles files={files} onFileToggle={onFileToggle} onToggleAll={onToggleAll} onFilePriority={onFilePriority} onFileContextMenu={onFileContextMenu} onFolderContextMenu={onFolderContextMenu} onFolderRowClick={onFolderRowClick} />;
+    return <MobileFiles files={files} onFilePriority={onFilePriority} onFilePriorityTarget={onFilePriorityTarget} />;
   }
 );
 

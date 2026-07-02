@@ -25,6 +25,7 @@ interface DesktopDetailTableProps<T> {
   onSortChange?: (columnId: string) => void;
   onRowClick?: (row: T) => void;
   onRowContextMenu?: (event: React.MouseEvent<HTMLTableRowElement>, row: T) => void;
+  onTableContextMenu?: (event: React.MouseEvent<HTMLDivElement>) => void;
   getRowClassName?: (row: T) => string | undefined;
 }
 
@@ -44,6 +45,7 @@ export function DesktopDetailTable<T>({
   onSortChange,
   onRowClick,
   onRowContextMenu,
+  onTableContextMenu,
   getRowClassName,
 }: DesktopDetailTableProps<T>) {
   const [columnWidths, setColumnWidths] = React.useState<Record<string, number>>(() => (
@@ -128,7 +130,10 @@ export function DesktopDetailTable<T>({
   const totalWidth = columns.reduce((sum, column) => sum + (columnWidths[column.id] ?? column.width), 0);
 
   return (
-    <div className="min-h-0 flex-1 overflow-auto rounded-md border border-border bg-surface">
+    <div
+      className="min-h-0 flex-1 overflow-auto rounded-md border border-border bg-surface"
+      onContextMenu={onTableContextMenu}
+    >
       <table className="w-full border-separate border-spacing-0 text-xs" style={{ minWidth: totalWidth, tableLayout: 'fixed' }}>
         <thead className="sticky top-0 z-10">
           <tr>
@@ -201,7 +206,12 @@ export function DesktopDetailTable<T>({
               <tr
                 key={key}
                 onClick={() => { onRowClick?.(row); }}
-                onContextMenu={(event) => { onRowContextMenu?.(event, row); }}
+                onContextMenu={(event) => {
+                  if (onRowContextMenu) {
+                    event.stopPropagation();
+                    onRowContextMenu(event, row);
+                  }
+                }}
                 className={cn(
                   'transition-colors',
                   onRowContextMenu ? 'select-none' : undefined,

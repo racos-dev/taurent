@@ -48,7 +48,7 @@ function DesktopPeersTable({ peers, onBanPeer, onAddPeers, onCopyPeerAddress, ba
   onCopyPeerAddress?: (peer: PeerRow) => void;
   banPeerIsPending?: boolean;
 }) {
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; peer: PeerRow } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; peer: PeerRow | null } | null>(null);
   const [activePeerKey, setActivePeerKey] = useState<string | null>(null);
   const [sortColumnId, setSortColumnId] = useState<string>('dlSpeed');
   const [sortDirection, setSortDirection] = useState<DesktopDetailTableSortDirection>('desc');
@@ -58,6 +58,13 @@ function DesktopPeersTable({ peers, onBanPeer, onAddPeers, onCopyPeerAddress, ba
     setActivePeerKey(peer.key);
     setContextMenu({ x: event.clientX, y: event.clientY, peer });
   }, []);
+
+  const handleTableContextMenu = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (!onAddPeers) return;
+    event.preventDefault();
+    setActivePeerKey(null);
+    setContextMenu({ x: event.clientX, y: event.clientY, peer: null });
+  }, [onAddPeers]);
 
   const closeContextMenu = useCallback(() => {
     setContextMenu(null);
@@ -239,6 +246,7 @@ function DesktopPeersTable({ peers, onBanPeer, onAddPeers, onCopyPeerAddress, ba
         onSortChange={handleSortChange}
         onRowClick={(peer) => { setActivePeerKey(peer.key); }}
         onRowContextMenu={handleContextMenu}
+        onTableContextMenu={handleTableContextMenu}
         getRowClassName={(peer) => cn(peer.progress >= 1 && 'text-success')}
       />
 
@@ -261,7 +269,7 @@ function DesktopPeersTable({ peers, onBanPeer, onAddPeers, onCopyPeerAddress, ba
 function PeerContextMenuOverlay({ x, y, peer, onClose, onAddPeers, onCopyPeerAddress, onBanPeer, banPeerIsPending }: {
   x: number;
   y: number;
-  peer: PeerRow;
+  peer: PeerRow | null;
   onClose: () => void;
   onAddPeers?: () => void;
   onCopyPeerAddress?: (peer: PeerRow) => void;
@@ -306,7 +314,7 @@ function PeerContextMenuOverlay({ x, y, peer, onClose, onAddPeers, onCopyPeerAdd
       style={{ left: pos.x, top: pos.y }}
       className="fixed z-50 w-52 rounded-md border border-border bg-surface-elevated py-1 shadow-lg select-none"
     >
-      {onAddPeers ? (
+      {!peer && onAddPeers ? (
         <button
           type="button"
           role="menuitem"
@@ -316,7 +324,7 @@ function PeerContextMenuOverlay({ x, y, peer, onClose, onAddPeers, onCopyPeerAdd
           Add peers...
         </button>
       ) : null}
-      {onCopyPeerAddress ? (
+      {peer && onCopyPeerAddress ? (
         <button
           type="button"
           role="menuitem"
@@ -326,8 +334,7 @@ function PeerContextMenuOverlay({ x, y, peer, onClose, onAddPeers, onCopyPeerAdd
           Copy IP:port
         </button>
       ) : null}
-      <div className="my-1 border-t border-border" />
-      {onBanPeer ? (
+      {peer && onBanPeer ? (
         <button
           type="button"
           role="menuitem"
@@ -453,17 +460,11 @@ export const TorrentDetailsPeersSection = React.memo<TorrentDetailsPeersSectionP
       );
     }
 
-    if (!peers || peers.length === 0) {
-      return (
-        <StateCard title="No peers connected" />
-      );
-    }
-
     if (variant === 'desktop') {
       return (
         <div className="flex min-h-0 flex-1 flex-col">
           <DesktopPeersTable
-            peers={peers}
+            peers={peers ?? []}
             onBanPeer={handleRequestBan}
             onAddPeers={onAddPeers}
             onCopyPeerAddress={onCopyPeerAddress}
@@ -498,6 +499,12 @@ export const TorrentDetailsPeersSection = React.memo<TorrentDetailsPeersSectionP
 
           {banError ? <p className="mt-1 text-xs text-error">{banError}</p> : null}
         </div>
+      );
+    }
+
+    if (!peers || peers.length === 0) {
+      return (
+        <StateCard title="No peers connected" />
       );
     }
 

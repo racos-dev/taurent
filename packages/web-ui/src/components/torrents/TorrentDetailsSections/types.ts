@@ -71,6 +71,8 @@ export interface TorrentDetailsFilesSectionProps extends SectionStateProps {
    * If provided, the caller is responsible for rendering and handling the menu.
    */
   onFolderContextMenu?: (event: React.MouseEvent<HTMLTableRowElement>, row: FileDisplayRow) => void;
+  /** Desktop only: called when the user requests a context menu on the files table background. */
+  onFilesContextMenu?: (event: React.MouseEvent<HTMLDivElement>) => void;
   /**
    * Desktop only: called when the user clicks a folder row.
    * If provided, the caller is responsible for handling the click (e.g. opening the folder).
@@ -127,6 +129,7 @@ export interface TorrentDetailsPeersSectionProps extends SectionStateProps {
 export interface TorrentDetailsHttpSourcesSectionProps extends SectionStateProps {
   variant?: 'desktop' | 'mobile';
   webSeeds: import('@taurent/shared/types/qbittorrent').WebSeed[] | undefined;
+  onCopyHttpSourceUrl?: (seed: import('@taurent/shared/types/qbittorrent').WebSeed) => void;
 }
 
 // Display status types for mobile

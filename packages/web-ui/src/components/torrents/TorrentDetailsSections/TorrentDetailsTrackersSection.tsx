@@ -46,7 +46,7 @@ function DesktopTrackers({ trackers, onAddTrackers, onEditTracker, onRemoveTrack
   onRemoveTracker?: (tracker: Tracker) => void;
   onCopyTrackerUrl?: (tracker: Tracker) => void;
 }) {
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; tracker: Tracker } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; tracker: Tracker | null } | null>(null);
   const [activeTrackerKey, setActiveTrackerKey] = useState<string | null>(null);
   const [sortColumnId, setSortColumnId] = useState<string>('tier');
   const [sortDirection, setSortDirection] = useState<DesktopDetailTableSortDirection>('asc');
@@ -54,11 +54,24 @@ function DesktopTrackers({ trackers, onAddTrackers, onEditTracker, onRemoveTrack
   const getTrackerKey = useCallback((tracker: Tracker) => `${tracker.url}-${tracker.tier}-${tracker.status}`, []);
 
   const handleContextMenu = useCallback((event: React.MouseEvent<HTMLTableRowElement>, tracker: Tracker) => {
-    if (tracker.url.startsWith('** [')) return;
     event.preventDefault();
+    if (tracker.url.startsWith('** [')) {
+      if (onAddTrackers) {
+        setActiveTrackerKey(null);
+        setContextMenu({ x: event.clientX, y: event.clientY, tracker: null });
+      }
+      return;
+    }
     setActiveTrackerKey(getTrackerKey(tracker));
     setContextMenu({ x: event.clientX, y: event.clientY, tracker });
-  }, [getTrackerKey]);
+  }, [getTrackerKey, onAddTrackers]);
+
+  const handleTableContextMenu = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (!onAddTrackers) return;
+    event.preventDefault();
+    setActiveTrackerKey(null);
+    setContextMenu({ x: event.clientX, y: event.clientY, tracker: null });
+  }, [onAddTrackers]);
 
   const closeContextMenu = useCallback(() => {
     setContextMenu(null);
@@ -194,6 +207,7 @@ function DesktopTrackers({ trackers, onAddTrackers, onEditTracker, onRemoveTrack
         onSortChange={handleSortChange}
         onRowClick={(tracker) => { setActiveTrackerKey(getTrackerKey(tracker)); }}
         onRowContextMenu={handleContextMenu}
+        onTableContextMenu={handleTableContextMenu}
       />
 
       {contextMenu ? (
@@ -215,7 +229,7 @@ function DesktopTrackers({ trackers, onAddTrackers, onEditTracker, onRemoveTrack
 function TrackerContextMenuOverlay({ x, y, tracker, onClose, onAddTrackers, onEditTracker, onRemoveTracker, onCopyTrackerUrl }: {
   x: number;
   y: number;
-  tracker: Tracker;
+  tracker: Tracker | null;
   onClose: () => void;
   onAddTrackers?: () => void;
   onEditTracker?: (tracker: Tracker) => void;
@@ -260,7 +274,7 @@ function TrackerContextMenuOverlay({ x, y, tracker, onClose, onAddTrackers, onEd
       style={{ left: pos.x, top: pos.y }}
       className="fixed z-50 w-52 rounded-md border border-border bg-surface-elevated py-1 shadow-lg select-none"
     >
-      {onAddTrackers ? (
+      {!tracker && onAddTrackers ? (
         <button
           type="button"
           role="menuitem"
@@ -270,7 +284,7 @@ function TrackerContextMenuOverlay({ x, y, tracker, onClose, onAddTrackers, onEd
           Add trackers...
         </button>
       ) : null}
-      {onEditTracker ? (
+      {tracker && onEditTracker ? (
         <button
           type="button"
           role="menuitem"
@@ -280,7 +294,7 @@ function TrackerContextMenuOverlay({ x, y, tracker, onClose, onAddTrackers, onEd
           Edit tracker URL...
         </button>
       ) : null}
-      {onRemoveTracker ? (
+      {tracker && onRemoveTracker ? (
         <button
           type="button"
           role="menuitem"
@@ -290,8 +304,7 @@ function TrackerContextMenuOverlay({ x, y, tracker, onClose, onAddTrackers, onEd
           Remove tracker
         </button>
       ) : null}
-      <div className="my-1 border-t border-border" />
-      {onCopyTrackerUrl ? (
+      {tracker && onCopyTrackerUrl ? (
         <button
           type="button"
           role="menuitem"
@@ -372,31 +385,26 @@ export const TorrentDetailsTrackersSection = React.memo<TorrentDetailsTrackersSe
       );
     }
 
+    if (variant === 'desktop') {
+      return <DesktopTrackers trackers={trackers ?? []} onAddTrackers={onAddTrackers} onEditTracker={onEditTracker} onRemoveTracker={onRemoveTracker} onCopyTrackerUrl={onCopyTrackerUrl} />;
+    }
+
     if (!trackers || trackers.length === 0) {
-      if (variant === 'mobile') {
-        return (
-          <StateCard
-            title="No trackers reported"
-            message="Tracker information will appear here when available."
-          />
-        );
-      }
       return (
-        <StateCard title="No trackers reported" message="Tracker information will appear here when available." />
+        <StateCard
+          title="No trackers reported"
+          message="Tracker information will appear here when available."
+        />
       );
     }
 
-    if (variant === 'mobile') {
-      return (
-        <div className="space-y-4">
-          {trackers.map((tracker, index) => (
-            <MobileTrackerCard key={`${tracker.url}-${index}`} tracker={tracker} />
-          ))}
-        </div>
-      );
-    }
-
-    return <DesktopTrackers trackers={trackers} onAddTrackers={onAddTrackers} onEditTracker={onEditTracker} onRemoveTracker={onRemoveTracker} onCopyTrackerUrl={onCopyTrackerUrl} />;
+    return (
+      <div className="space-y-4">
+        {trackers.map((tracker, index) => (
+          <MobileTrackerCard key={`${tracker.url}-${index}`} tracker={tracker} />
+        ))}
+      </div>
+    );
   }
 );
 

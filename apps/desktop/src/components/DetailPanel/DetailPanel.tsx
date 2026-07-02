@@ -291,6 +291,10 @@ export function DetailPanel() {
     void navigator.clipboard.writeText(`${peer.ip}:${peer.port}`);
   }, []);
 
+  const handleCopyHttpSourceUrl = useCallback((seed: { url: string }) => {
+    void navigator.clipboard.writeText(seed.url);
+  }, []);
+
   // ─── File toggle/priority handlers ────────────────────────────────────────
   const handleFileToggle = useCallback((fileIndex: number, enabled: boolean) => {
     if (!panelTorrentHash) return;
@@ -638,6 +642,7 @@ export function DetailPanel() {
               isLoading={webSeedsLoading}
               error={webSeedsError}
               onRetry={webSeedsRefetch}
+              onCopyHttpSourceUrl={handleCopyHttpSourceUrl}
             />
           )}
           {shellTab === 'files' && (
