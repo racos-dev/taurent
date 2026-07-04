@@ -7,8 +7,9 @@ Provides the platform-agnostic presentational body for the qBittorrent search pl
 ## Design
 
 - **`SearchScreenBody`** — top-level `React.memo` component (`SearchScreenProps`). Handles capability gating (loading → unsupported → offline → ready), local query state synced with prop, and three visual zones: search input, plugin management (collapsible), and results list.
-- **Sub-components**: `SearchResultRow` (memo, displays file name, size, seeders/leechers, site link, "Add" button) and `PluginCard` (memo, toggles enable/disable, uninstall).
-- **Normalized types** — `NormalizedSearchPlugin` and `NormalizedSearchResult` decouple from raw qBittorrent API shapes; normalization happens upstream.
+- **Sub-components**: `SearchResultRow` (memo, displays file name, size, seeders/leechers, site link, "Add" button), `SortControl` (memo, `Select` for sort field + button to toggle direction), and `PluginCard` (memo, toggles enable/disable, uninstall).
+- **Normalized types** — `NormalizedSearchPlugin` and `NormalizedSearchResult` decouple from raw qBittorrent API shapes; normalization happens upstream. `SearchSortKey`/`SearchSortDirection` mirror the web-core ordering unions.
+- **Result sorting** — optional `sortKey`/`sortDirection` + `onSortKeyChange`/`onSortDirectionChange` props render the `SortControl` above the results; when any is omitted the control is hidden (backward compatible).
 - **Variant prop** — `variant?: 'desktop' | 'mobile'` adjusts spacing and layout (`isCompact` flag).
 - **Capability gating** — early returns render `StateSurface` for loading/unsupported/offline states before the main UI.
 
@@ -24,6 +25,6 @@ Provides the platform-agnostic presentational body for the qBittorrent search pl
 ## Integration
 
 - **`@taurent/shared`** — `cn`, `formatBytes`, `Icon`.
-- **Local shared components** — `StateSurface`, `SkeletonBlock`, `ConfirmDialog`, `PluginInstallDialog`, `Input`.
+- **Local shared components** — `StateSurface`, `SkeletonBlock`, `ConfirmDialog`, `PluginInstallDialog`, `Input`, `Select`.
 - **Controller layer** — all mutation states (`isPluginActionPending`, `isSearching`, `isLoadingResults`, `isLoadingPlugins`) and action handlers come from the platform controller hook.
-- **Exported from `index.ts`**: `SearchScreenBody`, `SearchScreenProps`, `NormalizedSearchPlugin`, `NormalizedSearchResult`.
+- **Exported from `index.ts`**: `SearchScreenBody`, `SearchScreenProps`, `NormalizedSearchPlugin`, `NormalizedSearchResult`, `SearchSortKey`, `SearchSortDirection`.

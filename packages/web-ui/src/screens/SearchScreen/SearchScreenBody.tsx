@@ -4,6 +4,8 @@ import { StateSurface } from '../../components/shared/StateSurface';
 import { SkeletonBlock } from '../../components/shared/SkeletonBlock';
 import { ConfirmDialog } from '../../components/dialogs/ConfirmDialog';
 import { Input } from '../../components/primitives/Input';
+import { Select } from '../../components/primitives/Select';
+import type { SelectOption } from '../../components/primitives/Select';
 import { PluginInstallDialog } from '../../components/dialogs/PluginInstallDialog';
 import {
   filledVariantClasses,
@@ -33,6 +35,16 @@ export interface NormalizedSearchResult {
   siteUrl: string;
 }
 
+export type SearchSortKey = 'seeders' | 'leechers' | 'size' | 'name';
+export type SearchSortDirection = 'asc' | 'desc';
+
+const SORT_KEY_OPTIONS: SelectOption<SearchSortKey>[] = [
+  { value: 'seeders', label: 'Seeders' },
+  { value: 'leechers', label: 'Leechers' },
+  { value: 'size', label: 'Size' },
+  { value: 'name', label: 'Name' },
+];
+
 export interface SearchScreenProps {
   variant?: 'desktop' | 'mobile';
   // Capability state
@@ -55,6 +67,11 @@ export interface SearchScreenProps {
   searchResults: NormalizedSearchResult[];
   currentResultsTotal: number;
   isLoadingResults: boolean;
+  // Result ordering (optional; when omitted, the sort control is hidden)
+  sortKey?: SearchSortKey;
+  sortDirection?: SearchSortDirection;
+  onSortKeyChange?: (key: SearchSortKey) => void;
+  onSortDirectionChange?: (direction: SearchSortDirection) => void;
   // Plugins
   plugins: NormalizedSearchPlugin[];
   isLoadingPlugins: boolean;
@@ -125,6 +142,45 @@ const SearchResultRow = React.memo<SearchResultRowProps>(({ result, onAdd }) => 
 ));
 
 SearchResultRow.displayName = 'SearchResultRow';
+
+interface SortControlProps {
+  sortKey: SearchSortKey;
+  sortDirection: SearchSortDirection;
+  onSortKeyChange: (key: SearchSortKey) => void;
+  onSortDirectionChange: (direction: SearchSortDirection) => void;
+}
+
+const SortControl = React.memo<SortControlProps>(
+  ({ sortKey, sortDirection, onSortKeyChange, onSortDirectionChange }) => {
+    const isDescending = sortDirection === 'desc';
+    return (
+      <div className="flex shrink-0 items-center gap-2">
+        <span className="text-xs text-text-muted">Sort</span>
+        <Select<SearchSortKey>
+          options={SORT_KEY_OPTIONS}
+          value={sortKey}
+          onChange={onSortKeyChange}
+          containerClassName="w-28"
+          aria-label="Sort results by"
+        />
+        <button
+          type="button"
+          onClick={() => onSortDirectionChange(isDescending ? 'asc' : 'desc')}
+          aria-label={isDescending ? 'Sort descending (highest first)' : 'Sort ascending (lowest first)'}
+          title={isDescending ? 'Descending' : 'Ascending'}
+          className={cn(
+            'flex shrink-0 items-center justify-center rounded-sm p-2 text-text-secondary',
+            surfaceVariantClasses({ border: 'border-border', hoverBg: 'bg-surface-interactive' }),
+          )}
+        >
+          <Icon name={isDescending ? 'chevron-down' : 'chevron-up'} className="h-4 w-4" />
+        </button>
+      </div>
+    );
+  },
+);
+
+SortControl.displayName = 'SortControl';
 
 interface PluginCardProps {
   plugin: NormalizedSearchPlugin;
@@ -206,6 +262,10 @@ export const SearchScreenBody = React.memo<SearchScreenProps>(({
   searchResults,
   currentResultsTotal,
   isLoadingResults,
+  sortKey,
+  sortDirection,
+  onSortKeyChange,
+  onSortDirectionChange,
   plugins,
   isLoadingPlugins,
   pluginsError,
@@ -426,11 +486,23 @@ export const SearchScreenBody = React.memo<SearchScreenProps>(({
           </div>
         ) : (
           <div className={cn('space-y-2', isCompact ? 'p-4' : 'p-4')}>
-            {currentResultsTotal > 0 && !isSearching && (
-              <p className="mb-2 text-xs text-text-muted">
-                {currentResultsTotal} result{currentResultsTotal === 1 ? '' : 's'} found
-              </p>
-            )}
+            <div className="mb-2 flex items-center justify-between gap-2">
+              {currentResultsTotal > 0 && !isSearching ? (
+                <p className="text-xs text-text-muted">
+                  {currentResultsTotal} result{currentResultsTotal === 1 ? '' : 's'} found
+                </p>
+              ) : (
+                <span aria-hidden="true" />
+              )}
+              {sortKey && sortDirection && onSortKeyChange && onSortDirectionChange ? (
+                <SortControl
+                  sortKey={sortKey}
+                  sortDirection={sortDirection}
+                  onSortKeyChange={onSortKeyChange}
+                  onSortDirectionChange={onSortDirectionChange}
+                />
+              ) : null}
+            </div>
             {searchResults.map((result, index) => (
               <SearchResultRow
                 key={`${result.fileName}-${index}`}

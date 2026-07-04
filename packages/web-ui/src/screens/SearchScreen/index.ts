@@ -3,4 +3,6 @@ export type {
   SearchScreenProps,
   NormalizedSearchPlugin,
   NormalizedSearchResult,
+  SearchSortKey,
+  SearchSortDirection,
 } from './SearchScreenBody';

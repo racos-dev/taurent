@@ -7,9 +7,10 @@ Capability-gated search controller and screen model hooks. Provides the full sea
 ## Key Files
 
 - `index.ts` — Barrel export
-- `useSearchController.ts` — Main hook that manages search execution, result polling (2s interval), plugin CRUD, and typed bridge DTO consumption; accepts `SearchAdapters` interface
-- `useSearchScreenModel.ts` — Composes `useSearchController` with the `onAddResult` callback for platform-specific add-torrent behavior
+- `useSearchController.ts` — Main hook that manages search execution, result polling (2s interval), plugin CRUD, result ordering state, and typed bridge DTO consumption; accepts `SearchAdapters` interface
+- `useSearchScreenModel.ts` — Composes `useSearchController` with the `onAddResult` callback for platform-specific add-torrent behavior; passes through result-ordering state
 - `createSearchAdapters.ts` — Adapter factory that constructs `SearchAdapters` from a `QBClientBridge`; moves bridge bundle construction from app-level screens into shared web-core
+- `sortSearchResults.ts` — Pure, non-mutating result ordering helper (`sortSearchResults`) plus `SearchSortKey`/`SearchSortDirection` types and defaults (seeders, descending); fully unit tested
 
 ## Design Patterns
 
@@ -20,6 +21,7 @@ Capability-gated search controller and screen model hooks. Provides the full sea
 - **Error threshold**: Stops polling after 5 consecutive failures to prevent infinite error loops
 - **Typed boundary consumption**: Search status/results/plugins arrive as typed bridge DTOs (`SearchStatus[]`, `SearchResults`, `SearchPlugin[]`); the controller keeps only narrow UI helpers such as status label mapping and plugin-category defaults
 - **Platform-specific add result**: `onAddResult` is a required callback so desktop (aux window) and mobile (navigation) can wire their own add-torrent flow
+- **Result ordering**: `sortKey`/`sortDirection` state (default seeders/descending) drives a memoized, non-mutating sort of the fetched results via `sortSearchResults`; the ordered array is what consumers read from `searchResults`
 
 ## Flow
 
