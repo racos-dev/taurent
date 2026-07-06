@@ -8,7 +8,7 @@
  * Usage:
  *   const model = useRssScreenModel({
  *     scope: { serverId, sessionGeneration, isConnected },
- *     supported: capabilities?.supportsRss ?? null,
+ *     capabilities: { supportsSearch, supportsRss, supportsWebSeedManagement },
  *     getRssItems: () => bridge.qBClient.getRssItems(),
  *     getRssRules: () => bridge.qBClient.getRssRules(),
  *     mutations: {
@@ -35,6 +35,7 @@ import {
 } from '../hooks/useRssMutations';
 import type { RssItem, RssRule, RssRuleInput } from '@taurent/bridge';
 import type { UseRssControllerResult } from './useRssController';
+import type { AppCapabilities } from '../capabilities';
 
 export interface UseRssScreenMutations {
   addFeed: (variables: { path: string; url: string }) => Promise<unknown>;
@@ -47,8 +48,12 @@ export interface UseRssScreenMutations {
 
 export interface UseRssScreenModelOptions {
   scope: QueryScope;
-  /** Whether the server supports RSS. null = unknown, true = supported, false = not */
-  supported: boolean | null;
+  /**
+   * Server capabilities (Rust-resolved, camelCase).
+   * `capabilities.supportsRss` gates the RSS data fetch and the
+   * `isSupported` / `isUnsupported` derivation in the result.
+   */
+  capabilities: AppCapabilities;
   /**
    * Fetch function for RSS items — returns the typed bridge envelope.
    * T142.3: items is `RssItem[]` (Rust-owned DTO rows) instead of `unknown`.
@@ -71,7 +76,9 @@ export interface UseRssScreenModelResult {
   isLoading: boolean;
   error: Error | null;
 
-  // Capability state (derived, same shape as SearchScreenBody expects)
+  // Capability state. `isSupported` keeps the legacy `boolean | null`
+  // shape (offline → `null`, supported → `true`, unsupported → `false`)
+  // so the shared `RSSScreenBody` continues to render the correct empty state.
   isSupported: boolean | null;
   isUnsupported: boolean;
   isCapabilityLoading: boolean;
@@ -98,14 +105,14 @@ export interface UseRssScreenModelResult {
 
 export function useRssScreenModel({
   scope,
-  supported,
+  capabilities,
   getRssItems,
   getRssRules,
   mutations,
 }: UseRssScreenModelOptions): UseRssScreenModelResult {
   const controller = useRssController({
     scope,
-    supported,
+    capabilities,
     getRssItems,
     getRssRules,
   });
@@ -142,10 +149,16 @@ export function useRssScreenModel({
     mutationFn: mutations.removeRule,
   });
 
-  // Derive capability states from supported and controller.isUnsupported
-  const isCapabilityLoading = supported === null && scope.isConnected;
-  const isUnsupported = controller.isUnsupported || supported === false;
-  const isSupported = supported === true;
+  // Reconstruct the legacy tri-state `isSupported: boolean | null` so the
+  // existing `RSSScreenBody` keeps rendering the correct empty state:
+  //   - disconnected (`!scope.isConnected`) → null → "Connect to a server"
+  //   - connected + supportsRss             → true  → normal RSS UI
+  //   - connected + !supportsRss            → false → "RSS not available"
+  const isOffline = !scope.isConnected;
+  const isSupported = isOffline ? null : capabilities.supportsRss;
+  const isUnsupported = !isOffline && !capabilities.supportsRss;
+  // No capability-loading state in v2 — capabilities arrive with the session snapshot.
+  const isCapabilityLoading = false;
 
   // Collect the first Error from controller or any mutation
   const mutationError =
@@ -171,7 +184,7 @@ export function useRssScreenModel({
     isLoading: controller.isLoading,
     error,
 
-    isSupported: isSupported ? true : isUnsupported ? false : null,
+    isSupported,
     isUnsupported,
     isCapabilityLoading,
 

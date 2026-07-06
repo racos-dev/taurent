@@ -216,7 +216,7 @@ export function DetailPanel() {
 
   // ─── Session scope ─────────────────────────────────────────────────────────
   const { isConnected, serverId, sessionGeneration, capabilities } = useQBClient();
-  const supportsWebSeedManagement = capabilities?.supportsWebSeedManagement === true;
+  const supportsWebSeedManagement = capabilities.supportsWebSeedManagement;
 
   // ─── Add trackers mutation ────────────────────────────────────────────────
   const addTrackerMutation = useMutation({

@@ -64,6 +64,8 @@ fn connect_commits_new_identity_and_discards_previous() {
 
 #[test]
 fn session_state_does_not_contain_password() {
+    use crate::capability::ResolvedCapabilities;
+
     let state = SessionState {
         server: Some(SafeServerSummary {
             id: "srv-1".into(),
@@ -76,6 +78,8 @@ fn session_state_does_not_contain_password() {
         session_generation: 1,
         initialized: true,
         supports_pause_resume: true,
+        api_version: Some("2.16.0".to_string()),
+        capabilities: ResolvedCapabilities::default(),
     };
     let json = serde_json::to_string(&state).unwrap();
     assert!(!json.contains("password"));

@@ -48,7 +48,6 @@ import type {
   RSSRulesResponse,
   RssRuleInput,
   TorrentWebseedsResponse,
-  RustCapabilitiesResponse,
   MaindataSnapshotResponse,
   MaindataSyncHealth,
   WorkspaceView,
@@ -185,16 +184,12 @@ export interface ApplicationBridge {
   setPreferences(prefs: Partial<Preferences>): Promise<OperationResponse>;
   getDefaultSavePath(): Promise<DefaultSavePathResponse>;
   shutdown(): Promise<OperationResponse>;
-  /** Retrieve server capabilities (supported features) from the Rust backend. */
-  getServerCapabilities(): Promise<RustCapabilitiesResponse>;
 }
 
 // Mobile-specific application bridge.
 // Shared consumers should prefer application.* to stay desktop-aligned.
 export interface MobileApplicationBridge {
   getDefaultSavePath(): Promise<DefaultSavePathResponse>;
-  /** Retrieve server capabilities (supported features) from the Rust backend. */
-  getServerCapabilities(): Promise<RustCapabilitiesResponse>;
   shutdown(): Promise<OperationResponse>;
   getPreferences(): Promise<PreferencesResponse>;
   setPreferences(prefs: Partial<Preferences>): Promise<OperationResponse>;

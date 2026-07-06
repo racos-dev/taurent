@@ -352,6 +352,15 @@ function buildSnapshot(
     server_id: server?.id ?? null,
     server_name: server?.name ?? null,
     server_url: server?.url ?? null,
+    // Mock reports a connected qBittorrent at 5.x with all capabilities
+    // available. Tests that need to gate a specific feature can override
+    // the snapshot via `setAppState` or direct mutation.
+    api_version: status === 'connected' ? '5.1.0' : null,
+    capabilities: {
+      supports_search: true,
+      supports_rss: true,
+      supports_webseed_management: true,
+    },
     status,
     last_error: lastError,
   };
@@ -1521,20 +1530,6 @@ function createMockMobileBridge(transport?: Transport): MobileBridge {
           resource: 'preferences',
         });
         return Promise.resolve(OK());
-      },
-
-      getServerCapabilities() {
-        recordCall('application.getServerCapabilities', []);
-        return Promise.resolve({
-          session_generation: GEN,
-          server_id: _activeServerId,
-          capabilities: {
-            supports_search: 'unknown' as const,
-            supports_rss: 'unknown' as const,
-            supports_pause_resume: 'unknown' as const,
-            supports_webseed_management: 'confirmed' as const,
-          },
-        });
       },
     },
 

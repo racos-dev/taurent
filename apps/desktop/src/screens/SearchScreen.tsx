@@ -16,7 +16,7 @@ export function SearchScreen() {
 
   const model = useSearchScreenModel({
     scope: { serverId, sessionGeneration, isConnected },
-    isSupported: capabilities?.supportsSearch ?? null,
+    capabilities,
     adapters: createSearchAdapters(BridgeAdapter.qBClient),
     onAddResult: async (result) => {
       // Open add-torrent aux window with the search result URL prefilled

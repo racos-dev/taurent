@@ -1,0 +1,9 @@
+# qBittorrent Web API capability profiles
+# Cumulative deltas: resolution starts with [base], then accumulates
+# all [versions] where version <= server's webapiVersion.
+
+[base]
+capabilities = ["supports_rss"]
+
+[versions."2.1.1"]
+adds = ["supports_search", "supports_webseed_management"]

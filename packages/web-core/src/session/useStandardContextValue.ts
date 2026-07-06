@@ -1,21 +1,21 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { mapRustCapabilitiesToFlags, type AppCapabilities } from '../capabilities';
-import { formatUserMessageForContext } from '@taurent/shared/utils/error';
-import type { RustCapabilitiesResponse } from '@taurent/bridge';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  DEFAULT_APP_CAPABILITIES,
+  toAppCapabilities,
+  type AppCapabilities,
+} from '../capabilities';
+import type { SessionSnapshot } from '@taurent/bridge';
 import type { SessionController } from './sessionController';
 import type { QBClientContextValue } from './QBClientContextValue';
 
 // Bridge interface capturing the surface area needed for capability discovery.
-// Uses a permissive return type so both bridge-typed and shared-typed
-// SyncMainData implementations satisfy the constraint.
 //
-// getSessionSnapshot is optional — when present (desktop/mobile bridges), server metadata
-// is derived automatically and serverName/serverUrl are populated without any app-level wrapper.
-// getServerCapabilities is optional — when absent (e.g. mocks), `capabilities` stays null and
-// consumers branch on null to gate feature UI.
+// `getSessionSnapshot` is the single source of capability truth in v2 — Rust
+// resolves `supports_search` / `supports_rss` / `supports_webseed_management`
+// from the qBittorrent webapi version and includes them in the session
+// snapshot. No separate `get_server_capabilities` invoke is required.
 export interface CapabilityBridge {
-  getSessionSnapshot?(): Promise<{ server_name: string | null; server_url: string | null }>;
-  getServerCapabilities?(): Promise<RustCapabilitiesResponse>;
+  getSessionSnapshot?(): Promise<SessionSnapshot>;
 }
 
 export interface UseStandardContextValueOptions {
@@ -32,12 +32,10 @@ export function useStandardContextValue({
   // remain null and can be enriched by the app-level provider if needed.
   const [serverName, setServerName] = useState<string | null>(null);
   const [serverUrl, setServerUrl] = useState<string | null>(null);
-
-  // Rust capability flags — fetched from bridge when connected.
-  // Rust is the single source of truth for capability discovery.
-  const [capabilities, setCapabilities] = useState<AppCapabilities | null>(null);
-  const [capabilitiesLoading, setCapabilitiesLoading] = useState<boolean>(true);
-  const [capabilitiesError, setCapabilitiesError] = useState<string | null>(null);
+  const [apiVersion, setApiVersion] = useState<string | null>(null);
+  // Rust-resolved capability flags. Non-nullable: defaults to all-false when
+  // disconnected, hydrated to the snapshot's `capabilities` block on first snapshot.
+  const [capabilities, setCapabilities] = useState<AppCapabilities>(DEFAULT_APP_CAPABILITIES);
 
   // Initial load + subsequent refreshes driven by sessionGeneration changes.
   useEffect(() => {
@@ -46,70 +44,25 @@ export function useStandardContextValue({
     // Fetch on mount and whenever sessionGeneration changes.
     bridge
       .getSessionSnapshot()
-      .then((snapshot) => {
+      .then((snapshot: SessionSnapshot) => {
         setServerName(snapshot.server_name);
         setServerUrl(snapshot.server_url);
+        setApiVersion(snapshot.api_version);
+        setCapabilities(toAppCapabilities(snapshot.capabilities));
       })
       .catch(() => {
         // Best-effort — ignore errors
       });
   }, [bridge, controller.sessionGeneration]);
 
-  // Fetch Rust capabilities when connected and serverId is available.
-  const fetchCapabilities = useCallback(async () => {
-    if (!bridge.getServerCapabilities) {
-      // No Rust capability source — leave capabilities null. Consumers must branch on null.
-      setCapabilitiesLoading(false);
-      setCapabilities(null);
-      return;
-    }
-    if (!controller.isConnected || controller.serverId === null) {
-      // Not connected yet — don't surface an error, and avoid indefinite loading.
-      setCapabilitiesLoading(false);
-      return;
-    }
-
-    try {
-      const response = await bridge.getServerCapabilities();
-      setCapabilities(mapRustCapabilitiesToFlags(response.capabilities));
-      setCapabilitiesError(null);
-    } catch (err) {
-      setCapabilitiesError(formatUserMessageForContext(err, 'connection'));
-    } finally {
-      setCapabilitiesLoading(false);
-    }
-  }, [bridge, controller.isConnected, controller.serverId]);
-
-  useEffect(() => {
-    setCapabilitiesLoading(true);
-    setCapabilitiesError(null);
-    void fetchCapabilities();
-  }, [fetchCapabilities]);
-
-  const refreshCapabilities = useCallback(() => {
-    setCapabilitiesLoading(true);
-    setCapabilitiesError(null);
-    void fetchCapabilities();
-  }, [fetchCapabilities]);
-
   return useMemo(
     () => ({
       ...controller,
       serverName,
       serverUrl,
+      apiVersion,
       capabilities,
-      capabilitiesLoading,
-      capabilitiesError,
-      refreshCapabilities,
     }),
-    [
-      controller,
-      serverName,
-      serverUrl,
-      capabilities,
-      capabilitiesLoading,
-      capabilitiesError,
-      refreshCapabilities,
-    ],
+    [controller, serverName, serverUrl, apiVersion, capabilities],
   );
 }

@@ -1,6 +1,6 @@
 //! Canonical shared torrents command group.
 
-use crate::client::{capture_request_context, qb_get, qb_post, qb_probe, SessionRequestContext};
+use crate::client::{capture_request_context, qb_get, qb_post, SessionRequestContext};
 use crate::commands::transfer::{DownloadLimitResponse, UploadLimitResponse};
 use crate::session::{emit_resource_invalidated, SessionStateHandle};
 use qb_core::normalize::{build_add_torrent_options, split_tags};
@@ -16,20 +16,6 @@ use tauri::State;
 // ============================================================================
 // Shared DTOs
 // ============================================================================
-
-/// Check if a status code indicates the endpoint is not supported (404 or 405).
-pub fn is_unsupported_status(status: u16) -> bool {
-    status == 404 || status == 405
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ProbeResponse {
-    pub session_generation: u64,
-    pub server_id: Option<String>,
-    /// Tri-state: Some(true) = supported, Some(false) = not supported, None = unknown (probe failed)
-    pub supported: Option<bool>,
-    pub error: Option<String>,
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TorrentListResponse {
@@ -117,84 +103,6 @@ pub struct AddTorrentOptions {
     pub stop_condition: Option<String>,
     #[serde(rename = "addToTop")]
     pub add_to_top: Option<bool>,
-}
-
-// ============================================================================
-// Probe commands
-// ============================================================================
-
-#[tauri::command]
-pub async fn probe_search(state: State<'_, SessionStateHandle>) -> Result<ProbeResponse, String> {
-    let request = capture_request_context(&state)?;
-    match qb_probe(&state, "/api/v2/search/plugins").await {
-        Ok(result) => {
-            if (200..300).contains(&result.status_code) {
-                Ok(ProbeResponse {
-                    session_generation: request.session_generation,
-                    server_id: request.server_id,
-                    supported: Some(true),
-                    error: None,
-                })
-            } else if is_unsupported_status(result.status_code) {
-                Ok(ProbeResponse {
-                    session_generation: request.session_generation,
-                    server_id: request.server_id,
-                    supported: Some(false),
-                    error: None,
-                })
-            } else {
-                Ok(ProbeResponse {
-                    session_generation: request.session_generation,
-                    server_id: request.server_id,
-                    supported: None,
-                    error: Some(format!("HTTP error: {}", result.status_code)),
-                })
-            }
-        }
-        Err(e) => Ok(ProbeResponse {
-            session_generation: request.session_generation,
-            server_id: request.server_id,
-            supported: None,
-            error: Some(e),
-        }),
-    }
-}
-
-#[tauri::command]
-pub async fn probe_rss(state: State<'_, SessionStateHandle>) -> Result<ProbeResponse, String> {
-    let request = capture_request_context(&state)?;
-    match qb_probe(&state, "/api/v2/rss/items").await {
-        Ok(result) => {
-            if (200..300).contains(&result.status_code) {
-                Ok(ProbeResponse {
-                    session_generation: request.session_generation,
-                    server_id: request.server_id,
-                    supported: Some(true),
-                    error: None,
-                })
-            } else if is_unsupported_status(result.status_code) {
-                Ok(ProbeResponse {
-                    session_generation: request.session_generation,
-                    server_id: request.server_id,
-                    supported: Some(false),
-                    error: None,
-                })
-            } else {
-                Ok(ProbeResponse {
-                    session_generation: request.session_generation,
-                    server_id: request.server_id,
-                    supported: None,
-                    error: Some(format!("HTTP error: {}", result.status_code)),
-                })
-            }
-        }
-        Err(e) => Ok(ProbeResponse {
-            session_generation: request.session_generation,
-            server_id: request.server_id,
-            supported: None,
-            error: Some(e),
-        }),
-    }
 }
 
 // ============================================================================

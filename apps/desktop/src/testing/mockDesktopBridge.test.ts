@@ -4,8 +4,6 @@
 //   - `reset()` clears registered maindata sync listeners so pre-reset
 //     listeners do not receive later events, while fresh post-reset
 //     listeners still do.
-//   - `application.getServerCapabilities()` exists and returns the same
-//     `unknown` tri-state payload shape as the mobile mock.
 //   - `qBClient.setWorkspaceView`/`getWorkspaceView`/`addWorkspaceViewListener`
 //     (P2.5) match the Rust `WorkspaceView` contract: snake_case wire
 //     fields, hash-only `sorted_hashes`, and `workspace-view-changed`
@@ -15,7 +13,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AppUpdateInfo } from '@taurent/bridge/contracts';
 import type {
   MaindataSyncChangedEvent,
-  RustCapabilitiesResponse,
   WorkspaceView,
   WorkspaceViewRequest,
 } from '@taurent/bridge/types';
@@ -183,24 +180,23 @@ describe('mockDesktopBridge', () => {
   });
 
   describe('application.getServerCapabilities()', () => {
-    it('exists and records the call like other application probes', async () => {
-      automation.clearRecordedCalls();
-      const response = await bridge.application.getServerCapabilities();
-      const calls = automation.getRecordedCalls();
-      expect(calls.map((c) => c.name)).toContain('application.getServerCapabilities');
-      expect(response).toBeDefined();
+    it('does not exist on the mock bridge — capabilities now arrive via session snapshot', async () => {
+      // v2 capability migration: there is no `application.getServerCapabilities`
+      // on the desktop bridge. The mock surfaces capabilities via the
+      // `getSessionSnapshot` payload (see `buildSnapshot` in `mockDesktopBridge`).
+      expect(
+        (bridge.application as unknown as Record<string, unknown>).getServerCapabilities,
+      ).toBeUndefined();
     });
 
-    it('returns the unknown tri-state capability payload shape', async () => {
-      const response: RustCapabilitiesResponse = await bridge.application.getServerCapabilities();
-      expect(typeof response.session_generation).toBe('number');
-      expect(typeof response.server_id).toBe('string');
-      expect(response.capabilities).toEqual({
-        supports_search: 'unknown',
-        supports_rss: 'unknown',
-        supports_pause_resume: 'unknown',
-        supports_webseed_management: 'confirmed',
+    it('session snapshot reports non-nullable boolean capabilities', async () => {
+      const snapshot = await bridge.getSessionSnapshot();
+      expect(snapshot.capabilities).toEqual({
+        supports_search: true,
+        supports_rss: true,
+        supports_webseed_management: true,
       });
+      expect(snapshot.api_version).toBe('5.1.0');
     });
   });
 

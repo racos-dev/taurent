@@ -9,9 +9,8 @@
  * - Typed rule consumption: typed `RssRule[]` is consumed directly;
  *   `rssRuleNames` is derived from `rssRules[*].name` without any further
  *   key/path normalization.
- * - Capability gating: `supported === false` short-circuits both queries
- *   and returns empty arrays; `supported === null` (probing) also defers
- *   fetching. `supported === true` enables both queries.
+ * - Capability gating (v2): `capabilities.supportsRss === false` short-
+ *   circuits both queries and returns empty arrays; `true` enables both.
  * - Query key rotation: items and rules queries are keyed by
  *   `[RESOURCE.RSS, serverId, sessionGeneration, 'items' | 'rules']` so
  *   session invalidation invalidates both.
@@ -37,6 +36,19 @@ import type {
   UseRssControllerOptions,
 } from '../useRssController';
 import { useRssController } from '../useRssController';
+import type { AppCapabilities } from '../../capabilities';
+
+const SUPPORTED_CAPABILITIES: AppCapabilities = {
+  supportsSearch: true,
+  supportsRss: true,
+  supportsWebSeedManagement: true,
+};
+
+const UNSUPPORTED_CAPABILITIES: AppCapabilities = {
+  supportsSearch: false,
+  supportsRss: false,
+  supportsWebSeedManagement: false,
+};
 
 // ─── Test setup ──────────────────────────────────────────────────────────────
 
@@ -65,7 +77,7 @@ function makeOptions(
 ): UseRssControllerOptions {
   return {
     scope: { serverId: 'srv1', sessionGeneration: 1, isConnected: true },
-    supported: true,
+    capabilities: SUPPORTED_CAPABILITIES,
     getRssItems: vi.fn().mockResolvedValue({ items: [] as RssItem[] }),
     getRssRules: vi.fn().mockResolvedValue({ rules: [] as RssRule[] }),
     ...overrides,
@@ -327,11 +339,11 @@ describe('useRssController — typed rule consumption and rssRuleNames (T142.4)'
 // ─── Capability gating ──────────────────────────────────────────────────────
 
 describe('useRssController — capability gating (T142.4)', () => {
-  it('does not fetch and returns empty arrays when supported === false', async () => {
+  it('does not fetch and returns empty arrays when capabilities.supportsRss === false', async () => {
     const getRssItems = vi.fn().mockResolvedValue({ items: [] as RssItem[] });
     const getRssRules = vi.fn().mockResolvedValue({ rules: [] as RssRule[] });
     const options = makeOptions({
-      supported: false,
+      capabilities: UNSUPPORTED_CAPABILITIES,
       getRssItems,
       getRssRules,
     });
@@ -351,31 +363,7 @@ describe('useRssController — capability gating (T142.4)', () => {
     expect(result.current.rssRuleNames).toEqual([]);
   });
 
-  it('does not fetch and reports probing state when supported === null', async () => {
-    const getRssItems = vi.fn().mockResolvedValue({ items: [] as RssItem[] });
-    const getRssRules = vi.fn().mockResolvedValue({ rules: [] as RssRule[] });
-    const options = makeOptions({
-      supported: null,
-      getRssItems,
-      getRssRules,
-    });
-
-    const { result } = renderHook(() => useRssController(options), {
-      wrapper: makeWrapper(),
-    });
-
-    await waitFor(() => {
-      expect(result.current.isUnsupported).toBe(false);
-    });
-    // Probing state: queries are not enabled, so the fetcher is not
-    // called. Empty arrays are returned because the data is undefined.
-    expect(getRssItems).not.toHaveBeenCalled();
-    expect(getRssRules).not.toHaveBeenCalled();
-    expect(result.current.rssItems).toEqual([]);
-    expect(result.current.rssRules).toEqual([]);
-  });
-
-  it('fetches and reports non-unsupported when supported === true', async () => {
+  it('fetches and reports non-unsupported when capabilities.supportsRss === true', async () => {
     const typedItems: RssItem[] = [
       {
         name: 'Linux Tracker',
@@ -404,7 +392,7 @@ describe('useRssController — capability gating (T142.4)', () => {
     const getRssItems = vi.fn().mockResolvedValue({ items: typedItems });
     const getRssRules = vi.fn().mockResolvedValue({ rules: typedRules });
     const options = makeOptions({
-      supported: true,
+      capabilities: SUPPORTED_CAPABILITIES,
       getRssItems,
       getRssRules,
     });
@@ -422,12 +410,12 @@ describe('useRssController — capability gating (T142.4)', () => {
     expect(result.current.rssRuleNames).toEqual(['Rule 1']);
   });
 
-  it('does not fetch when isConnected is false even if supported === true', async () => {
+  it('does not fetch when isConnected is false even if capabilities.supportsRss === true', async () => {
     const getRssItems = vi.fn().mockResolvedValue({ items: [] as RssItem[] });
     const getRssRules = vi.fn().mockResolvedValue({ rules: [] as RssRule[] });
     const options = makeOptions({
       scope: { ...SCOPE, isConnected: false },
-      supported: true,
+      capabilities: SUPPORTED_CAPABILITIES,
       getRssItems,
       getRssRules,
     });

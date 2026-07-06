@@ -13,7 +13,7 @@
  * Usage:
  *   const controller = useRssController({
  *     scope: { serverId, sessionGeneration, isConnected },
- *     supported: capabilities?.supportsRss ?? null,
+ *     capabilities: { supportsRss, supportsSearch, supportsWebSeedManagement },
  *     getRssItems: () => bridge.qBClient.getRssItems(),
  *     getRssRules: () => bridge.qBClient.getRssRules(),
  *   });
@@ -25,6 +25,7 @@ import type { RssItem, RssRule } from '@taurent/bridge';
 import type { QueryScope } from '../query/scope';
 import { DEFAULT_STALE_TIME } from '../query/scope';
 import { RESOURCE } from '../query/keys';
+import type { AppCapabilities } from '../capabilities';
 
 // ---------------------------------------------------------------------------
 // Normalized types for UI consumption
@@ -45,17 +46,16 @@ export type NormalizedRSSRule = RssRule;
 
 export interface UseRssControllerOptions {
   scope: QueryScope;
+  /**
+   * Server capabilities (Rust-resolved, camelCase). `supportsRss` gates
+   * the RSS queries — when false, the queries stay disabled and the
+   * screen layer can render an unsupported empty state.
+   */
+  capabilities: AppCapabilities;
   /** Fetch function for RSS items — returns the typed bridge envelope. */
   getRssItems: () => Promise<{ items: RssItem[] }>;
   /** Fetch function for RSS rules — returns the typed bridge envelope. */
   getRssRules: () => Promise<{ rules: RssRule[] }>;
-  /**
-   * Whether the server supports RSS.
-   * - null = unknown (capability not yet probed)
-   * - true = supported
-   * - false = not supported
-   */
-  supported: boolean | null;
   staleTime?: number;
 }
 
@@ -78,16 +78,14 @@ export interface UseRssControllerResult {
 
 export function useRssController({
   scope,
+  capabilities,
   getRssItems,
   getRssRules,
-  supported,
   staleTime = DEFAULT_STALE_TIME,
 }: UseRssControllerOptions): UseRssControllerResult {
   const { isConnected, serverId } = scope;
 
-  // When supported === false, don't fetch and return empty data
-  // When supported === null (unknown), treat as probing state — don't fetch yet
-  const enabled = isConnected && serverId !== null && supported === true;
+  const enabled = isConnected && serverId !== null && capabilities.supportsRss;
 
   const itemsQuery = useQuery<{ items: RssItem[] }, Error>({
     queryKey: [RESOURCE.RSS, serverId, scope.sessionGeneration, 'items'],
@@ -151,7 +149,7 @@ export function useRssController({
     rssRules,
     rssRuleNames,
     isLoading,
-    isUnsupported: supported === false,
+    isUnsupported: !capabilities.supportsRss,
     error,
     refetch,
   };

@@ -2,6 +2,7 @@ use std::sync::Arc;
 use std::sync::Mutex;
 
 use qb_core::{
+    capability::{QbResolver, ResolvedCapabilities},
     client::{normalize_server_url, qb_probe, qbittorrent_login},
     ServerIdentity, SessionManager, SessionState, SessionStatus,
 };
@@ -27,6 +28,12 @@ fn parse_app_version_for_pause_resume(version: &str) -> bool {
 }
 
 const STARTUP_PROBE_PATH: &str = "/api/v2/app/version";
+const WEBAPI_VERSION_PATH: &str = "/api/v2/app/webapiVersion";
+
+/// Fallback webapi version used when the upstream `webapiVersion` request
+/// itself fails (network error, non-2xx, empty body). Resolving against
+/// "2.0" yields the base profile — only `supports_rss` enabled.
+const DEGRADED_WEBAPI_VERSION: &str = "2.0";
 
 fn summarize_cookie(cookie: &str) -> String {
     let suffix: String = cookie
@@ -128,6 +135,80 @@ async fn load_startup_pause_resume_capability(
     Ok(parse_app_version_for_pause_resume(version))
 }
 
+/// Resolve the server's `webapiVersion` and the corresponding
+/// `ResolvedCapabilities` from the embedded TOML profile.
+///
+/// On any failure (network error, non-2xx, empty body) the "2.0" base
+/// profile is used so the user still sees at least the always-on
+/// `supports_rss` capability. The function returns the raw webapi version
+/// string (or `"2.0"` on the fallback path) alongside the resolved
+/// capabilities so callers can store both on the session state.
+async fn load_resolved_capabilities(
+    client: &reqwest::Client,
+    base_url: &str,
+    sid_cookie: &str,
+    server_id: &str,
+) -> (String, ResolvedCapabilities) {
+    log::info!(
+        "Resolving webapiVersion for server_id={} from path={}",
+        server_id,
+        WEBAPI_VERSION_PATH
+    );
+
+    match qb_probe(client, base_url, sid_cookie, WEBAPI_VERSION_PATH).await {
+        Ok(probe) if probe.status_code == 200 => {
+            let version = probe
+                .data
+                .as_str()
+                .map(|s| s.trim().to_string())
+                .unwrap_or_default();
+            if version.is_empty() {
+                log::warn!(
+                    "webapiVersion for server_id={} was empty; falling back to {}",
+                    server_id,
+                    DEGRADED_WEBAPI_VERSION
+                );
+                (
+                    DEGRADED_WEBAPI_VERSION.to_string(),
+                    QbResolver::resolve(DEGRADED_WEBAPI_VERSION),
+                )
+            } else {
+                log::info!(
+                    "Resolved capabilities for server_id={} from webapiVersion={}",
+                    server_id,
+                    version
+                );
+                let caps = QbResolver::resolve(&version);
+                (version, caps)
+            }
+        }
+        Ok(probe) => {
+            log::warn!(
+                "webapiVersion for server_id={} returned HTTP {}; falling back to {}",
+                server_id,
+                probe.status_code,
+                DEGRADED_WEBAPI_VERSION
+            );
+            (
+                DEGRADED_WEBAPI_VERSION.to_string(),
+                QbResolver::resolve(DEGRADED_WEBAPI_VERSION),
+            )
+        }
+        Err(error) => {
+            log::warn!(
+                "webapiVersion request for server_id={} failed ({}); falling back to {}",
+                server_id,
+                error,
+                DEGRADED_WEBAPI_VERSION
+            );
+            (
+                DEGRADED_WEBAPI_VERSION.to_string(),
+                QbResolver::resolve(DEGRADED_WEBAPI_VERSION),
+            )
+        }
+    }
+}
+
 pub type SessionStateHandle = Arc<Mutex<SessionManager>>;
 
 pub fn create_session_state() -> SessionStateHandle {
@@ -211,8 +292,15 @@ pub async fn session_connect(
                 }
             };
 
+            // Resolve capabilities from the server's webapiVersion. This is
+            // best-effort: a failed fetch degrades to the "2.0" base profile
+            // (RSS only) rather than aborting the connect.
+            let (api_version, capabilities) =
+                load_resolved_capabilities(&client, &normalized_url, &sid_cookie, &server_id).await;
+
             let mut session = state.lock().unwrap();
             let generation = session.connect(identity, client, sid_cookie, supports_pause_resume);
+            session.set_resolved_capabilities(api_version, capabilities);
             emit_session_changed(
                 &app,
                 generation,
@@ -312,8 +400,15 @@ pub async fn session_connect_by_id(
                 }
             };
 
+            // Resolve capabilities from the server's webapiVersion. This is
+            // best-effort: a failed fetch degrades to the "2.0" base profile
+            // (RSS only) rather than aborting the connect.
+            let (api_version, capabilities) =
+                load_resolved_capabilities(&client, &normalized_url, &sid_cookie, &server_id).await;
+
             let mut session = session_state.lock().unwrap();
             let generation = session.connect(identity, client, sid_cookie, supports_pause_resume);
+            session.set_resolved_capabilities(api_version, capabilities);
             emit_session_changed(
                 &app,
                 generation,
@@ -381,10 +476,11 @@ pub async fn session_switch_server_by_id(
     // Step 2: Authenticate and probe the candidate server (NO session mutation)
     let login_result = qbittorrent_login(&meta.url, &meta.username, &password).await;
 
-    let (client, sid_cookie, supports_pause_resume) = match login_result {
+    let (client, sid_cookie, supports_pause_resume, api_version, capabilities) = match login_result
+    {
         Ok((client, sid_cookie)) => {
             let normalized_url = normalize_server_url(&meta.url, "https://");
-            match load_startup_pause_resume_capability(
+            let supports_pause_resume = match load_startup_pause_resume_capability(
                 &client,
                 &normalized_url,
                 &sid_cookie,
@@ -392,11 +488,25 @@ pub async fn session_switch_server_by_id(
             )
             .await
             {
-                Ok(supports_pause_resume) => (client, sid_cookie, supports_pause_resume),
+                Ok(supports_pause_resume) => supports_pause_resume,
                 Err(error_message) => {
                     return Err(error_message);
                 }
-            }
+            };
+
+            // Resolve capabilities from the server's webapiVersion. This is
+            // best-effort: a failed fetch degrades to the "2.0" base
+            // profile (RSS only) rather than aborting the switch.
+            let (api_version, capabilities) =
+                load_resolved_capabilities(&client, &normalized_url, &sid_cookie, &server_id).await;
+
+            (
+                client,
+                sid_cookie,
+                supports_pause_resume,
+                api_version,
+                capabilities,
+            )
         }
         Err(error) => {
             return Err(error.to_string());
@@ -413,7 +523,9 @@ pub async fn session_switch_server_by_id(
     // Step 4: Repo is saved — now commit the session.
     let generation = {
         let mut session = session_state.lock().unwrap();
-        session.connect(identity, client, sid_cookie, supports_pause_resume)
+        let generation = session.connect(identity, client, sid_cookie, supports_pause_resume);
+        session.set_resolved_capabilities(api_version, capabilities);
+        generation
     };
 
     // Step 5: Emit the standard connected session change event
@@ -506,8 +618,15 @@ pub async fn session_reconnect(
                     return Err(msg);
                 }
             };
+            // Resolve capabilities from the server's webapiVersion. This is
+            // best-effort: a failed fetch degrades to the "2.0" base profile
+            // (RSS only) rather than aborting the reconnect.
+            let (api_version, capabilities) =
+                load_resolved_capabilities(&client, &normalized_url, &sid_cookie, &identity.id)
+                    .await;
             let mut session = session_state.lock().unwrap();
             let generation = session.connect(identity, client, sid_cookie, supports_pause_resume);
+            session.set_resolved_capabilities(api_version, capabilities);
             emit_session_changed(
                 &app,
                 generation,
@@ -730,6 +849,14 @@ pub struct SessionSnapshot {
     pub server_url: Option<String>,
     pub status: SessionStatus,
     pub last_error: Option<String>,
+    /// Server's `webapiVersion` string. `None` until a successful connect
+    /// (or the "2.0" base profile after a webapiVersion fetch failure).
+    pub api_version: Option<String>,
+    /// Resolved boolean capabilities of the connected server. Always
+    /// populated once a connection has been attempted; the default
+    /// all-false value is what the renderer sees on a fresh process
+    /// before any connect.
+    pub capabilities: ResolvedCapabilities,
 }
 
 impl From<&SessionState> for SessionSnapshot {
@@ -741,6 +868,8 @@ impl From<&SessionState> for SessionSnapshot {
             server_url: state.server.as_ref().map(|server| server.url.clone()),
             status: state.status,
             last_error: state.last_error.clone(),
+            api_version: state.api_version.clone(),
+            capabilities: state.capabilities.clone(),
         }
     }
 }

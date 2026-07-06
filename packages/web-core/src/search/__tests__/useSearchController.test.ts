@@ -33,6 +33,13 @@ import type {
   SearchStatus,
 } from '@taurent/bridge';
 import { useSearchController, type SearchAdapters } from '../useSearchController';
+import type { AppCapabilities } from '../../capabilities';
+
+const SUPPORTED_CAPABILITIES: AppCapabilities = {
+  supportsSearch: true,
+  supportsRss: true,
+  supportsWebSeedManagement: true,
+};
 
 // ─── Test setup ──────────────────────────────────────────────────────────────
 
@@ -93,7 +100,7 @@ describe('useSearchController — typed status consumption (T141.4)', () => {
       () =>
         useSearchController({
           scope: SCOPE,
-          isSupported: true,
+          capabilities: SUPPORTED_CAPABILITIES,
           adapters,
         }),
       { wrapper: makeWrapper() }
@@ -136,7 +143,7 @@ describe('useSearchController — typed status consumption (T141.4)', () => {
       () =>
         useSearchController({
           scope: SCOPE,
-          isSupported: true,
+          capabilities: SUPPORTED_CAPABILITIES,
           adapters,
         }),
       { wrapper: makeWrapper() }
@@ -170,7 +177,7 @@ describe('useSearchController — typed status consumption (T141.4)', () => {
       () =>
         useSearchController({
           scope: SCOPE,
-          isSupported: true,
+          capabilities: SUPPORTED_CAPABILITIES,
           adapters,
         }),
       { wrapper: makeWrapper() }
@@ -221,7 +228,7 @@ describe('useSearchController — typed result consumption (T141.4)', () => {
       () =>
         useSearchController({
           scope: SCOPE,
-          isSupported: true,
+          capabilities: SUPPORTED_CAPABILITIES,
           adapters,
         }),
       { wrapper: makeWrapper() }
@@ -263,7 +270,7 @@ describe('useSearchController — typed result consumption (T141.4)', () => {
       () =>
         useSearchController({
           scope: SCOPE,
-          isSupported: true,
+          capabilities: SUPPORTED_CAPABILITIES,
           adapters,
         }),
       { wrapper: makeWrapper() }
@@ -316,7 +323,7 @@ describe('useSearchController — typed plugin consumption (T141.4)', () => {
       () =>
         useSearchController({
           scope: SCOPE,
-          isSupported: true,
+          capabilities: SUPPORTED_CAPABILITIES,
           adapters,
         }),
       { wrapper: makeWrapper() }
@@ -349,7 +356,7 @@ describe('useSearchController — typed plugin consumption (T141.4)', () => {
       () =>
         useSearchController({
           scope: SCOPE,
-          isSupported: true,
+          capabilities: SUPPORTED_CAPABILITIES,
           adapters,
         }),
       { wrapper: makeWrapper() }
@@ -375,7 +382,7 @@ describe('useSearchController — backend error propagation (T141.4)', () => {
       () =>
         useSearchController({
           scope: SCOPE,
-          isSupported: true,
+          capabilities: SUPPORTED_CAPABILITIES,
           adapters,
         }),
       { wrapper: makeWrapper() }
@@ -398,7 +405,7 @@ describe('useSearchController — backend error propagation (T141.4)', () => {
       () =>
         useSearchController({
           scope: SCOPE,
-          isSupported: true,
+          capabilities: SUPPORTED_CAPABILITIES,
           adapters,
         }),
       { wrapper: makeWrapper() }
@@ -421,7 +428,7 @@ describe('useSearchController — backend error propagation (T141.4)', () => {
       () =>
         useSearchController({
           scope: SCOPE,
-          isSupported: true,
+          capabilities: SUPPORTED_CAPABILITIES,
           adapters,
         }),
       { wrapper: makeWrapper() }
@@ -475,7 +482,7 @@ describe('useSearchController — wire-shape normalizer absence (T141.4)', () =>
       () =>
         useSearchController({
           scope: SCOPE,
-          isSupported: true,
+          capabilities: SUPPORTED_CAPABILITIES,
           adapters,
         }),
       { wrapper: makeWrapper() }

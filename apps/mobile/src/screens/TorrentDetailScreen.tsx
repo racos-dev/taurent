@@ -81,7 +81,7 @@ export function TorrentDetailScreen() {
   const torrent = torrents.find((item) => item.hash === hash) ?? null;
   const displayStatus = torrent ? getTorrentDisplayStatus(torrent) : null;
   const statusBarClass = displayStatus ? getStatusColorClass(displayStatus, 'bar') : null;
-  const supportsWebSeedManagement = capabilities?.supportsWebSeedManagement === true;
+  const supportsWebSeedManagement = capabilities.supportsWebSeedManagement;
 
   const handleAddHttpSources = useCallback(async (urls: string) => {
     try {

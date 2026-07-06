@@ -43,12 +43,10 @@ describe('AuthBoundary', () => {
       serverId: null,
       serverName: null,
       serverUrl: null,
+      apiVersion: null,
       error: null,
       retryState: { isRetrying: false, attemptCount: 0, maxAttempts: 3 },
-      capabilities: null,
-      capabilitiesLoading: false,
-      capabilitiesError: null,
-      refreshCapabilities: vi.fn(),
+      capabilities: { supportsSearch: false, supportsRss: false, supportsWebSeedManagement: false },
     });
 
     render(
@@ -85,12 +83,10 @@ describe('AuthBoundary', () => {
       serverId: null,
       serverName: null,
       serverUrl: null,
+      apiVersion: null,
       error: null,
       retryState: { isRetrying: false, attemptCount: 0, maxAttempts: 3 },
-      capabilities: null,
-      capabilitiesLoading: false,
-      capabilitiesError: null,
-      refreshCapabilities: vi.fn(),
+      capabilities: { supportsSearch: false, supportsRss: false, supportsWebSeedManagement: false },
     });
 
     render(
