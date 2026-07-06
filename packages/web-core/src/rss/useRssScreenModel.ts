@@ -8,7 +8,7 @@
  * Usage:
  *   const model = useRssScreenModel({
  *     scope: { serverId, sessionGeneration, isConnected },
- *     capabilities: { supportsSearch, supportsRss, supportsWebSeedManagement },
+ *     capabilities: { supportsSearch, supportsRss, supportsWebseedManagement },
  *     getRssItems: () => bridge.qBClient.getRssItems(),
  *     getRssRules: () => bridge.qBClient.getRssRules(),
  *     mutations: {

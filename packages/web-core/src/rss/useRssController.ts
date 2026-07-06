@@ -13,7 +13,7 @@
  * Usage:
  *   const controller = useRssController({
  *     scope: { serverId, sessionGeneration, isConnected },
- *     capabilities: { supportsRss, supportsSearch, supportsWebSeedManagement },
+ *     capabilities: { supportsRss, supportsSearch, supportsWebseedManagement },
  *     getRssItems: () => bridge.qBClient.getRssItems(),
  *     getRssRules: () => bridge.qBClient.getRssRules(),
  *   });

@@ -14,19 +14,6 @@ use crate::server_repo::{
     select_server_and_persist as repo_select_server_and_persist, ServerRepoStateHandle,
 };
 
-/// Parse the qBittorrent app version string and determine if pause/resume is supported.
-/// qBittorrent v5+ removed /pause and /resume endpoints in favor of /stop and /start.
-/// Version format: "v5.0.1", "v4.4.0", etc. The leading 'v' is optional.
-fn parse_app_version_for_pause_resume(version: &str) -> bool {
-    let v = version.trim_start_matches('v');
-    if let Some(major) = v.split('.').next().and_then(|s| s.parse::<u32>().ok()) {
-        // qBittorrent v5+ removed pause/resume; use stop/start instead
-        return major < 5;
-    }
-    // Unknown version, assume older (pause/resume supported) for safety
-    true
-}
-
 const STARTUP_PROBE_PATH: &str = "/api/v2/app/version";
 const WEBAPI_VERSION_PATH: &str = "/api/v2/app/webapiVersion";
 
@@ -89,12 +76,21 @@ fn startup_probe_failure_message(status_code: u16, body_summary: Option<&str>) -
     }
 }
 
-async fn load_startup_pause_resume_capability(
+/// Fetch the qBittorrent *app* version string from the first protected request
+/// after login.
+///
+/// Returns the raw app version (e.g. `"v5.0.1"`) on success. This is a hard
+/// post-login validation: any failure (network error, non-2xx, empty body)
+/// aborts the connect with the supplied error message. The raw string is then
+/// passed to `QbResolver::resolve` so app-version-keyed capabilities (including
+/// `supports_pause_resume`) can be resolved from the TOML's `[app_versions]`
+/// section.
+async fn load_app_version(
     client: &reqwest::Client,
     base_url: &str,
     sid_cookie: &str,
     server_id: &str,
-) -> Result<bool, String> {
+) -> Result<String, String> {
     log::info!(
         "Login succeeded for server_id={}; validating first protected request path={} with cookie={}",
         server_id,
@@ -132,22 +128,29 @@ async fn load_startup_pause_resume_capability(
         STARTUP_PROBE_PATH,
         version
     );
-    Ok(parse_app_version_for_pause_resume(version))
+    Ok(version.to_string())
 }
 
 /// Resolve the server's `webapiVersion` and the corresponding
 /// `ResolvedCapabilities` from the embedded TOML profile.
 ///
-/// On any failure (network error, non-2xx, empty body) the "2.0" base
-/// profile is used so the user still sees at least the always-on
-/// `supports_rss` capability. The function returns the raw webapi version
-/// string (or `"2.0"` on the fallback path) alongside the resolved
+/// `app_version` is the raw qBittorrent application version string (e.g.
+/// `"v5.0.1"`) returned by the startup probe. It is forwarded to
+/// `QbResolver::resolve` so app-version-keyed capabilities (including
+/// `supports_pause_resume`, declared in the TOML's `[app_versions]` section)
+/// can be resolved alongside webapi-version-keyed ones.
+///
+/// On any webapi-version fetch failure (network error, non-2xx, empty body)
+/// the "2.0" base profile is used so the user still sees at least the
+/// always-on `supports_rss` capability. The function returns the raw webapi
+/// version string (or `"2.0"` on the fallback path) alongside the resolved
 /// capabilities so callers can store both on the session state.
 async fn load_resolved_capabilities(
     client: &reqwest::Client,
     base_url: &str,
     sid_cookie: &str,
     server_id: &str,
+    app_version: &str,
 ) -> (String, ResolvedCapabilities) {
     log::info!(
         "Resolving webapiVersion for server_id={} from path={}",
@@ -170,7 +173,7 @@ async fn load_resolved_capabilities(
                 );
                 (
                     DEGRADED_WEBAPI_VERSION.to_string(),
-                    QbResolver::resolve(DEGRADED_WEBAPI_VERSION),
+                    QbResolver::resolve(DEGRADED_WEBAPI_VERSION, app_version),
                 )
             } else {
                 log::info!(
@@ -178,7 +181,7 @@ async fn load_resolved_capabilities(
                     server_id,
                     version
                 );
-                let caps = QbResolver::resolve(&version);
+                let caps = QbResolver::resolve(&version, app_version);
                 (version, caps)
             }
         }
@@ -191,7 +194,7 @@ async fn load_resolved_capabilities(
             );
             (
                 DEGRADED_WEBAPI_VERSION.to_string(),
-                QbResolver::resolve(DEGRADED_WEBAPI_VERSION),
+                QbResolver::resolve(DEGRADED_WEBAPI_VERSION, app_version),
             )
         }
         Err(error) => {
@@ -203,7 +206,7 @@ async fn load_resolved_capabilities(
             );
             (
                 DEGRADED_WEBAPI_VERSION.to_string(),
-                QbResolver::resolve(DEGRADED_WEBAPI_VERSION),
+                QbResolver::resolve(DEGRADED_WEBAPI_VERSION, app_version),
             )
         }
     }
@@ -269,34 +272,38 @@ pub async fn session_connect(
     match login_result {
         Ok((client, sid_cookie)) => {
             let normalized_url = normalize_server_url(&server_url, "https://");
-            let supports_pause_resume = match load_startup_pause_resume_capability(
+            let app_version =
+                match load_app_version(&client, &normalized_url, &sid_cookie, &server_id).await {
+                    Ok(app_version) => app_version,
+                    Err(error_message) => {
+                        let mut session = state.lock().unwrap();
+                        let generation = session.set_error(error_message.clone());
+                        emit_session_changed(
+                            &app,
+                            generation,
+                            Some(server_id),
+                            SessionStatus::Error,
+                            Some(error_message),
+                        );
+                        return Ok(generation);
+                    }
+                };
+
+            // Resolve capabilities from the server's webapiVersion (plus the
+            // app_version we just fetched for app-version-keyed caps such as
+            // `supports_pause_resume`). This is best-effort: a failed fetch
+            // degrades to the "2.0" base profile (RSS only) rather than
+            // aborting the connect.
+            let (api_version, capabilities) = load_resolved_capabilities(
                 &client,
                 &normalized_url,
                 &sid_cookie,
                 &server_id,
+                &app_version,
             )
-            .await
-            {
-                Ok(supports_pause_resume) => supports_pause_resume,
-                Err(error_message) => {
-                    let mut session = state.lock().unwrap();
-                    let generation = session.set_error(error_message.clone());
-                    emit_session_changed(
-                        &app,
-                        generation,
-                        Some(server_id),
-                        SessionStatus::Error,
-                        Some(error_message),
-                    );
-                    return Ok(generation);
-                }
-            };
+            .await;
 
-            // Resolve capabilities from the server's webapiVersion. This is
-            // best-effort: a failed fetch degrades to the "2.0" base profile
-            // (RSS only) rather than aborting the connect.
-            let (api_version, capabilities) =
-                load_resolved_capabilities(&client, &normalized_url, &sid_cookie, &server_id).await;
+            let supports_pause_resume = capabilities.supports_pause_resume;
 
             let mut session = state.lock().unwrap();
             let generation = session.connect(identity, client, sid_cookie, supports_pause_resume);
@@ -377,34 +384,38 @@ pub async fn session_connect_by_id(
     match login_result {
         Ok((client, sid_cookie)) => {
             let normalized_url = normalize_server_url(&meta.url, "https://");
-            let supports_pause_resume = match load_startup_pause_resume_capability(
+            let app_version =
+                match load_app_version(&client, &normalized_url, &sid_cookie, &server_id).await {
+                    Ok(app_version) => app_version,
+                    Err(error_message) => {
+                        let mut session = session_state.lock().unwrap();
+                        let generation = session.set_error(error_message.clone());
+                        emit_session_changed(
+                            &app,
+                            generation,
+                            Some(server_id),
+                            SessionStatus::Error,
+                            Some(error_message),
+                        );
+                        return Ok(generation);
+                    }
+                };
+
+            // Resolve capabilities from the server's webapiVersion (plus the
+            // app_version we just fetched for app-version-keyed caps such as
+            // `supports_pause_resume`). This is best-effort: a failed fetch
+            // degrades to the "2.0" base profile (RSS only) rather than
+            // aborting the connect.
+            let (api_version, capabilities) = load_resolved_capabilities(
                 &client,
                 &normalized_url,
                 &sid_cookie,
                 &server_id,
+                &app_version,
             )
-            .await
-            {
-                Ok(supports_pause_resume) => supports_pause_resume,
-                Err(error_message) => {
-                    let mut session = session_state.lock().unwrap();
-                    let generation = session.set_error(error_message.clone());
-                    emit_session_changed(
-                        &app,
-                        generation,
-                        Some(server_id),
-                        SessionStatus::Error,
-                        Some(error_message),
-                    );
-                    return Ok(generation);
-                }
-            };
+            .await;
 
-            // Resolve capabilities from the server's webapiVersion. This is
-            // best-effort: a failed fetch degrades to the "2.0" base profile
-            // (RSS only) rather than aborting the connect.
-            let (api_version, capabilities) =
-                load_resolved_capabilities(&client, &normalized_url, &sid_cookie, &server_id).await;
+            let supports_pause_resume = capabilities.supports_pause_resume;
 
             let mut session = session_state.lock().unwrap();
             let generation = session.connect(identity, client, sid_cookie, supports_pause_resume);
@@ -480,25 +491,29 @@ pub async fn session_switch_server_by_id(
     {
         Ok((client, sid_cookie)) => {
             let normalized_url = normalize_server_url(&meta.url, "https://");
-            let supports_pause_resume = match load_startup_pause_resume_capability(
+            let app_version =
+                match load_app_version(&client, &normalized_url, &sid_cookie, &server_id).await {
+                    Ok(app_version) => app_version,
+                    Err(error_message) => {
+                        return Err(error_message);
+                    }
+                };
+
+            // Resolve capabilities from the server's webapiVersion (plus the
+            // app_version we just fetched for app-version-keyed caps such as
+            // `supports_pause_resume`). This is best-effort: a failed fetch
+            // degrades to the "2.0" base profile (RSS only) rather than
+            // aborting the switch.
+            let (api_version, capabilities) = load_resolved_capabilities(
                 &client,
                 &normalized_url,
                 &sid_cookie,
                 &server_id,
+                &app_version,
             )
-            .await
-            {
-                Ok(supports_pause_resume) => supports_pause_resume,
-                Err(error_message) => {
-                    return Err(error_message);
-                }
-            };
+            .await;
 
-            // Resolve capabilities from the server's webapiVersion. This is
-            // best-effort: a failed fetch degrades to the "2.0" base
-            // profile (RSS only) rather than aborting the switch.
-            let (api_version, capabilities) =
-                load_resolved_capabilities(&client, &normalized_url, &sid_cookie, &server_id).await;
+            let supports_pause_resume = capabilities.supports_pause_resume;
 
             (
                 client,
@@ -596,34 +611,36 @@ pub async fn session_reconnect(
     match login_result {
         Ok((client, sid_cookie)) => {
             let normalized_url = normalize_server_url(&identity.url, "https://");
-            let supports_pause_resume = match load_startup_pause_resume_capability(
+            let app_version =
+                match load_app_version(&client, &normalized_url, &sid_cookie, &identity.id).await {
+                    Ok(app_version) => app_version,
+                    Err(msg) => {
+                        let mut session = session_state.lock().unwrap();
+                        let generation = session.set_error(msg.clone());
+                        emit_session_changed(
+                            &app,
+                            generation,
+                            session.get_state().server.as_ref().map(|s| s.id.clone()),
+                            SessionStatus::Error,
+                            Some(msg.clone()),
+                        );
+                        return Err(msg);
+                    }
+                };
+            // Resolve capabilities from the server's webapiVersion (plus the
+            // app_version we just fetched for app-version-keyed caps such as
+            // `supports_pause_resume`). This is best-effort: a failed fetch
+            // degrades to the "2.0" base profile (RSS only) rather than
+            // aborting the reconnect.
+            let (api_version, capabilities) = load_resolved_capabilities(
                 &client,
                 &normalized_url,
                 &sid_cookie,
                 &identity.id,
+                &app_version,
             )
-            .await
-            {
-                Ok(supports_pause_resume) => supports_pause_resume,
-                Err(msg) => {
-                    let mut session = session_state.lock().unwrap();
-                    let generation = session.set_error(msg.clone());
-                    emit_session_changed(
-                        &app,
-                        generation,
-                        session.get_state().server.as_ref().map(|s| s.id.clone()),
-                        SessionStatus::Error,
-                        Some(msg.clone()),
-                    );
-                    return Err(msg);
-                }
-            };
-            // Resolve capabilities from the server's webapiVersion. This is
-            // best-effort: a failed fetch degrades to the "2.0" base profile
-            // (RSS only) rather than aborting the reconnect.
-            let (api_version, capabilities) =
-                load_resolved_capabilities(&client, &normalized_url, &sid_cookie, &identity.id)
-                    .await;
+            .await;
+            let supports_pause_resume = capabilities.supports_pause_resume;
             let mut session = session_state.lock().unwrap();
             let generation = session.connect(identity, client, sid_cookie, supports_pause_resume);
             session.set_resolved_capabilities(api_version, capabilities);

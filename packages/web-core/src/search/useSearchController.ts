@@ -15,7 +15,7 @@
  * Usage:
  *   const controller = useSearchController({
  *     scope: { serverId, sessionGeneration, isConnected },
- *     capabilities: { supportsSearch, supportsRss, supportsWebSeedManagement },
+ *     capabilities: { supportsSearch, supportsRss, supportsWebseedManagement },
  *     adapters: {
  *       startSearch: (query, plugins, category) => bridge.qBClient.startSearch(...),
  *       stopSearch: (id) => bridge.qBClient.stopSearch(id),

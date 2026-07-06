@@ -15,17 +15,15 @@ import type {
 export type SessionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
 
 /**
- * Capabilities resolved from qBittorrent webapi version profile.
- * Mirrors the Rust `ResolvedCapabilities` struct — all fields are
- * non-nullable booleans (no tri-state, no separate `get_server_capabilities`
- * command). Capabilities arrive as part of every `SessionSnapshot` so the
- * renderer does not need a separate capability fetch path.
+ * Re-exported from the codegen output at `generated/server-capabilities.ts`.
+ * Keep the inline definition out of this file: the TOML profile at
+ * `crates/qb-core/capabilities/qbittorrent-capabilities.toml` is the single
+ * source of truth, regenerated with `pnpm codegen:capabilities`.
  */
-export interface ServerCapabilities {
-  supports_search: boolean;
-  supports_rss: boolean;
-  supports_webseed_management: boolean;
-}
+import type { ServerCapabilities } from './generated/server-capabilities';
+
+export type { ServerCapabilities };
+export { makeServerCapabilities } from './generated/server-capabilities';
 
 export interface SessionSnapshot {
   session_generation: number;

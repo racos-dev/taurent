@@ -5,46 +5,49 @@
 //! from making it into a production binary, this build script:
 //!
 //! 1. Parses `capabilities/qbittorrent-capabilities.toml`.
-//! 2. Verifies the `[base]` section exists with a `capabilities` key.
-//! 3. Verifies every capability name in `[base].capabilities` and in every
-//!    `[versions."X.Y.Z"].adds` is a known capability (matching the
-//!    `KNOWN_CAPABILITIES` list in `capability/version.rs`).
-//! 4. Verifies every `[versions."X.Y.Z"]` key is a valid semver triple.
+//! 2. Verifies every correction key/value is a valid semver.
+//! 3. Verifies every `[versions."X.Y.Z"]` key is a valid semver.
+//! 4. Verifies every `[app_versions."vX.Y.Z"]` key strips to a valid semver.
+//! 5. Verifies the `app_version` field inside `[versions]` entries — if
+//!    present and not `"unreleased"` — strips to a valid semver.
+//! 6. Walks each `[versions]` and `[app_versions]` table in semver order
+//!    and panics if a `removes` entry targets a capability that was never
+//!    `adds`'d (or was already `removes`'d) at an earlier threshold.
 //!
 //! On any validation failure the build script prints the error and panics,
 //! which surfaces as a normal Cargo build error.
-//!
-//! The hardcoded capability list here MUST stay in sync with
-//! `capability/version.rs::KNOWN_CAPABILITIES` — a comment in that file
-//! explains why. The two are kept identical by code review.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 use std::path::Path;
 
-const KNOWN_CAPABILITIES: &[&str] = &[
-    "supports_search",
-    "supports_rss",
-    "supports_webseed_management",
-];
+use serde::Deserialize;
 
-#[derive(serde::Deserialize, Default)]
+#[derive(Deserialize, Default)]
 struct TomlData {
     #[serde(default)]
-    base: BaseSection,
+    corrections: BTreeMap<String, String>,
     #[serde(default)]
     versions: BTreeMap<String, VersionEntry>,
-}
-
-#[derive(serde::Deserialize, Default)]
-struct BaseSection {
     #[serde(default)]
-    capabilities: Vec<String>,
+    app_versions: BTreeMap<String, VersionEntry>,
 }
 
-#[derive(serde::Deserialize, Default)]
+#[derive(Deserialize, Default)]
 struct VersionEntry {
     #[serde(default)]
-    adds: Vec<String>,
+    app_version: String,
+    #[serde(default)]
+    adds: Vec<CapEntry>,
+    #[serde(default)]
+    removes: Vec<CapEntry>,
+}
+
+#[derive(Deserialize)]
+struct CapEntry {
+    name: String,
+    #[serde(default)]
+    #[allow(dead_code)]
+    description: String,
 }
 
 fn main() {
@@ -73,54 +76,158 @@ fn main() {
         ),
     };
 
-    // Validate base capabilities exist (any string is fine; the structural
-    // check is that the section is present and parseable).
-    if data.base.capabilities.is_empty() {
-        panic!(
-            "capabilities TOML at {} is missing [base].capabilities entries",
-            toml_path.display()
-        );
-    }
-    for cap in &data.base.capabilities {
-        if !KNOWN_CAPABILITIES.contains(&cap.as_str()) {
-            panic!(
-                "Unknown capability {:?} in [base] of {}; known capabilities: {:?}",
-                cap,
-                toml_path.display(),
-                KNOWN_CAPABILITIES
-            );
-        }
-    }
+    validate_corrections(&data.corrections, &toml_path);
+    validate_versions_table(&data.versions, "versions", &toml_path, parse_lenient_semver);
+    validate_versions_table(
+        &data.app_versions,
+        "app_versions",
+        &toml_path,
+        parse_app_semver,
+    );
+    validate_removes_before_adds(&data.versions, "versions", &toml_path, parse_lenient_semver);
+    validate_removes_before_adds(
+        &data.app_versions,
+        "app_versions",
+        &toml_path,
+        parse_app_semver,
+    );
+}
 
-    // Validate every version section.
-    for (ver_str, entry) in &data.versions {
-        if parse_semver(ver_str).is_none() {
+/// Validate every key/value in `[corrections]` is a strict semver triple
+/// (no missing patch component — corrections only fire on exact match).
+fn validate_corrections(corrections: &BTreeMap<String, String>, toml_path: &Path) {
+    for (from, to) in corrections {
+        if parse_strict_semver(from).is_none() {
             panic!(
-                "Invalid semver version key {:?} under [versions] in {} \
+                "Invalid semver correction key {:?} in [corrections] of {} \
                  (expected \"MAJOR.MINOR.PATCH\")",
-                ver_str,
+                from,
                 toml_path.display()
             );
         }
-        for cap in &entry.adds {
-            if !KNOWN_CAPABILITIES.contains(&cap.as_str()) {
-                panic!(
-                    "Unknown capability {:?} in [versions.{}].adds of {}; \
-                     known capabilities: {:?}",
-                    cap,
-                    ver_str,
-                    toml_path.display(),
-                    KNOWN_CAPABILITIES
-                );
-            }
+        if parse_strict_semver(to).is_none() {
+            panic!(
+                "Invalid semver correction value {:?} for {:?} in [corrections] of {} \
+                 (expected \"MAJOR.MINOR.PATCH\")",
+                to,
+                from,
+                toml_path.display()
+            );
         }
     }
 }
 
-fn parse_semver(s: &str) -> Option<(u16, u16, u16)> {
+/// Validate every threshold key in a `[versions]`-style table is a valid
+/// semver (using `parse_fn` for the key shape — lenient for `[versions]`,
+/// v-stripping lenient for `[app_versions]`). Also validates the inner
+/// `app_version` metadata field on each entry.
+fn validate_versions_table(
+    map: &BTreeMap<String, VersionEntry>,
+    section: &str,
+    toml_path: &Path,
+    parse_fn: fn(&str) -> Option<(u16, u16, u16)>,
+) {
+    for (ver_str, entry) in map {
+        if parse_fn(ver_str).is_none() {
+            panic!(
+                "Invalid semver version key {:?} under [{}] in {} \
+                 (expected \"MAJOR.MINOR.PATCH\"{})",
+                ver_str,
+                section,
+                toml_path.display(),
+                if section == "app_versions" {
+                    ", optionally with a leading 'v'"
+                } else {
+                    ""
+                }
+            );
+        }
+
+        if !entry.app_version.is_empty()
+            && entry.app_version != "unreleased"
+            && parse_app_semver(&entry.app_version).is_none()
+        {
+            panic!(
+                "Invalid app_version {:?} under [{}.{}] in {} \
+                 (expected \"vMAJOR.MINOR.PATCH\" or \"unreleased\")",
+                entry.app_version,
+                section,
+                ver_str,
+                toml_path.display()
+            );
+        }
+    }
+}
+
+/// Walk `map` in semver order and panic on any `removes` entry that targets
+/// a capability not currently in `active`. This catches the two error modes
+/// the resolver cannot otherwise detect:
+///
+/// - Removing a capability that was never `adds`'d.
+/// - Removing a capability that was already `removes`'d at an earlier
+///   threshold (i.e. a duplicate remove).
+fn validate_removes_before_adds(
+    map: &BTreeMap<String, VersionEntry>,
+    section: &str,
+    toml_path: &Path,
+    parse_fn: fn(&str) -> Option<(u16, u16, u16)>,
+) {
+    // Sort by parsed semver (BTreeMap iterates by key *string*, which puts
+    // "10.0.0" before "2.0.0"). `validate_versions_table` already
+    // guaranteed every key parses, so `parse_fn` always succeeds here.
+    let mut thresholds: Vec<(&str, &VersionEntry)> =
+        map.iter().map(|(k, v)| (k.as_str(), v)).collect();
+    thresholds.sort_by_key(|(k, _)| parse_fn(k).unwrap());
+
+    let mut active: HashSet<String> = HashSet::new();
+    for (ver_str, entry) in thresholds {
+        for cap in &entry.removes {
+            if !active.contains(&cap.name) {
+                panic!(
+                    "Capability {:?} is `removes`'d at [{}.{}] in {} \
+                     but was never `adds`'d at an earlier threshold. \
+                     Every `removes` must match a prior `adds`.",
+                    cap.name,
+                    section,
+                    ver_str,
+                    toml_path.display()
+                );
+            }
+        }
+        for cap in &entry.removes {
+            active.remove(&cap.name);
+        }
+        for cap in &entry.adds {
+            active.insert(cap.name.clone());
+        }
+    }
+}
+
+/// Parse a strict semver triple — all three components must be present.
+/// Used for `[corrections]` keys and values, which must 1:1 match the
+/// upstream-reported version string.
+fn parse_strict_semver(s: &str) -> Option<(u16, u16, u16)> {
+    let mut parts = s.split('.');
+    let major: u16 = parts.next()?.parse().ok()?;
+    let minor: u16 = parts.next()?.parse().ok()?;
+    let patch: u16 = parts.next()?.parse().ok()?;
+    Some((major, minor, patch))
+}
+
+/// Parse a lenient semver — patch defaults to 0 when missing. Matches the
+/// resolver's `version::parse_semver` so build-time validation agrees with
+/// runtime resolution. Used for `[versions]` keys.
+fn parse_lenient_semver(s: &str) -> Option<(u16, u16, u16)> {
     let mut parts = s.split('.');
     let major: u16 = parts.next()?.parse().ok()?;
     let minor: u16 = parts.next()?.parse().ok()?;
     let patch: u16 = parts.next().unwrap_or("0").parse().ok()?;
     Some((major, minor, patch))
+}
+
+/// Strip a leading `v` and parse as lenient semver. Used for
+/// `[app_versions]` keys and `app_version` metadata fields.
+fn parse_app_semver(s: &str) -> Option<(u16, u16, u16)> {
+    let stripped = s.strip_prefix('v').unwrap_or(s);
+    parse_lenient_semver(stripped)
 }

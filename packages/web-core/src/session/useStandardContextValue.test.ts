@@ -12,7 +12,7 @@ import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { useStandardContextValue, type CapabilityBridge } from './useStandardContextValue';
-import type { ServerCapabilities } from '@taurent/bridge';
+import { makeServerCapabilities, type ServerCapabilities } from '@taurent/bridge';
 import type { SessionController } from './sessionController';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -50,11 +50,11 @@ function createMockBridge(overrides: Partial<CapabilityBridge> = {}): Capability
       api_version: '5.1.0',
       status: 'connected',
       last_error: null,
-      capabilities: {
+      capabilities: makeServerCapabilities({
         supports_search: false,
         supports_rss: false,
         supports_webseed_management: false,
-      },
+      }),
     }),
     ...overrides,
   };
@@ -72,12 +72,12 @@ function makeCapabilitiesSnapshot(
     api_version: apiVersion,
     status: 'connected',
     last_error: null,
-    capabilities: {
+    capabilities: makeServerCapabilities({
       supports_search: false,
       supports_rss: false,
       supports_webseed_management: false,
       ...capabilities,
-    },
+    }),
   } as const;
 }
 
@@ -113,7 +113,7 @@ describe('useStandardContextValue — Rust capability path via session snapshot'
 
       expect(result.current.capabilities.supportsSearch).toBe(true);
       expect(result.current.capabilities.supportsRss).toBe(true);
-      expect(result.current.capabilities.supportsWebSeedManagement).toBe(true);
+      expect(result.current.capabilities.supportsWebseedManagement).toBe(true);
     });
 
     it('maps every server capability false across the snapshot', async () => {
@@ -133,7 +133,7 @@ describe('useStandardContextValue — Rust capability path via session snapshot'
 
       expect(result.current.capabilities.supportsSearch).toBe(false);
       expect(result.current.capabilities.supportsRss).toBe(false);
-      expect(result.current.capabilities.supportsWebSeedManagement).toBe(false);
+      expect(result.current.capabilities.supportsWebseedManagement).toBe(false);
     });
 
     it('maps mixed capability values verbatim from the snapshot', async () => {
@@ -159,7 +159,7 @@ describe('useStandardContextValue — Rust capability path via session snapshot'
 
       expect(result.current.capabilities.supportsSearch).toBe(true);
       expect(result.current.capabilities.supportsRss).toBe(false);
-      expect(result.current.capabilities.supportsWebSeedManagement).toBe(true);
+      expect(result.current.capabilities.supportsWebseedManagement).toBe(true);
     });
 
     it('defaults to all-false capabilities when bridge.getSessionSnapshot is absent', () => {
@@ -174,7 +174,7 @@ describe('useStandardContextValue — Rust capability path via session snapshot'
       // Always defined, no loading/error surfaces — consumers can rely on it.
       expect(result.current.capabilities.supportsSearch).toBe(false);
       expect(result.current.capabilities.supportsRss).toBe(false);
-      expect(result.current.capabilities.supportsWebSeedManagement).toBe(false);
+      expect(result.current.capabilities.supportsWebseedManagement).toBe(false);
     });
   });
 
@@ -189,11 +189,11 @@ describe('useStandardContextValue — Rust capability path via session snapshot'
           api_version: '5.1.2',
           status: 'connected',
           last_error: null,
-          capabilities: {
+          capabilities: makeServerCapabilities({
             supports_search: false,
             supports_rss: false,
             supports_webseed_management: false,
-          },
+          }),
         }),
       });
       const controller = createMockController();

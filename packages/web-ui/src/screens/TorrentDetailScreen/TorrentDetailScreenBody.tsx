@@ -112,7 +112,7 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
   addHttpSourcesIsPending = false,
   editHttpSourceIsPending = false,
   removeHttpSourceIsPending = false,
-  supportsWebSeedManagement = false,
+  supportsWebseedManagement = false,
   handlePauseResume,
   handleRecheck,
   handleReannounce,
@@ -137,7 +137,7 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
   const [editingHttpSource, setEditingHttpSource] = React.useState<WebSeed | null>(null);
   const [editHttpSourceUrl, setEditHttpSourceUrl] = React.useState('');
 
-  const canManageHttpSources = supportsWebSeedManagement
+  const canManageHttpSources = supportsWebseedManagement
     && Boolean(handleAddHttpSources && handleEditHttpSource && handleRemoveHttpSource);
 
   const submitHttpSources = React.useCallback(() => {

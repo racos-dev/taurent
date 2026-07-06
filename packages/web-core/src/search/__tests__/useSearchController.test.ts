@@ -33,13 +33,13 @@ import type {
   SearchStatus,
 } from '@taurent/bridge';
 import { useSearchController, type SearchAdapters } from '../useSearchController';
-import type { AppCapabilities } from '../../capabilities';
+import { makeAppCapabilities } from '../../capabilities';
 
-const SUPPORTED_CAPABILITIES: AppCapabilities = {
+const SUPPORTED_CAPABILITIES = makeAppCapabilities({
   supportsSearch: true,
   supportsRss: true,
-  supportsWebSeedManagement: true,
-};
+  supportsWebseedManagement: true,
+});
 
 // ─── Test setup ──────────────────────────────────────────────────────────────
 

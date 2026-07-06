@@ -81,7 +81,7 @@ export function TorrentDetailScreen() {
   const torrent = torrents.find((item) => item.hash === hash) ?? null;
   const displayStatus = torrent ? getTorrentDisplayStatus(torrent) : null;
   const statusBarClass = displayStatus ? getStatusColorClass(displayStatus, 'bar') : null;
-  const supportsWebSeedManagement = capabilities.supportsWebSeedManagement;
+  const supportsWebseedManagement = capabilities.supportsWebseedManagement;
 
   const handleAddHttpSources = useCallback(async (urls: string) => {
     try {
@@ -258,7 +258,7 @@ export function TorrentDetailScreen() {
         addHttpSourcesIsPending={addHttpSourcesMutation.isPending}
         editHttpSourceIsPending={editHttpSourceMutation.isPending}
         removeHttpSourceIsPending={removeHttpSourceMutation.isPending}
-        supportsWebSeedManagement={supportsWebSeedManagement}
+        supportsWebseedManagement={supportsWebseedManagement}
         handlePauseResume={controller.handlePauseResume}
         handleRecheck={controller.handleRecheck}
         handleReannounce={controller.handleReannounce}
@@ -271,9 +271,9 @@ export function TorrentDetailScreen() {
         handleIncreasePriority={controller.handleIncreasePriority}
         handleDecreasePriority={controller.handleDecreasePriority}
         handleBanPeer={controller.handleBanPeer}
-        handleAddHttpSources={supportsWebSeedManagement ? handleAddHttpSources : undefined}
-        handleEditHttpSource={supportsWebSeedManagement ? handleEditHttpSource : undefined}
-        handleRemoveHttpSource={supportsWebSeedManagement ? handleRemoveHttpSource : undefined}
+        handleAddHttpSources={supportsWebseedManagement ? handleAddHttpSources : undefined}
+        handleEditHttpSource={supportsWebseedManagement ? handleEditHttpSource : undefined}
+        handleRemoveHttpSource={supportsWebseedManagement ? handleRemoveHttpSource : undefined}
       />
     </div>
   );

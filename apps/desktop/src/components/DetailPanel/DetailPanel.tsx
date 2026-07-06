@@ -216,7 +216,7 @@ export function DetailPanel() {
 
   // ─── Session scope ─────────────────────────────────────────────────────────
   const { isConnected, serverId, sessionGeneration, capabilities } = useQBClient();
-  const supportsWebSeedManagement = capabilities.supportsWebSeedManagement;
+  const supportsWebseedManagement = capabilities.supportsWebseedManagement;
 
   // ─── Add trackers mutation ────────────────────────────────────────────────
   const addTrackerMutation = useMutation({
@@ -798,9 +798,9 @@ export function DetailPanel() {
                 isLoading={webSeedsLoading}
                 error={webSeedsError}
                 onRetry={webSeedsRefetch}
-                onAddHttpSources={supportsWebSeedManagement ? toggleAddHttpSources : undefined}
-                onEditHttpSource={supportsWebSeedManagement ? handleEditHttpSource : undefined}
-                onRemoveHttpSource={supportsWebSeedManagement ? handleRemoveHttpSource : undefined}
+                onAddHttpSources={supportsWebseedManagement ? toggleAddHttpSources : undefined}
+                onEditHttpSource={supportsWebseedManagement ? handleEditHttpSource : undefined}
+                onRemoveHttpSource={supportsWebseedManagement ? handleRemoveHttpSource : undefined}
                 onCopyHttpSourceUrl={handleCopyHttpSourceUrl}
                 removeHttpSourceIsPending={removeHttpSourceMutation.isPending}
               />

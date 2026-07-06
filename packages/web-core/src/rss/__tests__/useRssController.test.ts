@@ -36,19 +36,19 @@ import type {
   UseRssControllerOptions,
 } from '../useRssController';
 import { useRssController } from '../useRssController';
-import type { AppCapabilities } from '../../capabilities';
+import { makeAppCapabilities } from '../../capabilities';
 
-const SUPPORTED_CAPABILITIES: AppCapabilities = {
+const SUPPORTED_CAPABILITIES = makeAppCapabilities({
   supportsSearch: true,
   supportsRss: true,
-  supportsWebSeedManagement: true,
-};
+  supportsWebseedManagement: true,
+});
 
-const UNSUPPORTED_CAPABILITIES: AppCapabilities = {
+const UNSUPPORTED_CAPABILITIES = makeAppCapabilities({
   supportsSearch: false,
   supportsRss: false,
-  supportsWebSeedManagement: false,
-};
+  supportsWebseedManagement: false,
+});
 
 // ─── Test setup ──────────────────────────────────────────────────────────────
 

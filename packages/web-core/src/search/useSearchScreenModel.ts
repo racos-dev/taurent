@@ -10,7 +10,7 @@
  * Usage:
  *   const model = useSearchScreenModel({
  *     scope: { serverId, sessionGeneration, isConnected },
- *     capabilities: { supportsSearch, supportsRss, supportsWebSeedManagement },
+ *     capabilities: { supportsSearch, supportsRss, supportsWebseedManagement },
  *     adapters: { startSearch, stopSearch, ... },
  *     onAddResult: async (result) => { ... },
  *   });

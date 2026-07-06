@@ -30,6 +30,7 @@ import type {
   WorkspaceView,
   WorkspaceViewRequest,
 } from '@taurent/bridge/types';
+import { makeServerCapabilities } from '@taurent/bridge';
 import { DESKTOP_CAPABILITIES } from '@taurent/bridge/contracts/capabilities';
 import type { ResourceInvalidatedEvent, SessionChangedEvent } from '@taurent/bridge/events';
 import { createMaindataState, createDeltaMaindata } from './fixtures/torrent';
@@ -136,11 +137,11 @@ function buildSnapshot(
     // capabilities by default. Tests that need to gate a specific feature
     // can override the snapshot via `setAppState` or direct mutation.
     api_version: status === 'connected' ? '5.1.0' : null,
-    capabilities: {
+    capabilities: makeServerCapabilities({
       supports_search: true,
       supports_rss: true,
       supports_webseed_management: true,
-    },
+    }),
     status,
     last_error: lastError,
   };

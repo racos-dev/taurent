@@ -13,6 +13,7 @@ vi.mock('../../connection/ServerManager', () => ({
 import { AuthBoundary } from '../AuthBoundary';
 import { useQBClient } from '../../connection/QBClientProvider';
 import { useServerManager } from '../../connection/ServerManager';
+import { makeAppCapabilities } from '@taurent/web-core/capabilities';
 
 const mockUseQBClient = vi.mocked(useQBClient);
 const mockUseServerManager = vi.mocked(useServerManager);
@@ -46,7 +47,7 @@ describe('AuthBoundary', () => {
       apiVersion: null,
       error: null,
       retryState: { isRetrying: false, attemptCount: 0, maxAttempts: 3 },
-      capabilities: { supportsSearch: false, supportsRss: false, supportsWebSeedManagement: false },
+      capabilities: makeAppCapabilities({ supportsSearch: false, supportsRss: false, supportsWebseedManagement: false }),
     });
 
     render(
@@ -86,7 +87,7 @@ describe('AuthBoundary', () => {
       apiVersion: null,
       error: null,
       retryState: { isRetrying: false, attemptCount: 0, maxAttempts: 3 },
-      capabilities: { supportsSearch: false, supportsRss: false, supportsWebSeedManagement: false },
+      capabilities: makeAppCapabilities({ supportsSearch: false, supportsRss: false, supportsWebseedManagement: false }),
     });
 
     render(

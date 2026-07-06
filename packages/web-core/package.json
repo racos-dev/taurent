@@ -19,7 +19,8 @@
     "./session": "./src/session/index.ts",
     "./torrents": "./src/torrents/index.ts",
     "./screens": "./src/screens/index.ts",
-    "./sync": "./src/sync/index.ts"
+    "./sync": "./src/sync/index.ts",
+    "./capabilities": "./src/capabilities/index.ts"
   },
   "scripts": {
     "test": "vitest run",

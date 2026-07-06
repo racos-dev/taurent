@@ -36,8 +36,9 @@ pub struct SessionState {
     pub initialized: bool,
     /// Whether the server supports pause/resume endpoints (qBittorrent < v5).
     /// qBittorrent v5+ removed these endpoints; use stop/start instead.
-    /// This is **not** part of the TOML capability profile — it is derived
-    /// from the qBittorrent *app* version by `qb-tauri` at connect time.
+    /// Mirrored from the resolved `capabilities.supports_pause_resume` field,
+    /// which is itself resolved via the TOML's `[app_versions]` section
+    /// alongside the rest of the boolean capability set.
     pub supports_pause_resume: bool,
     /// The server's `webapiVersion` string, or `None` if the session has
     /// never been connected (or the fetch failed and no version was recorded).
@@ -52,8 +53,11 @@ pub struct SessionState {
     /// all-false value is what the renderer sees on a fresh process
     /// before any connect.
     ///
-    /// `supports_pause_resume` is intentionally **not** part of this set;
-    /// see the field doc above.
+    /// Resolved from both the server's `webapiVersion` (for the
+    /// `[versions]` section) and the qBittorrent *app* version (for the
+    /// `[app_versions]` section), which is how `supports_pause_resume`
+    /// becomes part of this set. `supports_pause_resume` is also mirrored
+    /// to the top-level field above for convenience.
     #[serde(default)]
     pub capabilities: ResolvedCapabilities,
 }

@@ -2,17 +2,11 @@
 //!
 //! All version comparisons in this module use `(u16, u16, u16)` tuples to keep
 //! the math simple and predictable. Patch is treated as the tie-breaker.
-
-/// Canonical list of capabilities recognised by the resolver.
-///
-/// This list is the single source of truth used by both the runtime resolver
-/// (`resolver.rs`) and the `build.rs` validator to detect unknown capability
-/// names in the embedded TOML profiles.
-pub const KNOWN_CAPABILITIES: &[&str] = &[
-    "supports_search",
-    "supports_rss",
-    "supports_webseed_management",
-];
+//!
+//! Known-upstream `webapiVersion` reporting bugs (e.g. qBittorrent v4.3.0–
+//! v4.3.3 reporting "2.7.0" instead of "2.8.0") are corrected at the TOML
+//! layer via the `[corrections]` map in
+//! `capabilities/qbittorrent-capabilities.toml`, not here.
 
 /// Parse a semantic-version string like "2.16.0" or "2.7.0" into
 /// `(major, minor, patch)`. Returns `None` on malformed input.
@@ -30,20 +24,6 @@ pub fn parse_semver(s: &str) -> Option<(u16, u16, u16)> {
 /// Returns `true` if version `a` is less than or equal to version `b`.
 pub fn version_le(a: (u16, u16, u16), b: (u16, u16, u16)) -> bool {
     a.0 < b.0 || (a.0 == b.0 && a.1 < b.1) || (a.0 == b.0 && a.1 == b.1 && a.2 <= b.2)
-}
-
-/// Apply hardcoded version corrections for known-upstream qBittorrent
-/// webapiVersion bugs.
-///
-/// qBittorrent v4.3.0–v4.3.3 misreported `webapiVersion` as "2.7.0" when the
-/// real version was "2.8.0". When the server reports "2.7.0", resolve
-/// capabilities as if it had reported "2.8.0".
-pub fn correct_version(v: &str) -> &str {
-    if v == "2.7.0" {
-        "2.8.0"
-    } else {
-        v
-    }
 }
 
 #[cfg(test)]
@@ -96,26 +76,5 @@ mod tests {
     fn test_version_le_greater() {
         assert!(!version_le((2, 7, 0), (2, 6, 99)));
         assert!(!version_le((3, 0, 0), (2, 99, 99)));
-    }
-
-    #[test]
-    fn test_correct_version_v270_maps_to_280() {
-        assert_eq!(correct_version("2.7.0"), "2.8.0");
-    }
-
-    #[test]
-    fn test_correct_version_passthrough() {
-        assert_eq!(correct_version("2.0.0"), "2.0.0");
-        assert_eq!(correct_version("2.8.0"), "2.8.0");
-        assert_eq!(correct_version("2.16.0"), "2.16.0");
-    }
-
-    #[test]
-    fn test_known_capabilities_complete() {
-        // Guard against accidental drift between this list and the
-        // TOML profiles. If a capability is added, both must be updated.
-        assert!(KNOWN_CAPABILITIES.contains(&"supports_search"));
-        assert!(KNOWN_CAPABILITIES.contains(&"supports_rss"));
-        assert!(KNOWN_CAPABILITIES.contains(&"supports_webseed_management"));
     }
 }
