@@ -1256,6 +1256,110 @@ pub async fn get_torrent_webseeds(
     })
 }
 
+#[tauri::command]
+pub async fn add_webseeds(
+    state: State<'_, SessionStateHandle>,
+    app: tauri::AppHandle,
+    hash: String,
+    urls: String,
+) -> Result<OperationResponse, String> {
+    let request = capture_request_context(&state)?;
+    let gen = request.session_generation;
+    let server_id = request.server_id.clone();
+
+    let path = "/api/v2/torrents/addWebSeeds";
+    let _ = qb_post(
+        &state,
+        path,
+        &[("hash", hash.as_str()), ("urls", urls.as_str())],
+    )
+    .await?;
+
+    emit_resource_invalidated(
+        &app,
+        gen,
+        server_id.clone(),
+        format!("torrent-webseeds:{}", hash),
+    );
+
+    Ok(OperationResponse {
+        session_generation: gen,
+        server_id,
+        success: true,
+    })
+}
+
+#[tauri::command]
+pub async fn edit_webseed(
+    state: State<'_, SessionStateHandle>,
+    app: tauri::AppHandle,
+    hash: String,
+    orig_url: String,
+    new_url: String,
+) -> Result<OperationResponse, String> {
+    let request = capture_request_context(&state)?;
+    let gen = request.session_generation;
+    let server_id = request.server_id.clone();
+
+    let path = "/api/v2/torrents/editWebSeed";
+    let _ = qb_post(
+        &state,
+        path,
+        &[
+            ("hash", hash.as_str()),
+            ("origUrl", orig_url.as_str()),
+            ("newUrl", new_url.as_str()),
+        ],
+    )
+    .await?;
+
+    emit_resource_invalidated(
+        &app,
+        gen,
+        server_id.clone(),
+        format!("torrent-webseeds:{}", hash),
+    );
+
+    Ok(OperationResponse {
+        session_generation: gen,
+        server_id,
+        success: true,
+    })
+}
+
+#[tauri::command]
+pub async fn remove_webseeds(
+    state: State<'_, SessionStateHandle>,
+    app: tauri::AppHandle,
+    hash: String,
+    urls: String,
+) -> Result<OperationResponse, String> {
+    let request = capture_request_context(&state)?;
+    let gen = request.session_generation;
+    let server_id = request.server_id.clone();
+
+    let path = "/api/v2/torrents/removeWebSeeds";
+    let _ = qb_post(
+        &state,
+        path,
+        &[("hash", hash.as_str()), ("urls", urls.as_str())],
+    )
+    .await?;
+
+    emit_resource_invalidated(
+        &app,
+        gen,
+        server_id.clone(),
+        format!("torrent-webseeds:{}", hash),
+    );
+
+    Ok(OperationResponse {
+        session_generation: gen,
+        server_id,
+        success: true,
+    })
+}
+
 // ============================================================================
 // Sync commands
 // ============================================================================

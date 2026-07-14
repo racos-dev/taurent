@@ -303,6 +303,18 @@ export function createDesktopBridge(transport?: Transport): DesktopBridge {
     return t.invoke<TorrentWebseedsResponse>('get_torrent_webseeds', { hash });
   }
 
+  async function cmdAddWebSeeds(hash: string, urls: string): Promise<OperationResponse> {
+    return t.invoke<OperationResponse>('add_webseeds', { hash, urls });
+  }
+
+  async function cmdEditWebSeed(hash: string, origUrl: string, newUrl: string): Promise<OperationResponse> {
+    return t.invoke<OperationResponse>('edit_webseed', { hash, origUrl, newUrl });
+  }
+
+  async function cmdRemoveWebSeeds(hash: string, urls: string): Promise<OperationResponse> {
+    return t.invoke<OperationResponse>('remove_webseeds', { hash, urls });
+  }
+
   async function cmdSetAutoManagement(hashes: string[], enable: boolean): Promise<OperationResponse> {
     return t.invoke<OperationResponse>('set_auto_management', { hashes, enable });
   }
@@ -729,6 +741,18 @@ export function createDesktopBridge(transport?: Transport): DesktopBridge {
 
       async getWebSeeds(hash: string): Promise<TorrentWebseedsResponse> {
         return cmdGetTorrentWebseeds(hash);
+      },
+
+      async addWebSeeds(hash: string, urls: string): Promise<OperationResponse> {
+        return cmdAddWebSeeds(hash, urls);
+      },
+
+      async editWebSeed(hash: string, origUrl: string, newUrl: string): Promise<OperationResponse> {
+        return cmdEditWebSeed(hash, origUrl, newUrl);
+      },
+
+      async removeWebSeeds(hash: string, urls: string): Promise<OperationResponse> {
+        return cmdRemoveWebSeeds(hash, urls);
       },
 
       async renameFile(hash: string, oldPath: string, newPath: string): Promise<OperationResponse> {

@@ -19,6 +19,7 @@ pub struct ResolvedCapabilities {
     pub supports_search: CapabilityState,
     pub supports_rss: CapabilityState,
     pub supports_pause_resume: CapabilityState,
+    pub supports_webseed_management: CapabilityState,
 }
 
 /// Parse a version string like "2.11.5" or "4.6.0" into (major, minor, patch). Returns None on malformed input.
@@ -54,6 +55,7 @@ pub fn resolve_capabilities(
     app_version: Option<&str>,
     search_probe_ok: Option<bool>,
     rss_probe_ok: Option<bool>,
+    webseed_management_probe_ok: Option<bool>,
 ) -> ResolvedCapabilities {
     let version_known = app_version.is_some();
 
@@ -77,10 +79,17 @@ pub fn resolve_capabilities(
         None => CapabilityState::Unknown,
     };
 
+    let supports_webseed_management = match webseed_management_probe_ok {
+        Some(true) => CapabilityState::Confirmed,
+        Some(false) if version_known => CapabilityState::Unsupported,
+        _ => CapabilityState::Unknown,
+    };
+
     ResolvedCapabilities {
         supports_search,
         supports_rss,
         supports_pause_resume,
+        supports_webseed_management,
     }
 }
 
@@ -151,65 +160,105 @@ mod tests {
     // resolve_capabilities tests
     #[test]
     fn test_resolve_capabilities_probes_ok() {
-        let result = resolve_capabilities(Some("2.11.5"), Some("4.6.0"), Some(true), Some(true));
+        let result = resolve_capabilities(
+            Some("2.11.5"),
+            Some("4.6.0"),
+            Some(true),
+            Some(true),
+            Some(true),
+        );
         assert_eq!(result.supports_search, CapabilityState::Confirmed);
         assert_eq!(result.supports_rss, CapabilityState::Confirmed);
         assert_eq!(result.supports_pause_resume, CapabilityState::Confirmed);
+        assert_eq!(
+            result.supports_webseed_management,
+            CapabilityState::Confirmed
+        );
     }
 
     #[test]
     fn test_resolve_capabilities_probes_fail_known_version() {
-        let result = resolve_capabilities(Some("2.11.5"), Some("4.6.0"), Some(false), Some(false));
+        let result = resolve_capabilities(
+            Some("2.11.5"),
+            Some("4.6.0"),
+            Some(false),
+            Some(false),
+            Some(false),
+        );
         assert_eq!(result.supports_search, CapabilityState::Unsupported);
         assert_eq!(result.supports_rss, CapabilityState::Unsupported);
         assert_eq!(result.supports_pause_resume, CapabilityState::Confirmed); // API version meets threshold
+        assert_eq!(
+            result.supports_webseed_management,
+            CapabilityState::Unsupported
+        );
     }
 
     #[test]
     fn test_resolve_capabilities_probes_fail_unknown_version() {
         // Probe succeeded (Some(false)=non-2xx) but app_version unknown → Unknown
-        let result = resolve_capabilities(None, None, Some(false), Some(false));
+        let result = resolve_capabilities(None, None, Some(false), Some(false), Some(false));
         assert_eq!(result.supports_search, CapabilityState::Unknown);
         assert_eq!(result.supports_rss, CapabilityState::Unknown);
         assert_eq!(result.supports_pause_resume, CapabilityState::Unknown);
+        assert_eq!(result.supports_webseed_management, CapabilityState::Unknown);
     }
 
     #[test]
     fn test_resolve_capabilities_mixed_probes() {
-        let result = resolve_capabilities(Some("2.11.5"), Some("4.6.0"), Some(true), Some(false));
+        let result = resolve_capabilities(
+            Some("2.11.5"),
+            Some("4.6.0"),
+            Some(true),
+            Some(false),
+            Some(true),
+        );
         assert_eq!(result.supports_search, CapabilityState::Confirmed);
         assert_eq!(result.supports_rss, CapabilityState::Unsupported);
         assert_eq!(result.supports_pause_resume, CapabilityState::Confirmed);
+        assert_eq!(
+            result.supports_webseed_management,
+            CapabilityState::Confirmed
+        );
     }
 
     #[test]
     fn test_resolve_capabilities_old_api_version() {
         // API version 2.10 doesn't meet the 2.11 threshold
-        let result = resolve_capabilities(Some("2.10.0"), Some("4.5.0"), Some(false), Some(false));
+        let result = resolve_capabilities(
+            Some("2.10.0"),
+            Some("4.5.0"),
+            Some(false),
+            Some(false),
+            Some(false),
+        );
         assert_eq!(result.supports_pause_resume, CapabilityState::Unsupported);
     }
 
     #[test]
     fn test_resolve_capabilities_no_api_version() {
-        let result = resolve_capabilities(None, Some("4.6.0"), Some(false), Some(false));
+        let result = resolve_capabilities(None, Some("4.6.0"), Some(false), Some(false), None);
         assert_eq!(result.supports_pause_resume, CapabilityState::Unknown);
+        assert_eq!(result.supports_webseed_management, CapabilityState::Unknown);
     }
 
     #[test]
     fn test_resolve_capabilities_probe_failed_network_error() {
         // Probe failed (None) → Unknown regardless of version
-        let result = resolve_capabilities(Some("2.11.5"), Some("4.6.0"), None, None);
+        let result = resolve_capabilities(Some("2.11.5"), Some("4.6.0"), None, None, None);
         assert_eq!(result.supports_search, CapabilityState::Unknown);
         assert_eq!(result.supports_rss, CapabilityState::Unknown);
         assert_eq!(result.supports_pause_resume, CapabilityState::Confirmed);
+        assert_eq!(result.supports_webseed_management, CapabilityState::Unknown);
     }
 
     #[test]
     fn test_resolve_capabilities_probe_failed_with_unknown_version() {
         // Both probe failed and version unknown → all Unknown
-        let result = resolve_capabilities(None, None, None, None);
+        let result = resolve_capabilities(None, None, None, None, None);
         assert_eq!(result.supports_search, CapabilityState::Unknown);
         assert_eq!(result.supports_rss, CapabilityState::Unknown);
         assert_eq!(result.supports_pause_resume, CapabilityState::Unknown);
+        assert_eq!(result.supports_webseed_management, CapabilityState::Unknown);
     }
 }

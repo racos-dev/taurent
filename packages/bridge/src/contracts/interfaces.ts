@@ -108,6 +108,9 @@ export interface TorrentBridgeBase {
   editTracker(hash: string, origUrl: string, newUrl: string): Promise<OperationResponse>;
   removeTrackers(hash: string, urls: string): Promise<OperationResponse>;
   getWebSeeds(hash: string): Promise<TorrentWebseedsResponse>;
+  addWebSeeds(hash: string, urls: string): Promise<OperationResponse>;
+  editWebSeed(hash: string, origUrl: string, newUrl: string): Promise<OperationResponse>;
+  removeWebSeeds(hash: string, urls: string): Promise<OperationResponse>;
 }
 
 // Desktop torrent bridge - desktop-specific operations extending base

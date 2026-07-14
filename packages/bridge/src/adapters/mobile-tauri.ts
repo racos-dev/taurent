@@ -279,6 +279,18 @@ export function createMobileTauriBridge(transport?: Transport): MobileBridge {
     return t.invoke<TorrentWebseedsResponse>('get_torrent_webseeds', { hash });
   }
 
+  async function bridgeAddWebSeeds(hash: string, urls: string): Promise<OperationResponse> {
+    return t.invoke<OperationResponse>('add_webseeds', { hash, urls });
+  }
+
+  async function bridgeEditWebSeed(hash: string, origUrl: string, newUrl: string): Promise<OperationResponse> {
+    return t.invoke<OperationResponse>('edit_webseed', { hash, origUrl, newUrl });
+  }
+
+  async function bridgeRemoveWebSeeds(hash: string, urls: string): Promise<OperationResponse> {
+    return t.invoke<OperationResponse>('remove_webseeds', { hash, urls });
+  }
+
   async function getCookies(): Promise<unknown> {
     return t.invoke('get_cookies');
   }
@@ -662,6 +674,18 @@ export function createMobileTauriBridge(transport?: Transport): MobileBridge {
 
       async getWebSeeds(hash: string): Promise<TorrentWebseedsResponse> {
         return getTorrentWebseeds(hash);
+      },
+
+      async addWebSeeds(hash: string, urls: string): Promise<OperationResponse> {
+        return bridgeAddWebSeeds(hash, urls);
+      },
+
+      async editWebSeed(hash: string, origUrl: string, newUrl: string): Promise<OperationResponse> {
+        return bridgeEditWebSeed(hash, origUrl, newUrl);
+      },
+
+      async removeWebSeeds(hash: string, urls: string): Promise<OperationResponse> {
+        return bridgeRemoveWebSeeds(hash, urls);
       },
 
       async setAutoManagement(hashes: string[], enable: boolean): Promise<OperationResponse> {

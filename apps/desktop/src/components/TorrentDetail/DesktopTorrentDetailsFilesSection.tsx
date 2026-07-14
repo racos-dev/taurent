@@ -136,6 +136,16 @@ export function DesktopTorrentDetailsFilesSection(
     [contentPath, isSingleFile]
   );
 
+  const handleFilesContextMenu = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const serverFolderPath = isSingleFile ? dirname(contentPath) : contentPath;
+      setFolderContextMenu({ x: event.clientX, y: event.clientY, serverFolderPath });
+    },
+    [contentPath, isSingleFile]
+  );
+
   const handleFolderRowClick = useCallback(
     async (row: FileDisplayRow) => {
       if (!row.isFolder) return;
@@ -151,6 +161,7 @@ export function DesktopTorrentDetailsFilesSection(
         {...restProps}
         onFileContextMenu={handleFileContextMenu}
         onFolderContextMenu={handleFolderContextMenu}
+        onFilesContextMenu={handleFilesContextMenu}
         onFolderRowClick={handleFolderRowClick}
       />
       {fileContextMenu ? (

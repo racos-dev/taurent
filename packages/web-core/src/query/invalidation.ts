@@ -20,6 +20,7 @@ import {
   buildTorrentPropertiesKey,
   buildTorrentTrackersKey,
   buildTorrentFilesKey,
+  buildTorrentWebseedsKey,
   buildTorrentPeersKey,
   buildTransferInfoKey,
   buildSyncMaindataKey,
@@ -120,6 +121,14 @@ export function invalidateTorrentFiles(queryClient: QueryClient, scope: QuerySco
 }
 
 /**
+ * Invalidate torrent web seeds for a specific hash.
+ * Call after add/edit/remove web seed operations.
+ */
+export function invalidateTorrentWebseeds(queryClient: QueryClient, scope: QueryScope, hash: string): void {
+  queryClient.invalidateQueries({ queryKey: buildTorrentWebseedsKey(scope.serverId, scope.sessionGeneration, hash) });
+}
+
+/**
  * Invalidate all torrent detail resources (properties, trackers, files) for a specific hash.
  * Use when a mutation affects multiple detail views.
  */
@@ -127,6 +136,7 @@ export function invalidateTorrentDetails(queryClient: QueryClient, scope: QueryS
   invalidateTorrentProperties(queryClient, scope, hash);
   invalidateTorrentTrackers(queryClient, scope, hash);
   invalidateTorrentFiles(queryClient, scope, hash);
+  invalidateTorrentWebseeds(queryClient, scope, hash);
 }
 
 /**

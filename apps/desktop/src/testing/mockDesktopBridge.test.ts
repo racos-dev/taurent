@@ -199,6 +199,7 @@ describe('mockDesktopBridge', () => {
         supports_search: 'unknown',
         supports_rss: 'unknown',
         supports_pause_resume: 'unknown',
+        supports_webseed_management: 'confirmed',
       });
     });
   });

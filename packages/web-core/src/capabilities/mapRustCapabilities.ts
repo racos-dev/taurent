@@ -4,6 +4,7 @@ export interface AppCapabilities {
   supportsSearch: boolean | null;
   supportsRss: boolean | null;
   supportsPauseResume: boolean | null;
+  supportsWebSeedManagement: boolean | null;
   hasUnknownCapabilities: boolean;
 }
 
@@ -31,6 +32,7 @@ export function mapRustCapabilitiesToFlags(
     supportsSearch: resolve(capabilities.supports_search),
     supportsRss: resolve(capabilities.supports_rss),
     supportsPauseResume: resolve(capabilities.supports_pause_resume),
+    supportsWebSeedManagement: resolve(capabilities.supports_webseed_management),
     hasUnknownCapabilities,
   };
 }

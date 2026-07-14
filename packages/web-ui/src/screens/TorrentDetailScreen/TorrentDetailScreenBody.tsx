@@ -1,5 +1,6 @@
 import React from 'react';
 import type { TorrentDetailScreenBodyProps, DetailTab } from './types';
+import type { WebSeed } from '@taurent/shared/types/qbittorrent';
 import {
   TorrentDetailHeader,
   ActionButton,
@@ -18,16 +19,29 @@ import {
   TorrentDetailsTrackersSection,
   TorrentDetailsFilesSection,
   TorrentDetailsPeersSection,
+  TorrentDetailsHttpSourcesSection,
 } from '@taurent/web-ui';
 import { Icon } from '@taurent/shared';
 import { TorrentItem } from '../HomeScreen';
 
 const FILE_PREVIEW_LIMIT = 50;
 
-const TABS = (['overview', 'trackers', 'peers', 'files'] as DetailTab[]).map((tab) => ({
+const TABS = (['overview', 'trackers', 'peers', 'files', 'httpSources'] as DetailTab[]).map((tab) => ({
   id: tab,
-  label: tab === 'overview' ? 'Overview' : tab.charAt(0).toUpperCase() + tab.slice(1),
+  label: tab === 'overview'
+    ? 'Overview'
+    : tab === 'httpSources'
+      ? 'HTTP Sources'
+      : tab.charAt(0).toUpperCase() + tab.slice(1),
 }));
+
+function normalizeHttpSourceUrls(value: string): string {
+  return value
+    .split(/[\n,]+/)
+    .map((url) => url.trim())
+    .filter(Boolean)
+    .join('|');
+}
 
 export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(({
   torrent,
@@ -35,6 +49,7 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
   files,
   trackers,
   peers,
+  webSeeds,
   statusBarClass,
   isMobile,
   propertiesLoading,
@@ -45,10 +60,13 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
   filesError,
   peersLoading,
   peersError,
+  webSeedsLoading = false,
+  webSeedsError = null,
   refetchProperties,
   refetchTrackers,
   refetchFiles,
   refetchPeers,
+  refetchWebSeeds,
   activeTab,
   setActiveTab,
   visibleFiles,
@@ -91,6 +109,10 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
   decreasePriorityIsPending,
   addTrackerIsPending,
   banPeersIsPending,
+  addHttpSourcesIsPending = false,
+  editHttpSourceIsPending = false,
+  removeHttpSourceIsPending = false,
+  supportsWebSeedManagement = false,
   handlePauseResume,
   handleRecheck,
   handleReannounce,
@@ -103,9 +125,42 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
   handleIncreasePriority,
   handleDecreasePriority,
   handleBanPeer,
+  handleAddHttpSources,
+  handleEditHttpSource,
+  handleRemoveHttpSource,
 }) => {
   const fileCount = files?.length ?? 0;
   const hasManyFiles = fileCount > FILE_PREVIEW_LIMIT;
+  const webSeedCount = webSeeds?.length ?? 0;
+  const [showAddHttpSources, setShowAddHttpSources] = React.useState(false);
+  const [newHttpSourceUrls, setNewHttpSourceUrls] = React.useState('');
+  const [editingHttpSource, setEditingHttpSource] = React.useState<WebSeed | null>(null);
+  const [editHttpSourceUrl, setEditHttpSourceUrl] = React.useState('');
+
+  const canManageHttpSources = supportsWebSeedManagement
+    && Boolean(handleAddHttpSources && handleEditHttpSource && handleRemoveHttpSource);
+
+  const submitHttpSources = React.useCallback(() => {
+    if (!handleAddHttpSources) return;
+    const urls = normalizeHttpSourceUrls(newHttpSourceUrls);
+    if (!urls) return;
+    void handleAddHttpSources(urls)
+      .then(() => {
+        setNewHttpSourceUrls('');
+        setShowAddHttpSources(false);
+      })
+      .catch(() => undefined);
+  }, [handleAddHttpSources, newHttpSourceUrls]);
+
+  const submitHttpSourceEdit = React.useCallback(() => {
+    if (!handleEditHttpSource || !editingHttpSource || !editHttpSourceUrl.trim()) return;
+    void handleEditHttpSource(editingHttpSource, editHttpSourceUrl.trim())
+      .then(() => {
+        setEditingHttpSource(null);
+        setEditHttpSourceUrl('');
+      })
+      .catch(() => undefined);
+  }, [editHttpSourceUrl, editingHttpSource, handleEditHttpSource]);
 
   return (
     <div className="min-h-screen bg-background pb-6">
@@ -362,6 +417,110 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
               onRetry={() => void refetchFiles()}
               onFilePriority={openFilePriorityDialog}
               onFilePriorityTarget={openFilePriorityTarget}
+            />
+          </div>
+        ) : null}
+
+        {/* ── HTTP Sources tab ─────────────────────────────────────────────── */}
+        {activeTab === 'httpSources' ? (
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 className="text-sm font-semibold text-text-primary">HTTP Sources</h2>
+                <p className="mt-1 text-xs text-text-secondary">
+                  {webSeedCount} source{webSeedCount === 1 ? '' : 's'} configured
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {webSeedCount > 0 ? <Pill>{webSeedCount}</Pill> : null}
+                {canManageHttpSources ? (
+                  <Button
+                    type="button"
+                    variant={showAddHttpSources ? 'ghost' : 'outline'}
+                    size="sm"
+                    onClick={() => {
+                      setShowAddHttpSources((value) => !value);
+                      setEditingHttpSource(null);
+                    }}
+                  >
+                    {showAddHttpSources ? 'Cancel' : 'Add'}
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+
+            {showAddHttpSources && canManageHttpSources ? (
+              <div className="space-y-2 rounded-sm border border-border bg-surface p-3">
+                <textarea
+                  value={newHttpSourceUrls}
+                  onChange={(event) => setNewHttpSourceUrls(event.target.value)}
+                  placeholder="https://example.com/file"
+                  rows={3}
+                  className="w-full resize-none rounded-sm border border-border bg-background px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus-visible:ring-1 focus-visible:ring-border-focus focus-visible:outline-none"
+                />
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="md"
+                  onClick={submitHttpSources}
+                  disabled={!newHttpSourceUrls.trim() || addHttpSourcesIsPending}
+                  className="w-full"
+                >
+                  <Icon name="plus" iconSize="md" />
+                  {addHttpSourcesIsPending ? 'Adding...' : 'Add HTTP Sources'}
+                </Button>
+              </div>
+            ) : null}
+
+            {editingHttpSource && canManageHttpSources ? (
+              <div className="space-y-2 rounded-sm border border-border bg-surface p-3">
+                <textarea
+                  value={editHttpSourceUrl}
+                  onChange={(event) => setEditHttpSourceUrl(event.target.value)}
+                  rows={2}
+                  className="w-full resize-none rounded-sm border border-border bg-background px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus-visible:ring-1 focus-visible:ring-border-focus focus-visible:outline-none"
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="md"
+                    onClick={submitHttpSourceEdit}
+                    disabled={!editHttpSourceUrl.trim() || editHttpSourceIsPending}
+                  >
+                    {editHttpSourceIsPending ? 'Saving...' : 'Save'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="md"
+                    onClick={() => {
+                      setEditingHttpSource(null);
+                      setEditHttpSourceUrl('');
+                    }}
+                    disabled={editHttpSourceIsPending}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+
+            <TorrentDetailsHttpSourcesSection
+              variant="mobile"
+              webSeeds={webSeeds ?? undefined}
+              isLoading={webSeedsLoading}
+              error={webSeedsError}
+              onRetry={refetchWebSeeds ? () => void refetchWebSeeds() : undefined}
+              onEditHttpSource={canManageHttpSources ? (seed) => {
+                setEditingHttpSource(seed);
+                setEditHttpSourceUrl(seed.url);
+                setShowAddHttpSources(false);
+              } : undefined}
+              onRemoveHttpSource={canManageHttpSources ? (seed) => {
+                if (handleRemoveHttpSource) void handleRemoveHttpSource(seed).catch(() => undefined);
+              } : undefined}
+              removeHttpSourceIsPending={removeHttpSourceIsPending}
             />
           </div>
         ) : null}

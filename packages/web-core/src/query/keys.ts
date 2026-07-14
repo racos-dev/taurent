@@ -165,6 +165,13 @@ export function buildTorrentFilesKey(serverId: string | null, sessionGeneration:
 }
 
 /**
+ * Convenience: build the full torrent web seeds queryKey for a specific hash.
+ */
+export function buildTorrentWebseedsKey(serverId: string | null, sessionGeneration: number, hash: string): (string | null | number)[] {
+  return [RESOURCE.TORRENT_WEBSEEDS, serverId, sessionGeneration, hash];
+}
+
+/**
  * Convenience: build the full transfer queryKey.
  * Omitting `detail` returns the transfer-scope prefix for broad invalidation.
  */

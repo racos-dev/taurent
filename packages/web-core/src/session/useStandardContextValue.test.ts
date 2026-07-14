@@ -60,6 +60,7 @@ function makeRustCapabilitiesResponse(
   search: 'confirmed' | 'unsupported' | 'unknown',
   rss: 'confirmed' | 'unsupported' | 'unknown',
   pauseResume: 'confirmed' | 'unsupported' | 'unknown',
+  webSeedManagement: 'confirmed' | 'unsupported' | 'unknown' = 'unknown',
 ): RustCapabilitiesResponse {
   return {
     session_generation: 1,
@@ -68,6 +69,7 @@ function makeRustCapabilitiesResponse(
       supports_search: search,
       supports_rss: rss,
       supports_pause_resume: pauseResume,
+      supports_webseed_management: webSeedManagement,
     },
   };
 }
@@ -121,8 +123,13 @@ describe('useStandardContextValue — Rust capability path', () => {
   });
 
   describe('successful mapping', () => {
-    it('maps Rust confirmed → true for all three flags', async () => {
-      const rustResponse = makeRustCapabilitiesResponse('confirmed', 'confirmed', 'confirmed');
+    it('maps Rust confirmed → true for all flags', async () => {
+      const rustResponse = makeRustCapabilitiesResponse(
+        'confirmed',
+        'confirmed',
+        'confirmed',
+        'confirmed',
+      );
       const bridge = createMockBridge({
         getServerCapabilities: vi.fn().mockResolvedValue(rustResponse),
       });
@@ -140,13 +147,19 @@ describe('useStandardContextValue — Rust capability path', () => {
       expect(result.current.capabilities?.supportsSearch).toBe(true);
       expect(result.current.capabilities?.supportsRss).toBe(true);
       expect(result.current.capabilities?.supportsPauseResume).toBe(true);
+      expect(result.current.capabilities?.supportsWebSeedManagement).toBe(true);
       expect(result.current.capabilities?.hasUnknownCapabilities).toBe(false);
       expect(result.current.capabilitiesLoading).toBe(false);
       expect(result.current.capabilitiesError).toBeNull();
     });
 
     it('maps Rust unsupported → false and unknown → null', async () => {
-      const rustResponse = makeRustCapabilitiesResponse('confirmed', 'unsupported', 'unknown');
+      const rustResponse = makeRustCapabilitiesResponse(
+        'confirmed',
+        'unsupported',
+        'unknown',
+        'unsupported',
+      );
       const bridge = createMockBridge({
         getServerCapabilities: vi.fn().mockResolvedValue(rustResponse),
       });
@@ -164,6 +177,7 @@ describe('useStandardContextValue — Rust capability path', () => {
       expect(result.current.capabilities?.supportsSearch).toBe(true);
       expect(result.current.capabilities?.supportsRss).toBe(false);
       expect(result.current.capabilities?.supportsPauseResume).toBe(null);
+      expect(result.current.capabilities?.supportsWebSeedManagement).toBe(false);
       expect(result.current.capabilities?.hasUnknownCapabilities).toBe(true);
     });
   });
