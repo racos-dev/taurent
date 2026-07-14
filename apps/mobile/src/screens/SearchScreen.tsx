@@ -43,6 +43,10 @@ export function SearchScreen() {
           searchResults={model.searchResults}
           currentResultsTotal={model.currentResultsTotal}
           isLoadingResults={model.isLoadingResults}
+          sortKey={model.sortKey}
+          sortDirection={model.sortDirection}
+          onSortKeyChange={model.setSortKey}
+          onSortDirectionChange={model.setSortDirection}
           plugins={model.plugins}
           isLoadingPlugins={model.isLoadingPlugins}
           pluginsError={model.pluginsError}

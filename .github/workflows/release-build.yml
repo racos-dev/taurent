@@ -263,7 +263,7 @@ jobs:
       # NOTE: macOS notarization not configured. Users will hit Gatekeeper.
       # To enable: add APPLE_CERTIFICATE, APPLE_CERTIFICATE_PASSWORD, APPLE_TEAM_ID, APPLE_ID, APPLE_PASSWORD secrets.
       - name: Build desktop Tauri app
-        uses: tauri-apps/tauri-action@1ddc7b49b13c3038297360482fcb3e058764d7c9
+        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5
         env:
           VITE_APP_VERSION: ${{ needs.release-preflight.outputs.app_version }}
           VITE_RELEASE_TAG: ${{ needs.release-preflight.outputs.release_tag }}
@@ -342,7 +342,7 @@ jobs:
 
       - name: Cache Android NDK
         id: ndk-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: /usr/local/lib/android/sdk/ndk/${{ env.ANDROID_NDK_VERSION }}
           key: android-ndk-${{ runner.os }}-${{ env.ANDROID_NDK_VERSION }}

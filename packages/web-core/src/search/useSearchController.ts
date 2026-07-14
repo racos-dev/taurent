@@ -31,7 +31,7 @@
  *   });
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { formatUserMessageForContext } from '@taurent/shared/utils/error';
 import type {
@@ -43,6 +43,13 @@ import type {
 } from '@taurent/bridge';
 import type { QueryScope } from '../query/scope';
 import type { AppCapabilities } from '../capabilities';
+import {
+  sortSearchResults,
+  DEFAULT_SEARCH_SORT_KEY,
+  DEFAULT_SEARCH_SORT_DIRECTION,
+  type SearchSortKey,
+  type SearchSortDirection,
+} from './sortSearchResults';
 
 // ---------------------------------------------------------------------------
 // UI-facing status label
@@ -122,10 +129,16 @@ export interface UseSearchControllerResult {
   stopSearch: () => Promise<void>;
   deleteSearch: (id: number) => Promise<void>;
 
-  // Current search results (latest fetched)
+  // Current search results (latest fetched), ordered by the active sort
   searchResults: SearchResults['results'];
   currentResultsTotal: number;
   isLoadingResults: boolean;
+
+  // Result ordering
+  sortKey: SearchSortKey;
+  sortDirection: SearchSortDirection;
+  setSortKey: (key: SearchSortKey) => void;
+  setSortDirection: (direction: SearchSortDirection) => void;
 
   // Plugin list
   plugins: NormalizedSearchPlugin[];
@@ -242,6 +255,17 @@ export function useSearchController({
   const [currentResultsTotal, setCurrentResultsTotal] = useState(0);
   const [isLoadingResults, setIsLoadingResults] = useState(false);
   const [isPluginActionPending, setIsPluginActionPending] = useState(false);
+
+  // ─── Result ordering state ──────────────────────────────────────────────
+  const [sortKey, setSortKey] = useState<SearchSortKey>(DEFAULT_SEARCH_SORT_KEY);
+  const [sortDirection, setSortDirection] = useState<SearchSortDirection>(
+    DEFAULT_SEARCH_SORT_DIRECTION,
+  );
+
+  const sortedResults = useMemo(
+    () => sortSearchResults(searchResults, sortKey, sortDirection),
+    [searchResults, sortKey, sortDirection],
+  );
 
   // Error counter to stop polling after repeated failures
   const searchErrorCountRef = useRef(0);
@@ -480,9 +504,14 @@ export function useSearchController({
     stopSearch: stopSearchFn,
     deleteSearch: deleteSearchFn,
 
-    searchResults,
+    searchResults: sortedResults,
     currentResultsTotal,
     isLoadingResults,
+
+    sortKey,
+    sortDirection,
+    setSortKey,
+    setSortDirection,
 
     plugins: pluginsQuery.data ?? [],
     isLoadingPlugins: pluginsQuery.isLoading,

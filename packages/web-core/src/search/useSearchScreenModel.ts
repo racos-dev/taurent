@@ -25,6 +25,7 @@ import type {
   NormalizedSearchPlugin,
 } from './useSearchController';
 import type { AppCapabilities } from '../capabilities';
+import type { SearchSortKey, SearchSortDirection } from './sortSearchResults';
 
 export interface UseSearchScreenModelOptions {
   scope: QueryScope;
@@ -70,6 +71,12 @@ export interface UseSearchScreenModelResult {
   searchResults: NormalizedSearchResult[];
   currentResultsTotal: number;
   isLoadingResults: boolean;
+
+  // Result ordering
+  sortKey: SearchSortKey;
+  sortDirection: SearchSortDirection;
+  setSortKey: (key: SearchSortKey) => void;
+  setSortDirection: (direction: SearchSortDirection) => void;
 
   // Plugins
   plugins: NormalizedSearchPlugin[];
@@ -133,6 +140,11 @@ export function useSearchScreenModel({
     searchResults: controller.searchResults,
     currentResultsTotal: controller.currentResultsTotal,
     isLoadingResults: controller.isLoadingResults,
+
+    sortKey: controller.sortKey,
+    sortDirection: controller.sortDirection,
+    setSortKey: controller.setSortKey,
+    setSortDirection: controller.setSortDirection,
 
     plugins: controller.plugins,
     isLoadingPlugins: controller.isLoadingPlugins,
