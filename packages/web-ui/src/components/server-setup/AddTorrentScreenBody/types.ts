@@ -53,6 +53,7 @@ export interface AddTorrentScreenBodyProps {
   onContentLayoutChange?: (value: 'Original' | 'Subfolder' | 'NoSubfolder') => void;
   stopCondition?: 'none' | 'metadata' | 'files';
   onStopConditionChange?: (value: 'none' | 'metadata' | 'files') => void;
+  supportsMetadataApi?: boolean;
   addToTop?: boolean;
   onAddToTopChange?: (value: boolean) => void;
   // State
