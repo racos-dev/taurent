@@ -193,7 +193,7 @@ export type { AuthLoadingScreenProps } from './components/server-setup/AuthLoadi
 export { HomeScreenBody } from './screens/HomeScreen';
 export type { HomeScreenProps, SortOption, FilterSummaryItem } from './screens/HomeScreen';
 export { SearchScreenBody } from './screens/SearchScreen';
-export type { SearchScreenProps, NormalizedSearchPlugin, NormalizedSearchResult } from './screens/SearchScreen';
+export type { SearchScreenProps, NormalizedSearchPlugin, NormalizedSearchResult, SearchSortKey, SearchSortDirection } from './screens/SearchScreen';
 export { RSSScreenBody } from './screens/RSSScreen';
 export type {
   RSSScreenProps,
