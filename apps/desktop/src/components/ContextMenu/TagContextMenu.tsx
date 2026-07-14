@@ -2,7 +2,6 @@ import { Trash2, Eraser } from '@taurent/shared';
 import { ContextMenu } from '@taurent/web-ui';
 import type { ContextMenuItem as TContextMenuItem } from '@taurent/web-ui';
 import { TorrentBulkMenuItems } from './TorrentBulkMenuItems';
-import { useQBClient } from '@/connection/useQBClientHooks';
 
 interface TagContextMenuProps {
   x: number;
@@ -29,7 +28,6 @@ export function TagContextMenu({
   onPauseTorrents,
   onRemoveTorrents,
 }: TagContextMenuProps) {
-  const { capabilities } = useQBClient();
   const items: TContextMenuItem[] = [
     { kind: 'separator', id: 'sep-header', label: tagName },
     { kind: 'item', id: 'remove-tag', label: 'Remove tag', icon: Trash2, onClick: () => { onClose(); onDelete(); }, destructive: true },
@@ -44,7 +42,6 @@ export function TagContextMenu({
               onPause: onPauseTorrents,
               onRemove: onRemoveTorrents,
               onClose,
-              supportsPauseResume: capabilities.supportsPauseResume,
             }),
           ] as TContextMenuItem[]
         )

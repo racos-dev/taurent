@@ -24,14 +24,6 @@ interface CategoriesSectionProps {
   capabilities: AppCapabilities;
 }
 
-function buildCapabilityTooltip(status: ReturnType<typeof getCapabilityStatus>): string | undefined {
-  if (status.enabled) return undefined;
-  if (status.isRemoved && status.removedIn) return `Removed in qBittorrent ${status.removedIn}+`;
-  if (status.isUnreleased) return 'Requires a future qBittorrent release.';
-  if (status.requiresVersion) return `Requires qBittorrent ${status.requiresVersion}+`;
-  return undefined;
-}
-
 export function CategoriesSection({
   items,
   activeCategory,
@@ -43,7 +35,6 @@ export function CategoriesSection({
   capabilities,
 }: CategoriesSectionProps) {
   const capStatus = getCapabilityStatus(capabilities, 'supportsCategoriesManage');
-  const capTooltip = buildCapabilityTooltip(capStatus);
 
   const [contextMenu, setContextMenu] = useState<{
     x: number;
@@ -71,8 +62,6 @@ export function CategoriesSection({
         title="Categories"
         expanded={expanded}
         onToggle={onToggle}
-        disabled={!capStatus.enabled}
-        disabledTitle={capTooltip}
       >
         <SidebarFilterItem
           icon={<Folder />}
@@ -128,6 +117,7 @@ export function CategoriesSection({
           categoryName={contextMenu.categoryName}
           hashes={sidebarActions.getHashesByCategory(contextMenu.categoryName)}
           onClose={handleCloseContextMenu}
+          canManageCategories={capStatus.enabled}
           onEdit={() => {
             void openEditCategoryDialogWindow({
               name: contextMenu.categoryName,

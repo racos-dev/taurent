@@ -24,11 +24,9 @@ import { usePreferences } from '../../hooks';
 
 import { Search } from '@taurent/shared';
 import { Input } from '@taurent/web-ui';
-import { useQBClient } from '@/connection/useQBClientHooks';
 
 export function MainToolbar() {
   const { addTorrent, openSettings } = useDesktopCommands();
-  const { capabilities } = useQBClient();
   const { commands } = useTransferCommandList();
   const navigate = useNavigate();
   const location = useLocation();
@@ -94,18 +92,18 @@ export function MainToolbar() {
         />
         <ToolbarButton
           icon={Play}
-          tooltip={!capabilities.supportsPauseResume ? 'Pause/Resume was removed in qBittorrent v5.0+' : 'Resume selected'}
+          tooltip="Resume selected"
           shortcut={resumeCmd?.shortcut}
           dataTestId="toolbar-resume"
-          disabled={!resumeCmd?.enabled || !capabilities.supportsPauseResume}
+          disabled={!resumeCmd?.enabled}
           onClick={resumeCmd?.onClick}
         />
         <ToolbarButton
           icon={Pause}
-          tooltip={!capabilities.supportsPauseResume ? 'Pause/Resume was removed in qBittorrent v5.0+' : 'Pause selected'}
+          tooltip="Pause selected"
           shortcut={pauseCmd?.shortcut}
           dataTestId="toolbar-pause"
-          disabled={!pauseCmd?.enabled || !capabilities.supportsPauseResume}
+          disabled={!pauseCmd?.enabled}
           onClick={pauseCmd?.onClick}
         />
         <ToolbarButton

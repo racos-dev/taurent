@@ -17,14 +17,6 @@ interface TrackersSectionProps {
   capabilities: AppCapabilities;
 }
 
-function buildCapabilityTooltip(status: ReturnType<typeof getCapabilityStatus>): string | undefined {
-  if (status.enabled) return undefined;
-  if (status.isRemoved && status.removedIn) return `Removed in qBittorrent ${status.removedIn}+`;
-  if (status.isUnreleased) return 'Requires a future qBittorrent release.';
-  if (status.requiresVersion) return `Requires qBittorrent ${status.requiresVersion}+`;
-  return undefined;
-}
-
 export function TrackersSection({
   items,
   activeTracker,
@@ -34,7 +26,6 @@ export function TrackersSection({
   capabilities,
 }: TrackersSectionProps) {
   const capStatus = getCapabilityStatus(capabilities, 'supportsTrackerEditing');
-  const capTooltip = buildCapabilityTooltip(capStatus);
 
   const [expanded, setExpanded] = useState(true);
 
@@ -61,8 +52,6 @@ export function TrackersSection({
         title="Trackers"
         expanded={expanded}
         onToggle={() => setExpanded((current) => !current)}
-        disabled={!capStatus.enabled}
-        disabledTitle={capTooltip}
       >
         <SidebarFilterItem
           icon={<Globe />}
@@ -103,6 +92,7 @@ export function TrackersSection({
             hostname={contextMenu.hostname}
             hashes={hashes}
             onClose={handleCloseContextMenu}
+            canEditTrackers={capStatus.enabled}
             onRemoveTracker={() => {
               void sidebarActions.removeTrackerFromTorrents(contextMenu.trackerUrl, hashes);
             }}

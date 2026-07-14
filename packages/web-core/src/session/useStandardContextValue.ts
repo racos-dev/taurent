@@ -8,6 +8,8 @@ import type { SessionSnapshot } from '@taurent/bridge';
 import type { SessionController } from './sessionController';
 import type { QBClientContextValue } from './QBClientContextValue';
 
+const SNAPSHOT_RETRY_DELAYS_MS = [1_000, 2_000, 5_000] as const;
+
 // Bridge interface capturing the surface area needed for capability discovery.
 //
 // `getSessionSnapshot` is the single source of capability truth in v2 — Rust
@@ -42,20 +44,52 @@ export function useStandardContextValue({
   useEffect(() => {
     if (!bridge.getSessionSnapshot) return;
 
-    // Fetch on mount and whenever sessionGeneration changes.
-    bridge
-      .getSessionSnapshot()
-      .then((snapshot: SessionSnapshot) => {
+    let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const requestScope = {
+      serverId: controller.serverId,
+      sessionGeneration: controller.sessionGeneration,
+    };
+
+    const snapshotMatchesScope = (snapshot: SessionSnapshot) => {
+      return (
+        snapshot.session_generation === requestScope.sessionGeneration
+        && snapshot.server_id === requestScope.serverId
+      );
+    };
+
+    const scheduleSnapshotLoad = (attempt: number) => {
+      const retryDelay = SNAPSHOT_RETRY_DELAYS_MS[Math.min(attempt, SNAPSHOT_RETRY_DELAYS_MS.length - 1)];
+      retryTimer = setTimeout(() => {
+        void loadSnapshot(attempt + 1);
+      }, retryDelay);
+    };
+
+    const loadSnapshot = async (attempt = 0) => {
+      try {
+        const snapshot = await bridge.getSessionSnapshot?.();
+        if (!snapshot || cancelled || !snapshotMatchesScope(snapshot)) return;
+
         setServerName(snapshot.server_name);
         setServerUrl(snapshot.server_url);
         setAppVersion(snapshot.app_version);
         setApiVersion(snapshot.api_version);
         setCapabilities(toAppCapabilities(snapshot.capabilities));
-      })
-      .catch(() => {
-        // Best-effort — ignore errors
-      });
-  }, [bridge, controller.sessionGeneration]);
+      } catch {
+        if (!cancelled) {
+          scheduleSnapshotLoad(attempt);
+        }
+      }
+    };
+
+    void loadSnapshot();
+
+    return () => {
+      cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
+    };
+  }, [bridge, controller.serverId, controller.sessionGeneration]);
 
   return useMemo(
     () => ({

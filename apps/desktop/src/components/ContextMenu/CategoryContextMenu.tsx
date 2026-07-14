@@ -2,7 +2,6 @@ import { Pencil, Trash2, Eraser } from '@taurent/shared';
 import { ContextMenu } from '@taurent/web-ui';
 import type { ContextMenuItem as TContextMenuItem } from '@taurent/web-ui';
 import { TorrentBulkMenuItems } from './TorrentBulkMenuItems';
-import { useQBClient } from '@/connection/useQBClientHooks';
 
 interface CategoryContextMenuProps {
   x: number;
@@ -10,6 +9,7 @@ interface CategoryContextMenuProps {
   categoryName: string;
   hashes: string[];
   onClose: () => void;
+  canManageCategories: boolean;
   onEdit: () => void;
   onDelete: () => void;
   onRemoveUnused: () => void;
@@ -24,6 +24,7 @@ export function CategoryContextMenu({
   categoryName,
   hashes,
   onClose,
+  canManageCategories,
   onEdit,
   onDelete,
   onRemoveUnused,
@@ -32,13 +33,12 @@ export function CategoryContextMenu({
   onRemoveTorrents,
 }: CategoryContextMenuProps) {
   const isUncategorized = categoryName === '';
-  const { capabilities } = useQBClient();
 
   const items: TContextMenuItem[] = [
     { kind: 'separator', id: 'sep-header', label: categoryName || 'Uncategorized' },
-    { kind: 'item', id: 'edit-category', label: 'Edit category...', icon: Pencil, disabled: isUncategorized, onClick: () => { onClose(); onEdit(); } },
-    { kind: 'item', id: 'remove-category', label: 'Remove category', icon: Trash2, disabled: isUncategorized, onClick: () => { onClose(); onDelete(); }, destructive: true },
-    { kind: 'item', id: 'remove-unused-categories', label: 'Remove unused categories', icon: Eraser, onClick: () => { onClose(); onRemoveUnused(); } },
+    { kind: 'item', id: 'edit-category', label: 'Edit category...', icon: Pencil, disabled: isUncategorized || !canManageCategories, onClick: () => { onClose(); onEdit(); } },
+    { kind: 'item', id: 'remove-category', label: 'Remove category', icon: Trash2, disabled: isUncategorized || !canManageCategories, onClick: () => { onClose(); onDelete(); }, destructive: true },
+    { kind: 'item', id: 'remove-unused-categories', label: 'Remove unused categories', icon: Eraser, disabled: !canManageCategories, onClick: () => { onClose(); onRemoveUnused(); } },
     ...(hashes.length > 0
       ? (
           [
@@ -49,7 +49,6 @@ export function CategoryContextMenu({
               onPause: onPauseTorrents,
               onRemove: onRemoveTorrents,
               onClose,
-              supportsPauseResume: capabilities.supportsPauseResume,
             }),
           ] as TContextMenuItem[]
         )

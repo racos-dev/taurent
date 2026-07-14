@@ -7,7 +7,7 @@
  * Tauri command in v2 — capabilities ride alongside session metadata.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, renderHook, waitFor } from '@testing-library/react';
+import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
@@ -31,7 +31,7 @@ function makeWrapper() {
 function createMockController(overrides: Partial<SessionController> = {}): SessionController {
   return {
     serverId: 'test-server-id',
-    sessionGeneration: 0,
+    sessionGeneration: 1,
     isConnected: true,
     connect: vi.fn(),
     disconnect: vi.fn(),
@@ -64,6 +64,7 @@ function createMockBridge(overrides: Partial<CapabilityBridge> = {}): Capability
 function makeCapabilitiesSnapshot(
   capabilities: Partial<ServerCapabilities> = {},
   apiVersion: string | null = '5.1.0',
+  overrides: Partial<import('@taurent/bridge').SessionSnapshot> = {},
 ) {
   return {
     session_generation: 1,
@@ -80,6 +81,7 @@ function makeCapabilitiesSnapshot(
       supports_webseed_management: false,
       ...capabilities,
     }),
+    ...overrides,
   } as const;
 }
 
@@ -89,6 +91,7 @@ describe('useStandardContextValue — Rust capability path via session snapshot'
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
+    vi.useRealTimers();
   });
 
   describe('capability mapping', () => {
@@ -214,6 +217,101 @@ describe('useStandardContextValue — Rust capability path via session snapshot'
       expect(result.current.serverUrl).toBe('http://192.168.1.10:8080');
       expect(result.current.apiVersion).toBe('5.1.2');
       expect(result.current.appVersion).toBe('v5.0.0');
+    });
+
+    it('retries a transient snapshot failure for the current session generation', async () => {
+      vi.useFakeTimers();
+      const bridge = createMockBridge({
+        getSessionSnapshot: vi.fn()
+          .mockRejectedValueOnce(new Error('temporary IPC failure'))
+          .mockResolvedValueOnce(
+            makeCapabilitiesSnapshot({
+              supports_search: true,
+              supports_rss: true,
+            }),
+          ),
+      });
+      const controller = createMockController();
+
+      const { result } = renderHook(
+        () => useStandardContextValue({ controller, bridge }),
+        { wrapper: makeWrapper() },
+      );
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1_000);
+      });
+      vi.useRealTimers();
+
+      await waitFor(() => {
+        expect(result.current.capabilities.supportsSearch).toBe(true);
+      });
+
+      expect(bridge.getSessionSnapshot).toHaveBeenCalledTimes(2);
+      expect(result.current.capabilities.supportsRss).toBe(true);
+    });
+
+    it('ignores a stale snapshot response after the controller moves to a newer server generation', async () => {
+      let resolveStaleSnapshot: (snapshot: ReturnType<typeof makeCapabilitiesSnapshot>) => void = () => {};
+      const staleSnapshotPromise = new Promise<ReturnType<typeof makeCapabilitiesSnapshot>>((resolve) => {
+        resolveStaleSnapshot = resolve;
+      });
+
+      const bridge = createMockBridge({
+        getSessionSnapshot: vi.fn()
+          .mockReturnValueOnce(staleSnapshotPromise)
+          .mockResolvedValueOnce(
+            makeCapabilitiesSnapshot(
+              { supports_search: true },
+              '5.2.0',
+              {
+                session_generation: 2,
+                server_id: 'new-server-id',
+                server_name: 'New Server',
+              },
+            ),
+          ),
+      });
+
+      let controller = createMockController({
+        serverId: 'old-server-id',
+        sessionGeneration: 1,
+      });
+
+      const { result, rerender } = renderHook(
+        () => useStandardContextValue({ controller, bridge }),
+        { wrapper: makeWrapper() },
+      );
+
+      controller = createMockController({
+        serverId: 'new-server-id',
+        sessionGeneration: 2,
+      });
+      rerender();
+
+      await waitFor(() => {
+        expect(result.current.serverName).toBe('New Server');
+      });
+
+      await act(async () => {
+        resolveStaleSnapshot(
+          makeCapabilitiesSnapshot(
+            { supports_search: false, supports_rss: true },
+            '4.6.6',
+            {
+              session_generation: 1,
+              server_id: 'old-server-id',
+              server_name: 'Old Server',
+            },
+          ),
+        );
+        await Promise.resolve();
+      });
+
+      expect(result.current.serverName).toBe('New Server');
+      expect(result.current.apiVersion).toBe('5.2.0');
+      expect(result.current.capabilities.supportsSearch).toBe(true);
+      expect(result.current.capabilities.supportsRss).toBe(false);
     });
   });
 });

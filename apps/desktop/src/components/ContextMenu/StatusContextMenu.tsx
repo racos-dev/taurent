@@ -1,7 +1,6 @@
 import { ContextMenu } from '@taurent/web-ui';
 import type { ContextMenuItem as TContextMenuItem } from '@taurent/web-ui';
 import { TorrentBulkMenuItems } from './TorrentBulkMenuItems';
-import { useQBClient } from '@/connection/useQBClientHooks';
 
 interface StatusContextMenuProps {
   x: number;
@@ -24,7 +23,6 @@ export function StatusContextMenu({
   onPauseTorrents,
   onRemoveTorrents,
 }: StatusContextMenuProps) {
-  const { capabilities } = useQBClient();
   const items: TContextMenuItem[] = [
     { kind: 'separator', id: 'sep-header', label },
     ...(hashes.length > 0
@@ -34,7 +32,6 @@ export function StatusContextMenu({
           onPause: onPauseTorrents,
           onRemove: onRemoveTorrents,
           onClose,
-          supportsPauseResume: capabilities.supportsPauseResume,
         })
       : []),
   ];

@@ -455,7 +455,6 @@ export function DetailPanel() {
       increasePriority: desktopActions.increasePriority,
       decreasePriority: desktopActions.decreasePriority,
     },
-    supportsPauseResume: capabilities.supportsPauseResume,
     addTrackerMutation,
     banPeersMutation: {
       isPending: banPeersMutation.isPending,

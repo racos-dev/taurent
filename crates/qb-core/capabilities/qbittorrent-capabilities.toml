@@ -71,22 +71,10 @@ adds = [
   { name = "supports_folder_renaming", description = "Torrent folder renaming (/torrents/renameFolder)" },
 ]
 
-[versions."2.11.2"]
-app_version = "v4.6.6"
+[versions."2.11.4"]
+app_version = "v5.1.0"
 adds = [
   { name = "supports_webseed_management", description = "Webseed add/edit/remove endpoints" },
-]
-
-[versions."2.11.9"]
-app_version = "v5.0.0"
-adds = [
-  { name = "supports_metadata_api", description = "Torrent metadata fetch/parse/save (fetchMetadata/parseMetadata/saveMetadata)" },
-]
-
-[versions."2.12.1"]
-app_version = "v5.0.0"
-adds = [
-  { name = "supports_torrent_comments", description = "Torrent comments endpoint (setComment)" },
 ]
 
 [versions."2.14.1"]
@@ -102,10 +90,12 @@ adds = [
 ]
 
 [versions."2.15.1"]
-app_version = "v5.2.1"
+app_version = "v5.2.0"
 adds = [
+  { name = "supports_metadata_api", description = "Torrent metadata fetch/parse/save (fetchMetadata/parseMetadata/saveMetadata)" },
   { name = "supports_piece_availability", description = "Torrent piece availability (pieceAvailability)" },
   { name = "supports_process_info", description = "Torrent process info (processInfo)" },
+  { name = "supports_torrent_comments", description = "Torrent comments endpoint (setComment)" },
 ]
 
 [versions."2.15.4"]
