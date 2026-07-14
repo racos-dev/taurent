@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Globe } from '@taurent/shared';
 import type { SidebarTrackerEntry } from '@taurent/web-core/screens';
+import { getCapabilityStatus, type AppCapabilities } from '@taurent/web-core/capabilities';
 import { SidebarFilterItem } from '@taurent/web-ui';
 import { SidebarSection } from './SidebarSection';
 import { TrackerContextMenu } from '../../components/ContextMenu';
@@ -13,9 +14,28 @@ interface TrackersSectionProps {
   sidebarActions: ReturnType<typeof useSidebarActions>;
   /** Total torrents matching all filters except the tracker dimension. Used for "All Trackers" row. */
   totalFilteredCount: number;
+  capabilities: AppCapabilities;
 }
 
-export function TrackersSection({ items, activeTracker, onTrackerClick, sidebarActions, totalFilteredCount }: TrackersSectionProps) {
+function buildCapabilityTooltip(status: ReturnType<typeof getCapabilityStatus>): string | undefined {
+  if (status.enabled) return undefined;
+  if (status.isRemoved && status.removedIn) return `Removed in qBittorrent ${status.removedIn}+`;
+  if (status.isUnreleased) return 'Requires a future qBittorrent release.';
+  if (status.requiresVersion) return `Requires qBittorrent ${status.requiresVersion}+`;
+  return undefined;
+}
+
+export function TrackersSection({
+  items,
+  activeTracker,
+  onTrackerClick,
+  sidebarActions,
+  totalFilteredCount,
+  capabilities,
+}: TrackersSectionProps) {
+  const capStatus = getCapabilityStatus(capabilities, 'supportsTrackerEditing');
+  const capTooltip = buildCapabilityTooltip(capStatus);
+
   const [expanded, setExpanded] = useState(true);
 
   const [contextMenu, setContextMenu] = useState<{
@@ -41,6 +61,8 @@ export function TrackersSection({ items, activeTracker, onTrackerClick, sidebarA
         title="Trackers"
         expanded={expanded}
         onToggle={() => setExpanded((current) => !current)}
+        disabled={!capStatus.enabled}
+        disabledTitle={capTooltip}
       >
         <SidebarFilterItem
           icon={<Globe />}

@@ -32,6 +32,8 @@ export interface SessionSnapshot {
   server_url: string | null;
   /** qBittorrent webapi version string (e.g. "5.1.0"). `null` when not connected. */
   api_version: string | null;
+  /** Server's qBittorrent application version string (e.g. "v5.0.0"). `null` when not connected. */
+  app_version: string | null;
   /**
    * Server-resolved feature capabilities (Rust-owned). Defaults to
    * `{ all false }` when the session is not connected — the renderer

@@ -7,6 +7,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  buildAddedInMap,
+  buildRemovedInMap,
   buildResolverTestTable,
   check,
   collectCapabilities,
@@ -327,9 +329,10 @@ test('generateServerCapabilitiesTs emits snake_case interface and defaults', () 
   assert.match(output, /\.\.\.overrides,/);
 });
 
-test('generateAppCapabilitiesTs emits camelCase interface, defaults, and mapping', () => {
+test('generateAppCapabilitiesTs emits camelCase interface, defaults, mapping, and lifecycle constants', () => {
+  const tomlData = parseToml(realTomlPath);
   const caps = EXPECTED_CAPABILITY_NAMES;
-  const output = generateAppCapabilitiesTs(caps);
+  const output = generateAppCapabilitiesTs(caps, tomlData);
 
   assert.match(output, /@generated/);
   assert.match(output, /export interface AppCapabilities \{/);
@@ -341,6 +344,111 @@ test('generateAppCapabilitiesTs emits camelCase interface, defaults, and mapping
   assert.match(output, /supportsApiKeyAuth: capabilities\.supports_api_key_auth,/);
   assert.match(output, /export function makeAppCapabilities/);
   assert.match(output, /\{ \.\.\.DEFAULT_APP_CAPABILITIES, \.\.\.overrides \}/);
+
+  // CapabilityName + lifecycle constants.
+  assert.match(output, /export type CapabilityName = keyof AppCapabilities;/);
+  assert.match(output, /export const CAPABILITY_ADDED_IN: Record<CapabilityName, string>/);
+  assert.match(output, /supportsApiKeyAuth: "v5\.2\.0",/);
+  assert.match(output, /supportsRss: "v4\.1\.0",/);
+  assert.match(output, /supportsRssClone: "unreleased",/);
+  assert.match(output, /supportsPauseResume: "v4\.1\.0",/);
+  assert.match(output, /export const CAPABILITY_REMOVED_IN: Partial<Record<CapabilityName, string>>/);
+  assert.match(output, /supportsPauseResume: "v5\.0\.0",/);
+});
+
+test('buildAddedInMap returns correct app versions for known capabilities', () => {
+  const tomlData = parseToml(realTomlPath);
+  const map = buildAddedInMap(tomlData);
+
+  // Capabilities declared under [versions] — uses entry.app_version.
+  assert.equal(map.supports_rss, 'v4.1.0');
+  assert.equal(map.supports_rss_rules, 'v4.1.0');
+  assert.equal(map.supports_search, 'v4.1.4');
+  assert.equal(map.supports_api_key_auth, 'v5.2.0');
+  assert.equal(map.supports_basic_auth, 'v5.2.0');
+  assert.equal(map.supports_piece_availability, 'v5.2.1');
+
+  // Capability declared under [app_versions] — uses the section key.
+  assert.equal(map.supports_pause_resume, 'v4.1.0');
+});
+
+test('buildAddedInMap marks unreleased caps as "unreleased"', () => {
+  const tomlData = parseToml(realTomlPath);
+  const map = buildAddedInMap(tomlData);
+
+  // Three caps marked app_version = "unreleased" in [versions].
+  assert.equal(map.supports_rss_clone, 'unreleased');
+  assert.equal(map.supports_speed_limits_api, 'unreleased');
+  assert.equal(map.supports_file_download, 'unreleased');
+});
+
+test('buildAddedInMap picks earliest semver occurrence regardless of TOML key order', () => {
+  const tomlData = {
+    corrections: {},
+    versions: {
+      '2.5.0': { app_version: 'v5.0.0', adds: [{ name: 'supports_rss' }] },
+      '2.0': {
+        app_version: 'v4.1.0',
+        adds: [
+          { name: 'supports_rss' },
+          { name: 'supports_search' },
+        ],
+      },
+    },
+    appVersions: {
+      'v4.3.0': { adds: [{ name: 'supports_rss' }] },
+    },
+  };
+  const map = buildAddedInMap(tomlData);
+  // Earliest wins: webapi 2.0 (v4.1.0) beats later duplicates.
+  assert.equal(map.supports_rss, 'v4.1.0');
+  assert.equal(map.supports_search, 'v4.1.0');
+});
+
+test('buildAddedInMap covers every capability in the provided list', () => {
+  const tomlData = parseToml(realTomlPath);
+  const caps = collectCapabilities(tomlData);
+  const map = buildAddedInMap(tomlData);
+  for (const cap of caps) {
+    assert.ok(cap in map, `missing added-in entry for ${cap}`);
+  }
+});
+
+test('buildRemovedInMap returns the removal app version per cap', () => {
+  const tomlData = parseToml(realTomlPath);
+  const map = buildRemovedInMap(tomlData);
+  assert.equal(map.supports_pause_resume, 'v5.0.0');
+});
+
+test('buildRemovedInMap is empty when no caps are removed', () => {
+  const tomlData = {
+    corrections: {},
+    versions: {
+      '2.0': { app_version: 'v4.1.0', adds: [{ name: 'supports_rss' }] },
+    },
+    appVersions: {},
+  };
+  const map = buildRemovedInMap(tomlData);
+  assert.equal(Object.keys(map).length, 0);
+});
+
+test('buildRemovedInMap processes both [versions] and [app_versions] removes', () => {
+  const tomlData = {
+    corrections: {},
+    versions: {
+      '2.0': {
+        app_version: 'v4.1.0',
+        adds: [{ name: 'supports_rss' }],
+        removes: [{ name: 'supports_legacy_flag' }],
+      },
+    },
+    appVersions: {
+      'v5.0.0': { removes: [{ name: 'supports_pause_resume' }] },
+    },
+  };
+  const map = buildRemovedInMap(tomlData);
+  assert.equal(map.supports_legacy_flag, 'v4.1.0');
+  assert.equal(map.supports_pause_resume, 'v5.0.0');
 });
 
 // ── End-to-end smoke + CLI tests ────────────────────────────────────────────
@@ -358,6 +466,13 @@ test('script generates all 3 output files with expected markers', () => {
   assert.match(readGenerated(outDir, RUST_PATH), /pub struct ResolvedCapabilities/);
   assert.match(readGenerated(outDir, SERVER_TS_PATH), /export interface ServerCapabilities/);
   assert.match(readGenerated(outDir, APP_TS_PATH), /export interface AppCapabilities/);
+
+  // App-capabilities.ts must carry the lifecycle constants.
+  const appContent = readGenerated(outDir, APP_TS_PATH);
+  assert.match(appContent, /export const CAPABILITY_ADDED_IN: Record<CapabilityName, string>/);
+  assert.match(appContent, /export const CAPABILITY_REMOVED_IN: Partial<Record<CapabilityName, string>>/);
+  assert.match(appContent, /supportsApiKeyAuth: "v5\.2\.0",/);
+  assert.match(appContent, /supportsPauseResume: "v5\.0\.0",/);
 
   for (const name of EXPECTED_CAPABILITY_NAMES) {
     assert.match(readGenerated(outDir, RUST_PATH), new RegExp(`pub ${name}: bool,`));

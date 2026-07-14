@@ -79,6 +79,7 @@ fn session_state_does_not_contain_password() {
         initialized: true,
         supports_pause_resume: true,
         api_version: Some("2.16.0".to_string()),
+        app_version: None,
         capabilities: ResolvedCapabilities::default(),
     };
     let json = serde_json::to_string(&state).unwrap();

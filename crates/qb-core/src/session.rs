@@ -48,6 +48,13 @@ pub struct SessionState {
     /// label without an extra round-trip.
     #[serde(default)]
     pub api_version: Option<String>,
+    /// The server's qBittorrent application version string (e.g. "v4.3.3"),
+    /// or `None` when not connected. Fetched via GET /api/v2/app/version.
+    ///
+    /// Populated by `set_resolved_capabilities` alongside the webapi
+    /// version and the resolved capability set.
+    #[serde(default)]
+    pub app_version: Option<String>,
     /// Resolved boolean capabilities of the connected server. Always
     /// populated once a connection has been attempted; the default
     /// all-false value is what the renderer sees on a fresh process
@@ -92,6 +99,7 @@ impl Default for SessionState {
             initialized: true,
             supports_pause_resume: false,
             api_version: None,
+            app_version: None,
             capabilities: ResolvedCapabilities::default(),
         }
     }
@@ -178,9 +186,11 @@ impl SessionManager {
     pub fn set_resolved_capabilities(
         &mut self,
         api_version: String,
+        app_version: String,
         capabilities: ResolvedCapabilities,
     ) {
         self.state.api_version = Some(api_version);
+        self.state.app_version = Some(app_version);
         self.state.capabilities = capabilities;
     }
 
@@ -191,6 +201,7 @@ impl SessionManager {
     /// disconnected session.
     pub fn clear_resolved_capabilities(&mut self) {
         self.state.api_version = None;
+        self.state.app_version = None;
         self.state.capabilities = ResolvedCapabilities::default();
     }
 

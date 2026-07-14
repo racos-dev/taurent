@@ -6,4 +6,13 @@
 // `./generated/app-capabilities`.
 
 export type { AppCapabilities } from './generated/app-capabilities';
-export { DEFAULT_APP_CAPABILITIES, toAppCapabilities, makeAppCapabilities } from './generated/app-capabilities';
+export {
+  DEFAULT_APP_CAPABILITIES,
+  toAppCapabilities,
+  makeAppCapabilities,
+  CAPABILITY_ADDED_IN,
+  CAPABILITY_REMOVED_IN,
+} from './generated/app-capabilities';
+
+export { getCapabilityStatus } from './getCapabilityStatus';
+export type { CapabilityStatus, CapabilityName } from './getCapabilityStatus';

@@ -152,6 +152,8 @@ export type {
   ButtonWebProps,
   ButtonNativeProps,
 } from './components/primitives/Button';
+export { CapabilityButton } from './components/CapabilityButton/CapabilityButton';
+export type { CapabilityButtonProps } from './components/CapabilityButton/CapabilityButton';
 export { IconButton } from './components/primitives/IconButton';
 export type { IconButtonProps, IconButtonTone, IconButtonVariant } from './components/primitives/IconButton';
 export {

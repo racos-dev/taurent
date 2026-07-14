@@ -2,6 +2,7 @@ import { Pencil, Trash2, Eraser } from '@taurent/shared';
 import { ContextMenu } from '@taurent/web-ui';
 import type { ContextMenuItem as TContextMenuItem } from '@taurent/web-ui';
 import { TorrentBulkMenuItems } from './TorrentBulkMenuItems';
+import { useQBClient } from '@/connection/useQBClientHooks';
 
 interface CategoryContextMenuProps {
   x: number;
@@ -31,6 +32,7 @@ export function CategoryContextMenu({
   onRemoveTorrents,
 }: CategoryContextMenuProps) {
   const isUncategorized = categoryName === '';
+  const { capabilities } = useQBClient();
 
   const items: TContextMenuItem[] = [
     { kind: 'separator', id: 'sep-header', label: categoryName || 'Uncategorized' },
@@ -40,13 +42,14 @@ export function CategoryContextMenu({
     ...(hashes.length > 0
       ? (
           [
-            { kind: 'separator', id: 'sep-bulk' } as const,
+            { kind: 'separator' as const, id: 'sep-bulk' } as const,
             ...TorrentBulkMenuItems({
               hashes,
               onResume: onResumeTorrents,
               onPause: onPauseTorrents,
               onRemove: onRemoveTorrents,
               onClose,
+              supportsPauseResume: capabilities.supportsPauseResume,
             }),
           ] as TContextMenuItem[]
         )

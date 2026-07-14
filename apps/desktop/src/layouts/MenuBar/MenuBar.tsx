@@ -2,6 +2,7 @@ import React from 'react';
 import { useTransferCommandList } from '../../hooks/torrents/useTransferCommandList';
 import { useDesktopCommands } from '../../hooks/shell/useDesktopCommands';
 import { useShellStore } from '@/stores';
+import { useQBClient } from '@/connection/useQBClientHooks';
 import { DropdownMenu } from '@taurent/web-ui';
 import type { MenuItem } from '@taurent/web-ui';
 
@@ -27,6 +28,7 @@ export function MenuBar() {
   } = useDesktopCommands();
   const toggleSidebar = useShellStore((state) => state.toggleSidebar);
   const togglePropertiesPane = useShellStore((state) => state.togglePropertiesPane);
+  const { capabilities } = useQBClient();
   const inWindowMenuBarVisible = useShellStore((state) => state.inWindowMenuBarVisible);
   const toggleInWindowMenuBarVisible = useShellStore((state) => state.toggleInWindowMenuBarVisible);
   const [openMenuIndex, setOpenMenuIndex] = React.useState<number | null>(null);
@@ -68,13 +70,13 @@ export function MenuBar() {
       label: 'Pause',
       shortcut: cmd('pause')?.shortcut,
       onClick: () => cmd('pause')?.onClick(),
-      disabled: !cmd('pause')?.enabled,
+      disabled: !cmd('pause')?.enabled || !capabilities.supportsPauseResume,
     },
     {
       label: 'Resume',
       shortcut: cmd('resume')?.shortcut,
       onClick: () => cmd('resume')?.onClick(),
-      disabled: !cmd('resume')?.enabled,
+      disabled: !cmd('resume')?.enabled || !capabilities.supportsPauseResume,
     },
     {
       label: 'Delete',
@@ -96,7 +98,7 @@ export function MenuBar() {
     {
       label: 'Force Start',
       onClick: () => cmd('force-start')?.onClick(),
-      disabled: !cmd('force-start')?.enabled,
+      disabled: !cmd('force-start')?.enabled || !capabilities.supportsPauseResume,
     },
     { separator: true },
     {

@@ -70,6 +70,8 @@ export interface TorrentDetailControllerOptions {
   banPeersMutation?: BanPeersMutation;
   /** Add peers mutation from useAddPeersWithPeerInvalidation() */
   addPeersMutation?: AddPeersMutation;
+  /** When false, pause/resume actions are unavailable (e.g. qBittorrent v5.0+ removed them) */
+  supportsPauseResume?: boolean;
   /** Called by the delete handler after successful deletion */
   onNavigateBack: () => void;
 }

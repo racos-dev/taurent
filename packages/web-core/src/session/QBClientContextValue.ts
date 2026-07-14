@@ -13,6 +13,8 @@ export interface QBClientContextValue {
   serverUrl: string | null;
   /** Webapi version reported in the current session snapshot (`null` when disconnected). */
   apiVersion: string | null;
+  /** App version reported in the current session snapshot (`null` when disconnected). */
+  appVersion: string | null;
   error: string | null;
   retryState: {
     isRetrying: boolean;

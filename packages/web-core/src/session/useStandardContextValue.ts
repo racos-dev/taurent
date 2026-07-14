@@ -33,6 +33,7 @@ export function useStandardContextValue({
   const [serverName, setServerName] = useState<string | null>(null);
   const [serverUrl, setServerUrl] = useState<string | null>(null);
   const [apiVersion, setApiVersion] = useState<string | null>(null);
+  const [appVersion, setAppVersion] = useState<string | null>(null);
   // Rust-resolved capability flags. Non-nullable: defaults to all-false when
   // disconnected, hydrated to the snapshot's `capabilities` block on first snapshot.
   const [capabilities, setCapabilities] = useState<AppCapabilities>(DEFAULT_APP_CAPABILITIES);
@@ -47,6 +48,7 @@ export function useStandardContextValue({
       .then((snapshot: SessionSnapshot) => {
         setServerName(snapshot.server_name);
         setServerUrl(snapshot.server_url);
+        setAppVersion(snapshot.app_version);
         setApiVersion(snapshot.api_version);
         setCapabilities(toAppCapabilities(snapshot.capabilities));
       })
@@ -61,8 +63,9 @@ export function useStandardContextValue({
       serverName,
       serverUrl,
       apiVersion,
+      appVersion,
       capabilities,
     }),
-    [controller, serverName, serverUrl, apiVersion, capabilities],
+    [controller, serverName, serverUrl, apiVersion, appVersion, capabilities],
   );
 }

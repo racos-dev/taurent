@@ -193,32 +193,33 @@ describe('mockDesktopBridge', () => {
       const snapshot = await bridge.getSessionSnapshot();
       // Capabilities flow from the Rust-resolved `ResolvedCapabilities` struct
       // and arrive as a fully-populated ServerCapabilities object. The mock
-      // exposes the three headline flags as `true` (matching a 5.x qBittorrent)
-      // and the remaining fields as `false`.
+      // exposes all capability flags as `true` so renderer E2E flows can
+      // exercise every supported action against the mocked bridge.
       expect(snapshot.capabilities).toEqual({
-        supports_api_key_auth: false,
-        supports_basic_auth: false,
-        supports_categories_manage: false,
-        supports_file_download: false,
-        supports_file_renaming: false,
-        supports_folder_renaming: false,
-        supports_metadata_api: false,
-        supports_pause_resume: false,
-        supports_piece_availability: false,
-        supports_process_info: false,
+        supports_api_key_auth: true,
+        supports_basic_auth: true,
+        supports_categories_manage: true,
+        supports_file_download: true,
+        supports_file_renaming: true,
+        supports_folder_renaming: true,
+        supports_metadata_api: true,
+        supports_pause_resume: true,
+        supports_piece_availability: true,
+        supports_process_info: true,
         supports_rss: true,
-        supports_rss_clone: false,
-        supports_rss_matching: false,
-        supports_rss_refresh: false,
-        supports_rss_rules: false,
+        supports_rss_clone: true,
+        supports_rss_matching: true,
+        supports_rss_refresh: true,
+        supports_rss_rules: true,
         supports_search: true,
-        supports_speed_limits_api: false,
-        supports_tags: false,
-        supports_torrent_comments: false,
-        supports_tracker_editing: false,
+        supports_speed_limits_api: true,
+        supports_tags: true,
+        supports_torrent_comments: true,
+        supports_tracker_editing: true,
         supports_webseed_management: true,
       });
       expect(snapshot.api_version).toBe('5.1.0');
+      expect(snapshot.app_version).toBe('v5.0.0');
     });
   });
 

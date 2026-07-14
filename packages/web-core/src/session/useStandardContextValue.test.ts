@@ -48,6 +48,7 @@ function createMockBridge(overrides: Partial<CapabilityBridge> = {}): Capability
       server_name: 'Test Server',
       server_url: 'http://localhost:8080',
       api_version: '5.1.0',
+      app_version: 'v5.0.0',
       status: 'connected',
       last_error: null,
       capabilities: makeServerCapabilities({
@@ -70,6 +71,7 @@ function makeCapabilitiesSnapshot(
     server_name: 'Test Server',
     server_url: 'http://localhost:8080',
     api_version: apiVersion,
+    app_version: 'v5.0.0',
     status: 'connected',
     last_error: null,
     capabilities: makeServerCapabilities({
@@ -179,7 +181,7 @@ describe('useStandardContextValue — Rust capability path via session snapshot'
   });
 
   describe('server metadata (getSessionSnapshot)', () => {
-    it('populates serverName, serverUrl and apiVersion from the snapshot', async () => {
+    it('populates serverName, serverUrl, apiVersion and appVersion from the snapshot', async () => {
       const bridge = createMockBridge({
         getSessionSnapshot: vi.fn().mockResolvedValue({
           session_generation: 1,
@@ -187,6 +189,7 @@ describe('useStandardContextValue — Rust capability path via session snapshot'
           server_name: 'My Qbit',
           server_url: 'http://192.168.1.10:8080',
           api_version: '5.1.2',
+          app_version: 'v5.0.0',
           status: 'connected',
           last_error: null,
           capabilities: makeServerCapabilities({
@@ -210,6 +213,7 @@ describe('useStandardContextValue — Rust capability path via session snapshot'
       expect(result.current.serverName).toBe('My Qbit');
       expect(result.current.serverUrl).toBe('http://192.168.1.10:8080');
       expect(result.current.apiVersion).toBe('5.1.2');
+      expect(result.current.appVersion).toBe('v5.0.0');
     });
   });
 });

@@ -307,7 +307,7 @@ pub async fn session_connect(
 
             let mut session = state.lock().unwrap();
             let generation = session.connect(identity, client, sid_cookie, supports_pause_resume);
-            session.set_resolved_capabilities(api_version, capabilities);
+            session.set_resolved_capabilities(api_version, app_version.clone(), capabilities);
             emit_session_changed(
                 &app,
                 generation,
@@ -419,7 +419,7 @@ pub async fn session_connect_by_id(
 
             let mut session = session_state.lock().unwrap();
             let generation = session.connect(identity, client, sid_cookie, supports_pause_resume);
-            session.set_resolved_capabilities(api_version, capabilities);
+            session.set_resolved_capabilities(api_version, app_version.clone(), capabilities);
             emit_session_changed(
                 &app,
                 generation,
@@ -487,46 +487,48 @@ pub async fn session_switch_server_by_id(
     // Step 2: Authenticate and probe the candidate server (NO session mutation)
     let login_result = qbittorrent_login(&meta.url, &meta.username, &password).await;
 
-    let (client, sid_cookie, supports_pause_resume, api_version, capabilities) = match login_result
-    {
-        Ok((client, sid_cookie)) => {
-            let normalized_url = normalize_server_url(&meta.url, "https://");
-            let app_version =
-                match load_app_version(&client, &normalized_url, &sid_cookie, &server_id).await {
-                    Ok(app_version) => app_version,
-                    Err(error_message) => {
-                        return Err(error_message);
-                    }
-                };
+    let (client, sid_cookie, supports_pause_resume, api_version, capabilities, app_version) =
+        match login_result {
+            Ok((client, sid_cookie)) => {
+                let normalized_url = normalize_server_url(&meta.url, "https://");
+                let app_version =
+                    match load_app_version(&client, &normalized_url, &sid_cookie, &server_id).await
+                    {
+                        Ok(app_version) => app_version,
+                        Err(error_message) => {
+                            return Err(error_message);
+                        }
+                    };
 
-            // Resolve capabilities from the server's webapiVersion (plus the
-            // app_version we just fetched for app-version-keyed caps such as
-            // `supports_pause_resume`). This is best-effort: a failed fetch
-            // degrades to the "2.0" base profile (RSS only) rather than
-            // aborting the switch.
-            let (api_version, capabilities) = load_resolved_capabilities(
-                &client,
-                &normalized_url,
-                &sid_cookie,
-                &server_id,
-                &app_version,
-            )
-            .await;
+                // Resolve capabilities from the server's webapiVersion (plus the
+                // app_version we just fetched for app-version-keyed caps such as
+                // `supports_pause_resume`). This is best-effort: a failed fetch
+                // degrades to the "2.0" base profile (RSS only) rather than
+                // aborting the switch.
+                let (api_version, capabilities) = load_resolved_capabilities(
+                    &client,
+                    &normalized_url,
+                    &sid_cookie,
+                    &server_id,
+                    &app_version,
+                )
+                .await;
 
-            let supports_pause_resume = capabilities.supports_pause_resume;
+                let supports_pause_resume = capabilities.supports_pause_resume;
 
-            (
-                client,
-                sid_cookie,
-                supports_pause_resume,
-                api_version,
-                capabilities,
-            )
-        }
-        Err(error) => {
-            return Err(error.to_string());
-        }
-    };
+                (
+                    client,
+                    sid_cookie,
+                    supports_pause_resume,
+                    api_version,
+                    capabilities,
+                    app_version,
+                )
+            }
+            Err(error) => {
+                return Err(error.to_string());
+            }
+        };
 
     // Step 3: Candidate is verified — persist active server FIRST.
     // If this fails, session is untouched (command returns error without session mutation).
@@ -539,7 +541,7 @@ pub async fn session_switch_server_by_id(
     let generation = {
         let mut session = session_state.lock().unwrap();
         let generation = session.connect(identity, client, sid_cookie, supports_pause_resume);
-        session.set_resolved_capabilities(api_version, capabilities);
+        session.set_resolved_capabilities(api_version, app_version, capabilities);
         generation
     };
 
@@ -643,7 +645,7 @@ pub async fn session_reconnect(
             let supports_pause_resume = capabilities.supports_pause_resume;
             let mut session = session_state.lock().unwrap();
             let generation = session.connect(identity, client, sid_cookie, supports_pause_resume);
-            session.set_resolved_capabilities(api_version, capabilities);
+            session.set_resolved_capabilities(api_version, app_version.clone(), capabilities);
             emit_session_changed(
                 &app,
                 generation,
@@ -869,6 +871,9 @@ pub struct SessionSnapshot {
     /// Server's `webapiVersion` string. `None` until a successful connect
     /// (or the "2.0" base profile after a webapiVersion fetch failure).
     pub api_version: Option<String>,
+    /// Server's application version string (e.g. "v5.0.0"). `None` until
+    /// a successful connect.
+    pub app_version: Option<String>,
     /// Resolved boolean capabilities of the connected server. Always
     /// populated once a connection has been attempted; the default
     /// all-false value is what the renderer sees on a fresh process
@@ -886,6 +891,7 @@ impl From<&SessionState> for SessionSnapshot {
             status: state.status,
             last_error: state.last_error.clone(),
             api_version: state.api_version.clone(),
+            app_version: state.app_version.clone(),
             capabilities: state.capabilities.clone(),
         }
     }

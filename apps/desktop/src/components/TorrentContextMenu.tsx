@@ -17,6 +17,7 @@ import {
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 
 import { BridgeAdapter } from '@taurent/bridge/adapters/desktop'
+import { useQBClient } from '@/connection/useQBClientHooks';
 import { useTransferCommandList } from '../hooks/torrents/useTransferCommandList';
 import { useCategories, useSetTorrentCategory } from '../hooks';
 import { useTags, useAddTorrentTags, useRemoveTorrentTags } from '../hooks';
@@ -96,6 +97,7 @@ export function TorrentContextMenu({
 
   // Torrent actions
   const actions = useTorrentActions();
+  const { capabilities } = useQBClient();
 
   // Category hooks
   const { categories } = useCategories();
@@ -299,9 +301,9 @@ export function TorrentContextMenu({
       : []),
 
     // Start / Pause / Force Start
-    { kind: 'item', id: 'start', label: 'Start', icon: Play, disabled: !resumeCmd?.enabled, onClick: () => handleAction(resumeCmd?.onClick) },
-    { kind: 'item', id: 'pause', label: 'Pause', icon: Pause, disabled: !pauseCmd?.enabled, onClick: () => handleAction(pauseCmd?.onClick) },
-    { kind: 'item', id: 'force-start', label: 'Force Start', icon: Rocket, disabled: !forceStartCmd?.enabled, onClick: () => handleAction(forceStartCmd?.onClick) },
+    { kind: 'item', id: 'start', label: 'Start', icon: Play, disabled: !resumeCmd?.enabled || !capabilities.supportsPauseResume, onClick: () => handleAction(resumeCmd?.onClick) },
+    { kind: 'item', id: 'pause', label: 'Pause', icon: Pause, disabled: !pauseCmd?.enabled || !capabilities.supportsPauseResume, onClick: () => handleAction(pauseCmd?.onClick) },
+    { kind: 'item', id: 'force-start', label: 'Force Start', icon: Rocket, disabled: !forceStartCmd?.enabled || !capabilities.supportsPauseResume, onClick: () => handleAction(forceStartCmd?.onClick) },
 
     { kind: 'separator', id: 'sep-actions' },
 
@@ -434,7 +436,7 @@ export function TorrentContextMenu({
     isSeqDlEnabled, isFirstLastPrioEnabled, handleToggleSeqDl, handleToggleFirstLastPrio,
     recheckCmd, reannounceCmd, isSeedingSelection, isSuperSeedingEnabled, handleToggleSuperSeeding,
     copyHashCmd, copyNameCmd, copyMagnetCmd, targetTorrent, handleCopyToClipboard,
-    openFolderCmd, handleExportTorrent,
+    openFolderCmd, handleExportTorrent, capabilities,
   ]);
 
   return <ContextMenu x={x} y={y} onClose={onClose} items={items} width="w-56" />;
