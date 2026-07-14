@@ -74,6 +74,25 @@ export async function findAvailablePort(startPort: number): Promise<number> {
   throw new Error(`No available TCP port found starting at ${startPort}`);
 }
 
+/**
+ * Wait until a TCP listener has released its port.
+ *
+ * Relaunch callers must use this after terminating the previous app. A process
+ * receiving SIGTERM is not guaranteed to exit synchronously, so immediately
+ * spawning its replacement can make the replacement's WebDriver server lose
+ * the bind race with the old process.
+ */
+export async function waitForTcpPortClosed(port: number, timeoutMs = 5_000): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    if (!(await isTcpPortOpen(port))) return;
+    await sleep(100);
+  }
+
+  throw new Error(`TCP port ${port} was still open ${timeoutMs}ms after process teardown`);
+}
+
 export async function sleep(ms: number): Promise<void> {
   await new Promise((r) => setTimeout(r, ms));
 }
@@ -655,8 +674,9 @@ export async function captureProcessSnapshot(label: string): Promise<ProcessSnap
 /**
  * Kill the Tauri app process and any orphaned WebView2 children.
  *
- * On macOS/Linux, `appProc.kill('SIGTERM')` is sufficient — the OS reaps
- * children. On Windows, `taskkill /F /T /PID <pid>` kills the parent and its
+ * On macOS/Linux, request graceful termination and wait for the process to
+ * exit, escalating to SIGKILL after a bounded timeout. On Windows,
+ * `taskkill /F /T /PID <pid>` kills the parent and its
  * process tree, but WebView2 spawns `msedgewebview2.exe` processes via COM
  * which can survive a tree-kill. We follow up with a PowerShell scan for
  * orphan WebView2 processes whose `CommandLine` references the app's profile
@@ -673,12 +693,45 @@ export async function killAppProcessTree(
     await killAppProcessTreeWindows(appProc, userDataFolder);
     return;
   }
+
+  if (hasChildExited(appProc)) return;
+
   try {
     appProc.kill('SIGTERM');
     writemsg(`[teardown] sent SIGTERM to app process (pid=${appProc.pid ?? '?'})`);
   } catch (err) {
     verbosemsg(`[teardown] SIGTERM failed: ${(err as Error).message}`);
   }
+
+  if (await waitForChildExit(appProc, 5_000)) return;
+
+  writemsg(`[teardown] app process did not exit after SIGTERM; sending SIGKILL (pid=${appProc.pid ?? '?'})`);
+  try {
+    appProc.kill('SIGKILL');
+  } catch (err) {
+    verbosemsg(`[teardown] SIGKILL failed: ${(err as Error).message}`);
+  }
+  await waitForChildExit(appProc, 2_000);
+}
+
+function hasChildExited(appProc: ChildProcess): boolean {
+  return appProc.exitCode !== null || appProc.signalCode !== null;
+}
+
+function waitForChildExit(appProc: ChildProcess, timeoutMs: number): Promise<boolean> {
+  if (hasChildExited(appProc)) return Promise.resolve(true);
+
+  return new Promise<boolean>((resolveExit) => {
+    const onExit = (): void => {
+      clearTimeout(timeout);
+      resolveExit(true);
+    };
+    const timeout = setTimeout(() => {
+      appProc.off('exit', onExit);
+      resolveExit(hasChildExited(appProc));
+    }, timeoutMs);
+    appProc.once('exit', onExit);
+  });
 }
 
 async function killAppProcessTreeWindows(
