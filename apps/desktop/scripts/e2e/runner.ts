@@ -22,6 +22,7 @@ import {
   captureProcessSnapshot,
   sleep,
   findAvailablePort,
+  waitForTcpPortClosed,
   removeWebviewProfile,
   killAppProcessTree,
   parseSyncDiagnostics,
@@ -500,6 +501,7 @@ async function main() {
     webviewUserDataFolder,
     nativeDiagnosticsLogPath,
   );
+  const appLaunchResults = [appLaunchResult];
   let appProc = appLaunchResult.proc;
 
   try {
@@ -569,6 +571,7 @@ async function main() {
     }
 
     await killAppProcessTree(appProc, webviewUserDataFolder);
+    await waitForTcpPortClosed(driverPort);
     removeWebviewProfile(webviewUserDataFolder);
 
     nativeDiagnosticsLogPath = prepareNativeDiagnosticsLog();
@@ -587,6 +590,7 @@ async function main() {
       webviewUserDataFolder,
       nativeDiagnosticsLogPath,
     );
+    appLaunchResults.push(appLaunchResult);
     appProc = appLaunchResult.proc;
     await waitForAppReady(driverPort);
     result.timings.appLaunchMs = Date.now() - relaunchStart;
@@ -1217,16 +1221,19 @@ async function main() {
     writemsg('Fake server stopped.');
 
     if (!result.success) {
-      printCapturedAppOutputTail(appLaunchResult.capturedStdout, appLaunchResult.capturedStderr);
+      for (const [index, launchResult] of appLaunchResults.entries()) {
+        writemsg(`[diagnostics] app launch attempt ${index + 1}/${appLaunchResults.length}`);
+        printCapturedAppOutputTail(launchResult.capturedStdout, launchResult.capturedStderr);
+      }
     }
 
     result.nativeDiagnostics = readNativeDiagnostics(nativeDiagnosticsLogPath, !result.success);
 
     // Parse sync evidence from captured app output (T147.1 diagnostics)
-    const allAppLines = [
-      ...appLaunchResult.capturedStdout.join('').split('\n'),
-      ...appLaunchResult.capturedStderr.join('').split('\n'),
-    ].filter(Boolean);
+    const allAppLines = appLaunchResults.flatMap((launchResult) => [
+      ...launchResult.capturedStdout.join('').split('\n'),
+      ...launchResult.capturedStderr.join('').split('\n'),
+    ]).filter(Boolean);
     result.syncDiagnostics = parseSyncDiagnostics(allAppLines);
     writemsg(
       `[sync-diagnostics] snapshots=${result.syncDiagnostics.snapshotTimings.length}` +

@@ -3,6 +3,11 @@ import react from '@vitejs/plugin-react';
 import { playwright } from '@vitest/browser-playwright';
 import path from 'path';
 
+const isBrowserRun = process.argv.some((arg) => arg === '--browser' || arg.startsWith('--browser='));
+const testIncludes = isBrowserRun
+  ? ['src/**/*.test.ts', 'src/**/*.test.tsx']
+  : ['src/**/*.test.ts', 'src/**/*.test.tsx', 'scripts/**/*.test.ts'];
+
 export default defineProject({
   plugins: [react()],
   resolve: {
@@ -21,6 +26,6 @@ export default defineProject({
       provider: playwright(),
       instances: [{ browser: 'chromium' }],
     },
-    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    include: testIncludes,
   },
 });
