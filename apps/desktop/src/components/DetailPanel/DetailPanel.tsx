@@ -217,6 +217,7 @@ export function DetailPanel() {
   // ─── Session scope ─────────────────────────────────────────────────────────
   const { isConnected, serverId, sessionGeneration, capabilities } = useQBClient();
   const supportsWebseedManagement = capabilities.supportsWebseedManagement;
+  const supportsFileRenaming = capabilities.supportsFileRenaming;
 
   // ─── Add trackers mutation ────────────────────────────────────────────────
   const addTrackerMutation = useMutation({
@@ -450,7 +451,7 @@ export function DetailPanel() {
       setDownloadLimit: desktopActions.setDownloadLimit,
       setUploadLimit: desktopActions.setUploadLimit,
       setFilePriority: desktopActions.setFilePriority,
-      rename: desktopActions.setName,
+      rename: supportsFileRenaming ? desktopActions.setName : undefined,
       relocate: desktopActions.setLocation,
       increasePriority: desktopActions.increasePriority,
       decreasePriority: desktopActions.decreasePriority,

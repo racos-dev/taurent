@@ -18,6 +18,7 @@ import { useTorrents } from '../hooks';
 import { useMaindataState, useQBClient } from '../connection';
 import { useTorrentDetailController } from '@taurent/web-core/screens';
 import { TorrentDetailScreenBody } from '@taurent/web-ui';
+import { getCapabilityStatus } from '@taurent/web-core/capabilities';
 import { StateCard, ScreenHeader, Button } from '@taurent/web-ui';
 import { toast } from '@taurent/web-ui/components/shared/Toast/toast';
 import { formatUserMessageForContext } from '@taurent/shared/utils/error';
@@ -82,6 +83,7 @@ export function TorrentDetailScreen() {
   const displayStatus = torrent ? getTorrentDisplayStatus(torrent) : null;
   const statusBarClass = displayStatus ? getStatusColorClass(displayStatus, 'bar') : null;
   const supportsWebseedManagement = capabilities.supportsWebseedManagement;
+  const fileRenamingStatus = getCapabilityStatus(capabilities, 'supportsFileRenaming');
 
   const handleAddHttpSources = useCallback(async (urls: string) => {
     try {
@@ -259,6 +261,7 @@ export function TorrentDetailScreen() {
         editHttpSourceIsPending={editHttpSourceMutation.isPending}
         removeHttpSourceIsPending={removeHttpSourceMutation.isPending}
         supportsWebseedManagement={supportsWebseedManagement}
+        supportsFileRenaming={fileRenamingStatus.enabled}
         handlePauseResume={controller.handlePauseResume}
         handleRecheck={controller.handleRecheck}
         handleReannounce={controller.handleReannounce}

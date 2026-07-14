@@ -107,6 +107,7 @@ export interface TorrentDetailScreenBodyProps {
   editHttpSourceIsPending?: boolean;
   removeHttpSourceIsPending?: boolean;
   supportsWebseedManagement?: boolean;
+  supportsFileRenaming?: boolean;
 
   // ── Action handlers ───────────────────────────────────────────────────
   handlePauseResume: () => Promise<void>;

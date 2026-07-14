@@ -17,6 +17,7 @@ import {
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 
 import { BridgeAdapter } from '@taurent/bridge/adapters/desktop'
+import { useQBClient } from '../connection';
 import { useTransferCommandList } from '../hooks/torrents/useTransferCommandList';
 import { useCategories, useSetTorrentCategory } from '../hooks';
 import { useTags, useAddTorrentTags, useRemoveTorrentTags } from '../hooks';
@@ -93,6 +94,9 @@ export function TorrentContextMenu({
   const isDownloadingSelection = hasDownloadingSelection && !hasSeedingSelection;
   const isSeedingSelection = hasSeedingSelection && !hasDownloadingSelection;
   const isMixedDownloadingAndSeedingSelection = hasDownloadingSelection && hasSeedingSelection;
+
+  // Capabilities
+  const { capabilities } = useQBClient();
 
   // Torrent actions
   const actions = useTorrentActions();
@@ -252,7 +256,7 @@ export function TorrentContextMenu({
 
   // Capability gating — use command.enabled where available; fall back to hasService && hasSelection
   const canSetLocation = hasService && hasSelection;
-  const canRename = hasService && isSingle;
+  const canRename = hasService && isSingle && capabilities.supportsFileRenaming;
   const canSetDownloadLimit = hasService && hasSelection;
   const canSetUploadLimit = hasService && hasSelection;
 
