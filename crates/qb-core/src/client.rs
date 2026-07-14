@@ -1,5 +1,6 @@
+use base64::Engine;
 use reqwest::{
-    header::{HeaderMap, HeaderValue, COOKIE, ORIGIN, REFERER},
+    header::{HeaderMap, HeaderValue, AUTHORIZATION, COOKIE, ORIGIN, REFERER},
     multipart::Form,
     Client, Method, RequestBuilder, Url,
 };
@@ -113,8 +114,32 @@ fn body_snippet(bytes: &[u8]) -> Option<String> {
     String::from_utf8_lossy(trimmed).trim().to_string().into()
 }
 
+/// Authenticate against a qBittorrent server and return an HTTP client
+/// suitable for steady-state requests plus a session cookie string.
+///
+/// # Authentication modes
+///
+/// - **API key** (`api_key = Some(_)`): builds a `reqwest::Client` whose
+///   `default_headers` carry `Authorization: Bearer qbt_<key>`. No login
+///   POST is performed and the returned cookie is the empty string.
+///
+/// - **Username + password** (`api_key = None`): POSTs the credentials to
+///   `/api/v2/auth/login`. On 2xx, the `Set-Cookie: SID=...` header is
+///   extracted and returned alongside a fresh `reqwest::Client`. On
+///   non-2xx, retries with HTTP Basic auth against `/api/v2/app/version`
+///   (used by some reverse-proxy setups). When the proxy issues an SID
+///   cookie the client is plain and the cookie is returned; otherwise the
+///   client carries an `Authorization: Basic …` default header.
+///
+/// # Scheme fallback
+///
+/// When `url.scheme()` is empty (i.e. no explicit `http://` or `https://`),
+/// the function attempts HTTPS first and only falls back to HTTP if the
+/// HTTPS attempt fails with a network-level error. The fallback logs a
+/// warning when credentials are sent over plaintext HTTP.
 pub async fn qbittorrent_login(
-    server_url: &str,
+    url: &Url,
+    api_key: Option<&str>,
     username: &str,
     password: &str,
 ) -> BackendResult<(Client, String)> {
@@ -124,14 +149,114 @@ pub async fn qbittorrent_login(
         std::time::Duration::from_secs(REQUEST_TIMEOUT_SECS);
     const LOGIN_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(LOGIN_TIMEOUT_SECS);
 
-    let base_url = normalize_server_url(server_url, "https://");
-    let login_url = format!("{}/api/v2/auth/login", base_url);
+    // API key path: no login POST, just build a bearer-auth client.
+    if let Some(key) = api_key.filter(|k| !k.is_empty()) {
+        log::info!(
+            "Using API key authentication for {}",
+            redact_credentials_in_url(url)
+        );
+        let mut headers = HeaderMap::new();
+        let auth_value = format!("Bearer qbt_{}", key);
+        let header_value = HeaderValue::from_str(&auth_value)
+            .map_err(|err| BackendError::new(format!("Invalid API key header value: {}", err)))?;
+        headers.insert(AUTHORIZATION, header_value);
+        let client = Client::builder()
+            .timeout(REQUEST_TIMEOUT)
+            .default_headers(headers)
+            .build()
+            .map_err(|err| {
+                BackendError::new(format!("Failed to create API-key HTTP client: {}", err))
+            })?;
+        return Ok((client, String::new()));
+    }
 
+    // Username/password path: try login with scheme fallback if needed.
+    let (login_outcome, used_http_fallback) = if url.scheme().is_empty()
+        || (!url.scheme().eq_ignore_ascii_case("http")
+            && !url.scheme().eq_ignore_ascii_case("https"))
+    {
+        // Try https first
+        let https_attempt = attempt_login(url, "https", username, password, LOGIN_TIMEOUT).await;
+        match https_attempt {
+            Ok(result) => (result, false),
+            Err(err) if err.is_network_error() => {
+                // Fall back to http
+                log::warn!(
+                    "HTTPS login failed for {}, falling back to HTTP (credentials will be sent in plaintext)",
+                    redact_credentials_in_url(url)
+                );
+                let http_attempt =
+                    attempt_login(url, "http", username, password, LOGIN_TIMEOUT).await?;
+                (http_attempt, true)
+            }
+            Err(err) => return Err(err),
+        }
+    } else {
+        let scheme = url.scheme();
+        let result = attempt_login(url, scheme, username, password, LOGIN_TIMEOUT).await?;
+        (result, scheme.eq_ignore_ascii_case("http"))
+    };
+
+    if used_http_fallback {
+        log::warn!(
+            "Authenticated session established over plaintext HTTP for {}",
+            redact_credentials_in_url(url)
+        );
+    }
+
+    // Build the steady-state authenticated client. If the login outcome
+    // requires Authorization headers baked in (API key or Basic auth without
+    // SID), propagate them via default_headers.
+    let mut builder = Client::builder().timeout(REQUEST_TIMEOUT);
+    if let Some(extra) = login_outcome.default_headers {
+        builder = builder.default_headers(extra);
+    }
+    let client = builder.build().map_err(|err| {
+        BackendError::new(format!(
+            "Failed to create authenticated HTTP client: {}",
+            err
+        ))
+    })?;
+
+    Ok((client, login_outcome.cookie))
+}
+
+/// Outcome of a login attempt that may need Authorization headers
+/// propagated to the steady-state client.
+struct LoginOutcome {
+    /// Session cookie string to attach to subsequent requests (may be empty).
+    cookie: String,
+    /// Optional default headers (e.g. `Authorization: Bearer …` or `Basic …`)
+    /// to bake into the long-lived HTTP client.
+    default_headers: Option<HeaderMap>,
+}
+
+/// Attempt a single username/password login against the given scheme.
+///
+/// On a non-2xx auth login, falls back to a Basic-auth probe of
+/// `/api/v2/app/version` to support reverse-proxy deployments that
+/// authenticate the connection itself.
+async fn attempt_login(
+    base: &Url,
+    scheme: &str,
+    username: &str,
+    password: &str,
+    login_timeout: std::time::Duration,
+) -> BackendResult<LoginOutcome> {
+    let mut resolved = base.clone();
+    resolved
+        .set_scheme(scheme)
+        .map_err(|err| BackendError::new(format!("Invalid URL scheme: {:?}", err)))?;
+    // Ensure path is at least root
+    if resolved.path().is_empty() {
+        resolved.set_path("/");
+    }
+
+    let login_url = format!("{}api/v2/auth/login", resolved);
     log::info!("Attempting login to: {}", login_url);
 
-    // Short-timeout client for initial authentication only.
     let login_client = Client::builder()
-        .timeout(LOGIN_TIMEOUT)
+        .timeout(login_timeout)
         .build()
         .map_err(|err| BackendError::new(format!("Failed to create login HTTP client: {}", err)))?;
 
@@ -141,50 +266,133 @@ pub async fn qbittorrent_login(
         .send()
         .await?;
 
+    let status = response.status();
+
+    if status.is_success() {
+        // Extract SID cookie from Set-Cookie header before consuming body.
+        let sid_cookie = response
+            .headers()
+            .get("set-cookie")
+            .and_then(|value| value.to_str().ok())
+            .and_then(|cookie| cookie.split(';').next().map(|value| value.to_string()));
+
+        let bytes = response
+            .bytes()
+            .await
+            .map_err(|err| BackendError::new(format!("Failed to read login response: {}", err)))?;
+
+        let body_text = String::from_utf8_lossy(&bytes);
+        log::info!("Login response status: {}, body: {}", status, body_text);
+
+        match sid_cookie {
+            Some(cookie) if cookie.starts_with("SID=") => {
+                log::info!("Login successful, session cookie acquired");
+                Ok(LoginOutcome {
+                    cookie,
+                    default_headers: None,
+                })
+            }
+            _ => {
+                if body_text.trim() != "Ok." {
+                    return Err(BackendError::auth(
+                        format!("unexpected response '{}'", body_text.trim()),
+                        Some(body_text.trim().to_string()),
+                    ));
+                }
+                // No SID cookie but 2xx + "Ok.": trust the login but use empty cookie.
+                // The downstream client will need to add Authorization header separately.
+                log::warn!(
+                    "Login succeeded with no Set-Cookie SID for {}; downstream requests may need Authorization header",
+                    login_url
+                );
+                Ok(LoginOutcome {
+                    cookie: String::new(),
+                    default_headers: None,
+                })
+            }
+        }
+    } else {
+        // Non-2xx: try Basic-auth probe against app/version in case a reverse proxy
+        // is in front of qBittorrent.
+        log::warn!(
+            "Login POST returned non-success status {} for {}; probing Basic auth",
+            status,
+            login_url
+        );
+        try_basic_auth_probe(&resolved, username, password, login_timeout).await
+    }
+}
+
+/// Attempt a Basic-auth GET against `/api/v2/app/version` to recover from a
+/// failed login POST — supports reverse-proxy auth setups.
+async fn try_basic_auth_probe(
+    resolved: &Url,
+    username: &str,
+    password: &str,
+    login_timeout: std::time::Duration,
+) -> BackendResult<LoginOutcome> {
+    let version_url = format!("{}api/v2/app/version", resolved);
+    let basic = format!(
+        "Basic {}",
+        base64::engine::general_purpose::STANDARD
+            .encode(format!("{}:{}", username, password).as_bytes())
+    );
+    let header_value = HeaderValue::from_str(&basic)
+        .map_err(|err| BackendError::new(format!("Invalid Basic auth header: {}", err)))?;
+    let mut headers = HeaderMap::new();
+    headers.insert(AUTHORIZATION, header_value);
+
+    let client = Client::builder()
+        .timeout(login_timeout)
+        .default_headers(headers.clone())
+        .build()
+        .map_err(|err| {
+            BackendError::new(format!("Failed to build Basic-auth probe client: {}", err))
+        })?;
+
+    let response = client.get(&version_url).send().await?;
+    let status = response.status();
+
+    if !status.is_success() {
+        let bytes = response
+            .bytes()
+            .await
+            .map_err(|err| BackendError::new(format!("Failed to read probe response: {}", err)))?;
+        return Err(BackendError::http(status.as_u16(), body_snippet(&bytes)));
+    }
+
+    // 2xx: did the proxy also issue an SID cookie?
     let sid_cookie = response
         .headers()
         .get("set-cookie")
         .and_then(|value| value.to_str().ok())
         .and_then(|cookie| cookie.split(';').next().map(|value| value.to_string()))
-        .ok_or_else(|| BackendError::auth("login response missing Set-Cookie header", None))?;
+        .filter(|c| c.starts_with("SID="));
 
-    let status = response.status();
-    let bytes = response
-        .bytes()
-        .await
-        .map_err(|err| BackendError::new(format!("Failed to read login response: {}", err)))?;
-
-    let snippet = body_snippet(&bytes);
-
-    if !status.is_success() {
-        return Err(BackendError::http(status.as_u16(), snippet));
+    match sid_cookie {
+        Some(cookie) => Ok(LoginOutcome {
+            cookie,
+            default_headers: None,
+        }),
+        None => Ok(LoginOutcome {
+            // No cookie — downstream clients should attach Authorization header
+            // to every request.
+            cookie: String::new(),
+            default_headers: Some(headers),
+        }),
     }
+}
 
-    let body_text = String::from_utf8_lossy(&bytes);
-
-    log::info!("Login response status: {}, body: {}", status, body_text);
-
-    if body_text.trim() != "Ok." {
-        return Err(BackendError::auth(
-            format!("unexpected response '{}'", body_text.trim()),
-            Some(body_text.trim().to_string()),
-        ));
+/// Redact credentials-bearing portions of a URL for logging.
+fn redact_credentials_in_url(url: &Url) -> String {
+    if url.password().is_some() || url.username() != "" {
+        let mut clone = url.clone();
+        let _ = clone.set_password(None);
+        let _ = clone.set_username("");
+        clone.to_string()
+    } else {
+        url.to_string()
     }
-
-    log::info!("Login successful, session cookie acquired");
-
-    // Authenticated client uses the longer request timeout for steady-state requests.
-    let client = Client::builder()
-        .timeout(REQUEST_TIMEOUT)
-        .build()
-        .map_err(|err| {
-            BackendError::new(format!(
-                "Failed to create authenticated HTTP client: {}",
-                err
-            ))
-        })?;
-
-    Ok((client, sid_cookie))
 }
 
 pub async fn qb_get(

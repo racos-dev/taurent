@@ -14,6 +14,7 @@ fn test_server() -> ServerIdentity {
         url: "http://localhost:8080".into(),
         username: "admin".into(),
         password: "secret".into(),
+        api_key: None,
     }
 }
 
@@ -45,6 +46,7 @@ fn connect_commits_new_identity_and_discards_previous() {
         url: "http://remote:9090".into(),
         username: "user".into(),
         password: "pass".into(),
+        api_key: None,
     };
     let client2 = reqwest::Client::new();
     let cookie2 = "SID=candidate".to_string();
@@ -216,6 +218,7 @@ fn switch_server_resets_to_connecting() {
         url: "http://remote:9090".into(),
         username: "user".into(),
         password: "pass".into(),
+        api_key: None,
     };
 
     mgr.set_connecting(old_server);
@@ -690,7 +693,7 @@ fn is_network_error_message_returns_false_for_benign_messages() {
 }
 
 // =============================================================================
-// ProbeServerSchemeResult / NormalizeServerUrl types (serde round-trip)
+// NormalizeServerUrl types (serde round-trip)
 // =============================================================================
 
 #[test]
@@ -714,36 +717,6 @@ fn normalize_server_url_input_default_scheme() {
     assert_eq!(input.url, "localhost:8080");
     // default_https_scheme returns "https://"
     assert_eq!(input.default_scheme, "https://");
-}
-
-#[test]
-fn probe_server_scheme_result_success() {
-    use crate::server::ProbeServerSchemeResult;
-    let result = ProbeServerSchemeResult {
-        success: true,
-        normalized_url: Some("https://localhost:8080".into()),
-        error: None,
-    };
-    let json = serde_json::to_string(&result).unwrap();
-    let round: ProbeServerSchemeResult = serde_json::from_str(&json).unwrap();
-    assert!(round.success);
-    assert_eq!(round.normalized_url, Some("https://localhost:8080".into()));
-    assert!(round.error.is_none());
-}
-
-#[test]
-fn probe_server_scheme_result_failure() {
-    use crate::server::ProbeServerSchemeResult;
-    let result = ProbeServerSchemeResult {
-        success: false,
-        normalized_url: None,
-        error: Some("connection refused".into()),
-    };
-    let json = serde_json::to_string(&result).unwrap();
-    let round: ProbeServerSchemeResult = serde_json::from_str(&json).unwrap();
-    assert!(!round.success);
-    assert!(round.normalized_url.is_none());
-    assert_eq!(round.error, Some("connection refused".into()));
 }
 
 #[test]
@@ -794,6 +767,7 @@ fn atomic_switch_connect_does_not_clobber_previous_session_until_repo_persisted(
         url: "http://remote:9090".into(),
         username: "user".into(),
         password: "pass".into(),
+        api_key: None,
     };
     let client2 = reqwest::Client::new();
     let cookie2 = "SID=candidate".to_string();

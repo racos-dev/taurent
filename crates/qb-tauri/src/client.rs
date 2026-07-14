@@ -354,10 +354,16 @@ pub async fn qb_sync_maindata_with_request(
                     .clone()
             };
             // Mutex is released — safe to async
-            let (new_client, new_cookie) =
-                qb_client::qbittorrent_login(&identity.url, &identity.username, &identity.password)
-                    .await
-                    .map_err(|e| format!("refresh login failed: {}", e))?;
+            let refresh_url = url::Url::parse(&normalize_server_url(&identity.url, "https://"))
+                .map_err(|e| format!("Invalid refresh URL: {}", e))?;
+            let (new_client, new_cookie) = qb_client::qbittorrent_login(
+                &refresh_url,
+                identity.api_key.as_deref(),
+                &identity.username,
+                &identity.password,
+            )
+            .await
+            .map_err(|e| format!("refresh login failed: {}", e))?;
 
             // Re-check the active session before applying the refreshed credentials.
             // If the server changed or the generation advanced while we were doing

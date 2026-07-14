@@ -2,11 +2,12 @@ import React from 'react';
 import { Input } from '@taurent/web-ui';
 import { cn } from '@taurent/shared';
 import { Checkbox } from '../../primitives/Checkbox';
+import { ToggleSwitch } from '../../primitives/ToggleSwitch';
 import type { ServerConnectionFieldsProps } from './types';
 
 /**
  * Shared server connection fields component.
- * Renders name (optional), URL, username, and password fields.
+ * Renders name (optional), URL, username, password, and an optional API key toggle.
  * Platform styles are applied by the consumer via Tailwind classes.
  */
 export const ServerConnectionFields: React.FC<ServerConnectionFieldsProps> = React.memo(({
@@ -23,12 +24,19 @@ export const ServerConnectionFields: React.FC<ServerConnectionFieldsProps> = Rea
   password,
   onPasswordChange,
   passwordPlaceholder = '',
+  apiKey = '',
+  onApiKeyChange,
+  apiKeyPlaceholder = 'qbt_...',
+  useApiKey = false,
+  onUseApiKeyChange,
   rememberPassword,
   onRememberPasswordChange,
   disabled = false,
   className = '',
   validationErrors,
 }) => {
+  const showApiKeyToggle = Boolean(onApiKeyChange && onUseApiKeyChange);
+
   return (
     <div className={cn('space-y-4', className)}>
       {showNameField && (
@@ -53,24 +61,24 @@ export const ServerConnectionFields: React.FC<ServerConnectionFieldsProps> = Rea
       />
 
       <Input
-        label="Username *"
+        label={useApiKey ? 'Username' : 'Username *'}
         value={username}
         onChange={onUsernameChange}
         placeholder={usernamePlaceholder}
-        disabled={disabled}
+        disabled={disabled || useApiKey}
         error={validationErrors?.username ?? undefined}
       />
 
       <Input
-        label="Password"
-        type="password"
-        value={password}
-        onChange={onPasswordChange}
-        placeholder={passwordPlaceholder}
+        label={useApiKey ? 'API Key' : 'Password'}
+        type={useApiKey ? 'text' : 'password'}
+        value={useApiKey ? apiKey : password}
+        onChange={useApiKey ? onApiKeyChange : onPasswordChange}
+        placeholder={useApiKey ? apiKeyPlaceholder : passwordPlaceholder}
         disabled={disabled}
       />
 
-      {onRememberPasswordChange && (
+      {onRememberPasswordChange && !useApiKey && (
         <label className="flex items-center gap-2 cursor-pointer select-none">
           <Checkbox
             checked={rememberPassword ?? false}
@@ -80,6 +88,13 @@ export const ServerConnectionFields: React.FC<ServerConnectionFieldsProps> = Rea
           <span className="text-sm text-text-secondary">
             Remember password
           </span>
+        </label>
+      )}
+
+      {showApiKeyToggle && onUseApiKeyChange && (
+        <label className="flex items-center justify-between gap-3 cursor-pointer select-none">
+          <span className="text-sm text-text-secondary">Use API Key</span>
+          <ToggleSwitch checked={useApiKey} onChange={onUseApiKeyChange} />
         </label>
       )}
     </div>

@@ -12,6 +12,7 @@ name = "qb_core"
 path = "src/lib.rs"
 
 [dependencies]
+base64 = "0.22"
 icu_collator = "2"
 icu_locale = "2"
 log = "0.4"

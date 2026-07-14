@@ -8,8 +8,8 @@ export { AddTorrentScreenBody } from './components/server-setup/AddTorrentScreen
 export type { AddTorrentScreenBodyProps, AddTorrentFileItem } from './components/server-setup/AddTorrentScreenBody';
 export { LoginFormBody } from './components/server-setup/LoginForm';
 export type { LoginFormBodyProps } from './components/server-setup/LoginForm';
-export { AddServerFormBody } from './components/server-setup/AddServerForm';
-export type { AddServerFormBodyProps, AddServerFormBodyVariant } from './components/server-setup/AddServerForm';
+export { AddServerForm } from './components/server-setup/AddServerForm';
+export type { AddServerFormProps } from './components/server-setup/AddServerForm';
 export {
   TorrentDetailsOverviewSection,
   TorrentDetailsTrackersSection,

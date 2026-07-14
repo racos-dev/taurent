@@ -2,35 +2,40 @@
 //
 // Platform-agnostic — does not import @tauri-apps/* or produce UI.
 //
-// Extracts form field state, validation, test connection flow, and add-server
-// submission from the desktop/mobile AddServerScreen routes into a reusable
-// shared hook. UI rendering stays in the app route shell; this hook owns
-// the headless state machine.
+// Extracts form field state, validation, and add-server submission from the
+// desktop/mobile AddServerScreen routes into a reusable shared hook. UI
+// rendering stays in the app route shell; this hook owns the headless state.
 //
 // Usage (mobile/desktop AddServerScreen):
 //   const controller = useAddServerScreenController({
 //     addServer,
-//     bridgeServers: BridgeAdapter.servers,
+//     bridgeServers,
 //     onSuccess: (serverId) => { /* navigate */ },
 //     onCancel: () => { /* navigate */ },
 //   });
 
 import { useState, useCallback, useMemo } from 'react';
-import type { TestConnectionResult } from '@taurent/shared/types/server';
-import { formatUserMessageForContext, getErrorMessage } from '@taurent/shared/utils/error';
-import type { ServerUrlProbeBridge } from '@taurent/bridge';
+import { formatUserMessageForContext } from '@taurent/shared/utils/error';
 import { validateUrl } from './normalizeUrl';
-import { mapTestErrorToSuggestion } from './mapTestErrorToSuggestion';
 
 // ─── Input types ─────────────────────────────────────────────────────────────
 
 export interface AddServerScreenControllerOptions {
   /** Add a new server and return the created server summary */
-  addServer: (name: string, url: string, username: string, password: string, rememberPassword?: boolean) => Promise<{ id: string }>;
+  addServer: (
+    name: string,
+    url: string,
+    username: string,
+    password: string,
+    rememberPassword?: boolean,
+    apiKey?: string,
+  ) => Promise<{ id: string }>;
   /** Called after successful server addition with the new server id */
   onSuccess: (serverId: string) => void | Promise<void>;
-  /** Bridge servers interface for normalization and scheme probing */
-  bridgeServers: ServerUrlProbeBridge;
+  /** Bridge servers interface for URL normalization */
+  bridgeServers: {
+    normalizeServerUrl(input: { url: string; defaultScheme?: string }): Promise<{ normalized: string }>;
+  };
 }
 
 // ─── Output types ────────────────────────────────────────────────────────────
@@ -41,12 +46,16 @@ export interface AddServerScreenControllerResult {
   url: string;
   username: string;
   password: string;
+  apiKey: string;
   rememberPassword: boolean;
+  useApiKey: boolean;
   setName: (value: string) => void;
   setUrl: (value: string) => void;
   setUsername: (value: string) => void;
   setPassword: (value: string) => void;
+  setApiKey: (value: string) => void;
   setRememberPassword: (value: boolean) => void;
+  setUseApiKey: (value: boolean) => void;
 
   // ─── Validation ────────────────────────────────────────────
   validationErrors: {
@@ -59,12 +68,6 @@ export interface AddServerScreenControllerResult {
   // ─── Derived state ────────────────────────────────────────
   isFormValid: boolean;
   error: string | null;
-
-  // ─── Test connection ──────────────────────────────────────
-  testResult: TestConnectionResult | null;
-  isTesting: boolean;
-  handleTestConnection: () => Promise<TestConnectionResult | null>;
-  clearTestResult: () => void;
 
   // ─── Submit ───────────────────────────────────────────────
   isSubmitting: boolean;
@@ -82,15 +85,13 @@ export function useAddServerScreenController({
   const [name, setNameState] = useState('');
   const [url, setUrlState] = useState('');
   const [username, setUsernameState] = useState('');
-  const [password, setPassword] = useState('');
-  const [rememberPassword, setRememberPassword] = useState(true);
+  const [password, setPasswordState] = useState('');
+  const [apiKey, setApiKeyState] = useState('');
+  const [rememberPassword, setRememberPasswordState] = useState(true);
+  const [useApiKey, setUseApiKeyState] = useState(false);
 
   // ─── Error state ──────────────────────────────────────────
   const [error, setError] = useState<string | null>(null);
-
-  // ─── Test connection state ────────────────────────────────
-  const [testResult, setTestResult] = useState<TestConnectionResult | null>(null);
-  const [isTesting, setIsTesting] = useState(false);
 
   // ─── Submit state ─────────────────────────────────────────
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -101,8 +102,6 @@ export function useAddServerScreenController({
     url?: string | null;
     username?: string | null;
   }>({});
-
-  const [urlSuggestion, setUrlSuggestion] = useState<string | null>(null);
 
   // ─── Field setters with validation ───────────────────────
   const setName = useCallback((value: string) => {
@@ -133,66 +132,35 @@ export function useAddServerScreenController({
     }));
   }, []);
 
+  const setPassword = useCallback((value: string) => {
+    setPasswordState(value);
+  }, []);
+
+  const setApiKey = useCallback((value: string) => {
+    setApiKeyState(value);
+  }, []);
+
+  const setRememberPassword = useCallback((value: boolean) => {
+    setRememberPasswordState(value);
+  }, []);
+
+  const setUseApiKey = useCallback((value: boolean) => {
+    setUseApiKeyState(value);
+    if (value) {
+      // Clear username validation when switching to API key mode
+      setValidationErrors((prev) => ({ ...prev, username: null }));
+    }
+  }, []);
+
   // ─── Derived ───────────────────────────────────────────────
   const isFormValid = useMemo(() => {
-    return (
-      name.trim().length > 0 &&
-      url.trim().length > 0 &&
-      username.trim().length > 0 &&
-      !validationErrors.name &&
-      !validationErrors.url &&
-      !validationErrors.username
-    );
-  }, [name, url, username, validationErrors]);
-
-  // ─── Test connection ──────────────────────────────────────
-  const handleTestConnection = useCallback(async (): Promise<TestConnectionResult | null> => {
-    if (!url.trim() || !username.trim()) {
-      return null;
-    }
-
-    setIsTesting(true);
-    setTestResult(null);
-    setError(null);
-    setUrlSuggestion(null);
-
-    try {
-      // Probe scheme via bridge (handles https-first, http-fallback internally)
-      const probe = await bridgeServers.probeServerScheme(url.trim(), username.trim(), password);
-
-      if (probe.success && probe.normalizedUrl) {
-        setUrlState(probe.normalizedUrl);
-        const result: TestConnectionResult = { success: true };
-        setTestResult(result);
-        return result;
-      } else {
-        const errorMsg = probe.error || 'Connection failed';
-        const result: TestConnectionResult = {
-          success: false,
-          error: formatUserMessageForContext(errorMsg, 'add-server'),
-        };
-        setTestResult(result);
-        setUrlSuggestion(mapTestErrorToSuggestion(errorMsg));
-        return result;
-      }
-    } catch (err) {
-      const message = getErrorMessage(err);
-      const result = {
-        success: false,
-        error: formatUserMessageForContext(err, 'add-server'),
-      };
-      setTestResult(result);
-      setUrlSuggestion(mapTestErrorToSuggestion(message));
-      return result;
-    } finally {
-      setIsTesting(false);
-    }
-  }, [url, username, password, bridgeServers]);
-
-  const clearTestResult = useCallback(() => {
-    setTestResult(null);
-    setUrlSuggestion(null);
-  }, []);
+    const hasName = name.trim().length > 0;
+    const hasUrl = url.trim().length > 0;
+    const hasUsername = useApiKey || username.trim().length > 0;
+    const hasNoErrors =
+      !validationErrors.name && !validationErrors.url && !validationErrors.username;
+    return hasName && hasUrl && hasUsername && hasNoErrors;
+  }, [name, url, username, useApiKey, validationErrors]);
 
   // ─── Submit ───────────────────────────────────────────────
   const handleSubmit = useCallback(async () => {
@@ -206,54 +174,60 @@ export function useAddServerScreenController({
 
     try {
       const trimmedUrl = url.trim();
-
-      // If no scheme, probe to detect https vs http
-      let finalUrl: string;
-      if (!trimmedUrl.includes('://')) {
-        const probe = await bridgeServers.probeServerScheme(trimmedUrl, username.trim(), password);
-        if (probe.success && probe.normalizedUrl) {
-          finalUrl = probe.normalizedUrl;
-        } else {
-          // Fall back to normalization (defaults to https) if probe fails
-          const { normalized } = await bridgeServers.normalizeServerUrl({ url: trimmedUrl });
-          finalUrl = normalized;
-        }
-      } else {
-        const { normalized } = await bridgeServers.normalizeServerUrl({ url: trimmedUrl });
-        finalUrl = normalized;
-      }
+      const { normalized } = await bridgeServers.normalizeServerUrl({ url: trimmedUrl });
+      const finalUrl = normalized;
 
       if (finalUrl !== url) {
         setUrlState(finalUrl);
       }
-      const newServer = await addServer(name.trim(), finalUrl, username.trim(), password, rememberPassword);
+
+      const newServer = await addServer(
+        name.trim(),
+        finalUrl,
+        useApiKey ? '' : username.trim(),
+        useApiKey ? '' : password,
+        useApiKey ? false : rememberPassword,
+        useApiKey ? apiKey : '',
+      );
       await onSuccess(newServer.id);
     } catch (err) {
       setError(formatUserMessageForContext(err, 'add-server'));
     } finally {
       setIsSubmitting(false);
     }
-  }, [isFormValid, name, url, username, password, rememberPassword, addServer, onSuccess, bridgeServers]);
+  }, [
+    isFormValid,
+    name,
+    url,
+    username,
+    password,
+    apiKey,
+    rememberPassword,
+    useApiKey,
+    addServer,
+    onSuccess,
+    bridgeServers,
+  ]);
 
   return {
     name,
     url,
     username,
     password,
+    apiKey,
     rememberPassword,
+    useApiKey,
     setName,
     setUrl,
     setUsername,
     setPassword,
+    setApiKey,
     setRememberPassword,
+    setUseApiKey,
     validationErrors,
-    urlSuggestion,
+    urlSuggestion: null,
     isFormValid,
     error,
-    testResult,
-    isTesting,
-    handleTestConnection,
-    clearTestResult,
     isSubmitting,
     handleSubmit,
   };

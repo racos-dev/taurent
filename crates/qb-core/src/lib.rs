@@ -24,8 +24,8 @@ pub use dto::{
 };
 pub use error::{BackendError, BackendResult};
 pub use server::{
-    ActiveServerSummary, AddServerInput, CredentialStatus, NormalizeServerUrlInput,
-    NormalizeServerUrlOutput, ProbeServerSchemeResult, SavedServerSummary, ServerCredentialsInput,
-    ServerRecord, ServerValidationResult, TestConnectionResult, UpdateServerInput,
+    ActiveServerSummary, AddServerInput, AuthCredentials, CredentialStatus,
+    NormalizeServerUrlInput, NormalizeServerUrlOutput, SavedServerSummary, ServerCredentialsInput,
+    ServerRecord, ServerValidationResult, UpdateServerInput,
 };
 pub use session::{SafeServerSummary, ServerIdentity, SessionManager, SessionState, SessionStatus};

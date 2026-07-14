@@ -13,11 +13,13 @@ export const ServerOverviewSettings = React.memo(() => {
     addServer,
     updateServer,
     updateServerCredentials,
-    testServerConnection,
-    testSavedServerConnection,
     switchServer,
   } = useServerManager();
   const { connect, serverId: activeServerId } = useQBClient();
+
+  const [editPassword, setEditPassword] = React.useState('');
+  const [editApiKey, setEditApiKey] = React.useState('');
+  const [editUseApiKey, setEditUseApiKey] = React.useState(false);
 
   const handleSwitchServer = React.useCallback(
     async (serverId: string) => {
@@ -28,14 +30,14 @@ export const ServerOverviewSettings = React.memo(() => {
     [switchServer],
   );
 
-  // Atomic save handler — persists server profile and optionally the password in
+  // Atomic save handler — persists server profile and optionally the password/API key in
   // one call, then reconnects the live Rust session when the currently active
   // server was edited.  This invalidates sessionGeneration so the main window
   // refreshes its maindata and torrent list instead of showing stale content.
   const handleSaveServer = React.useCallback(
     async (
       serverId: string,
-      data: { name: string; url: string; username: string; password?: string },
+      data: { name: string; url: string; username: string; password?: string; apiKey?: string },
     ) => {
       // Persist the name/url/username fields.
       await updateServer(serverId, {
@@ -44,8 +46,10 @@ export const ServerOverviewSettings = React.memo(() => {
         username: data.username,
       });
 
-      // Persist the password only when a new one is supplied.
-      if (data.password) {
+      // Persist credentials only when a new value is supplied.
+      if (data.apiKey) {
+        await updateServerCredentials(serverId, data.url, '', data.apiKey);
+      } else if (data.password) {
         await updateServerCredentials(serverId, data.url, data.username, data.password);
       }
 
@@ -75,10 +79,14 @@ export const ServerOverviewSettings = React.memo(() => {
       onAddServer={addServer}
       onSaveServer={handleSaveServer}
       onRemoveServer={requestRemoveServer}
-      onTestConnection={testServerConnection}
-      onTestSavedServerConnection={testSavedServerConnection}
       onSwitchServer={handleSwitchServer}
       bridgeServers={BridgeAdapter.servers}
+      editPassword={editPassword}
+      editApiKey={editApiKey}
+      editUseApiKey={editUseApiKey}
+      onEditPasswordChange={setEditPassword}
+      onEditApiKeyChange={setEditApiKey}
+      onEditUseApiKeyChange={setEditUseApiKey}
     />
   );
 });

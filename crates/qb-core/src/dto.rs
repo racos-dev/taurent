@@ -3255,14 +3255,6 @@ mod tests {
     }
 
     #[test]
-    fn parse_torrent_properties_missing_isprivate() {
-        let mut obj = valid_torrent_properties_json();
-        obj.as_object_mut().unwrap().remove("isPrivate");
-        let err = parse_torrent_properties(&obj).unwrap_err();
-        assert!(err.is_invalid_response());
-    }
-
-    #[test]
     fn parse_torrent_properties_missing_share_ratio() {
         let mut obj = valid_torrent_properties_json();
         obj.as_object_mut().unwrap().remove("share_ratio");

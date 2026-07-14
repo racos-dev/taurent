@@ -35,6 +35,7 @@ tauri-plugin-shell = { version = "2.3.5", optional = true }
 tauri-plugin-opener = { version = "2.5.4", optional = true }
 thiserror = "2"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time"] }
+url = "2"
 uuid = { version = "1", features = ["v4"] }
 urlencoding = "2"
 tauri-plugin-secure-storage = "1.5.0"

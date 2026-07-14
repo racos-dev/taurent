@@ -1,16 +1,15 @@
 import React, { useCallback, useState, type FormEvent } from 'react';
 import { cn, Icon, normalizeServerUrl } from '@taurent/shared';
-import { formatUserMessageForContext, getErrorMessage } from '@taurent/shared/utils/error';
+import { formatUserMessageForContext } from '@taurent/shared/utils/error';
 import type { CredentialStatus } from '@taurent/shared/types/server';
-import type { ServerUrlProbeBridge } from '@taurent/bridge';
 import { useAddServerScreenController } from '@taurent/web-core/screens';
-import { AddServerFormBody } from '../../server-setup/AddServerForm/AddServerFormBody';
+import { AddServerForm } from '../../server-setup/AddServerForm';
 import { Button } from '../../primitives/Button';
 import { Input } from '../../primitives/Input';
+import { ToggleSwitch } from '../../primitives/ToggleSwitch';
 import { CredentialHealthIndicator } from '../../CredentialHealthIndicator';
 import { SettingsCard } from '../SettingsCard';
 import { StatusPanel } from '../../shared/StatusPanel';
-import { Spinner } from '../../shared/Spinner';
 
 // Subset of Server from @taurent/shared/types/server — omits isAuthenticated
 // so desktop's useServerManager result (which spreads anonymous server objects)
@@ -29,6 +28,8 @@ export interface SaveServerData {
   username: string;
   /** Omit or pass empty string to leave the existing password unchanged. */
   password?: string;
+  /** Omit or pass empty string to leave the existing API key unchanged. */
+  apiKey?: string;
 }
 
 export interface ServerOverviewSettingsPanelProps {
@@ -46,27 +47,23 @@ export interface ServerOverviewSettingsPanelProps {
     username: string,
     password: string
   ) => Promise<ServerOverviewSettingsPanelServer>;
-  /** Atomic save: updates server profile and optionally the password in one call.
+  /** Atomic save: updates server profile and optionally the password/API key in one call.
    *  Callers can reconnect the live session after this succeeds. */
   onSaveServer: (serverId: string, data: SaveServerData) => Promise<void>;
   onRemoveServer: (serverId: string) => Promise<void>;
-  /** Test connection for a new (unsaved) server before adding it. */
-  onTestConnection: (
-    url: string,
-    username: string,
-    password: string
-  ) => Promise<{ success: boolean; error?: string }>;
-  onTestSavedServerConnection: (
-    serverId: string
-  ) => Promise<{ success: boolean; error?: string }>;
   onSwitchServer: (serverId: string) => Promise<void>;
-  /** Bridge servers interface for URL normalization and scheme probing (add-server flow). */
-  bridgeServers: ServerUrlProbeBridge;
-}
+  /** Bridge servers interface for URL normalization (add-server flow). */
+  bridgeServers: {
+    normalizeServerUrl(input: { url: string; defaultScheme?: string }): Promise<{ normalized: string }>;
+  };
 
-interface TestResult {
-  success: boolean;
-  message: string;
+  // Edit-mode credential fields
+  editPassword: string;
+  editApiKey: string;
+  editUseApiKey: boolean;
+  onEditPasswordChange: (value: string) => void;
+  onEditApiKeyChange: (value: string) => void;
+  onEditUseApiKeyChange: (value: boolean) => void;
 }
 
 interface InlineAddServerFormProps {
@@ -77,7 +74,9 @@ interface InlineAddServerFormProps {
     password: string
   ) => Promise<ServerOverviewSettingsPanelServer>;
   onCancel: () => void;
-  bridgeServers: ServerUrlProbeBridge;
+  bridgeServers: {
+    normalizeServerUrl(input: { url: string; defaultScheme?: string }): Promise<{ normalized: string }>;
+  };
 }
 
 const InlineAddServerForm = React.memo<InlineAddServerFormProps>(({
@@ -98,8 +97,7 @@ const InlineAddServerForm = React.memo<InlineAddServerFormProps>(({
 
   return (
     <div className="space-y-4">
-      <AddServerFormBody
-        variant="desktop"
+      <AddServerForm
         name={addController.name}
         onNameChange={addController.setName}
         url={addController.url}
@@ -108,111 +106,24 @@ const InlineAddServerForm = React.memo<InlineAddServerFormProps>(({
         onUsernameChange={addController.setUsername}
         password={addController.password}
         onPasswordChange={addController.setPassword}
+        apiKey=""
+        onApiKeyChange={() => {}}
+        rememberPassword={addController.rememberPassword}
+        onRememberPasswordChange={addController.setRememberPassword}
+        useApiKey={false}
+        onUseApiKeyChange={() => {}}
         error={addController.error}
-        testResult={addController.testResult}
-        testingConnection={addController.isTesting}
-        loading={addController.isSubmitting}
-        onTestConnection={addController.handleTestConnection}
+        isSubmitting={addController.isSubmitting}
         onSubmit={addController.handleSubmit}
+        onCancel={onCancel}
         validationErrors={addController.validationErrors}
-        testErrorSuggestion={addController.urlSuggestion}
+        urlSuggestion={addController.urlSuggestion}
       />
-      <Button type="button" variant="outline" onClick={onCancel}>
-        Cancel
-      </Button>
     </div>
   );
 });
 
 InlineAddServerForm.displayName = 'InlineAddServerForm';
-
-/**
- * Check whether a URL already has an http/https scheme.
- */
-function hasScheme(url: string): boolean {
-  return url.startsWith('http://') || url.startsWith('https://');
-}
-
-/**
- * Check whether an error message indicates a network-level failure
- * that may be scheme-dependent (e.g., https port closed but http open).
- */
-function isNetworkError(message: string): boolean {
-  const lower = message.toLowerCase();
-  return (
-    lower.includes('connection refused') ||
-    lower.includes('connection failed') ||
-    lower.includes('timeout') ||
-    lower.includes('timed out') ||
-    lower.includes('econnrefused') ||
-    lower.includes('enotfound') ||
-    lower.includes('error sending request')
-  );
-}
-
-/**
- * Auto-detect the scheme for a URL. Tries https first, falls back to http
- * on network-level failures. Does NOT retry on auth failures, TLS errors,
- * or HTTP errors.
- *
- * Returns the full URL with discovered scheme and the test result on success,
- * or an error string on failure.
- */
-async function detectScheme(
-  rawUrl: string,
-  username: string,
-  password: string,
-  testConnection: (
-    url: string,
-    username: string,
-    password: string
-  ) => Promise<{ success: boolean; error?: string }>,
-): Promise<{ fullUrl: string; result: { success: boolean; error?: string } } | { error: string }> {
-  // If URL already has a scheme, just test it directly
-  if (hasScheme(rawUrl)) {
-    const normalized = normalizeServerUrl(rawUrl);
-    try {
-      const result = await testConnection(normalized, username, password);
-      return { fullUrl: normalized, result };
-    } catch (err) {
-      return { error: formatUserMessageForContext(err, 'connection') };
-    }
-  }
-
-  const httpsUrl = normalizeServerUrl(rawUrl, 'https://');
-  const httpUrl = normalizeServerUrl(rawUrl, 'http://');
-
-  // Try https first
-  let httpsResult: { success: boolean; error?: string };
-  try {
-    httpsResult = await testConnection(httpsUrl, username, password);
-  } catch (err) {
-    httpsResult = { success: false, error: getErrorMessage(err) };
-  }
-
-  if (httpsResult.success) {
-    return { fullUrl: httpsUrl, result: httpsResult };
-  }
-
-  // Only retry on network-level failures
-  if (httpsResult.error && isNetworkError(httpsResult.error)) {
-    let httpResult: { success: boolean; error?: string };
-    try {
-      httpResult = await testConnection(httpUrl, username, password);
-    } catch (err) {
-      httpResult = { success: false, error: getErrorMessage(err) };
-    }
-
-    if (httpResult.success) {
-      return { fullUrl: httpUrl, result: httpResult };
-    }
-    // Both failed — return https error (primary attempt)
-    return { error: formatUserMessageForContext(httpsResult.error, 'connection') };
-  }
-
-  // Non-network error (auth, TLS, HTTP error, etc.) — surface to user
-  return { error: formatUserMessageForContext(httpsResult.error || 'Connection failed', 'connection') };
-}
 
 export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPanelProps>(({
   servers,
@@ -223,21 +134,22 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
   onAddServer,
   onSaveServer,
   onRemoveServer,
-  onTestConnection,
-  onTestSavedServerConnection,
   onSwitchServer,
   bridgeServers,
+  editPassword,
+  editApiKey,
+  editUseApiKey,
+  onEditPasswordChange,
+  onEditApiKeyChange,
+  onEditUseApiKeyChange,
 }) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingServerId, setEditingServerId] = useState<string | null>(null);
-  const [testingServerId, setTestingServerId] = useState<string | null>(null);
-  const [testResults, setTestResults] = useState<Record<string, TestResult>>({});
   const [switchError, setSwitchError] = useState<string | null>(null);
 
   const [editName, setEditName] = useState('');
   const [editUrl, setEditUrl] = useState('');
   const [editUsername, setEditUsername] = useState('');
-  const [editPassword, setEditPassword] = useState('');
   const [editError, setEditError] = useState<string | null>(null);
 
   const handleEditServer = useCallback(
@@ -248,11 +160,13 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
         setEditName(server.name);
         setEditUrl(server.url);
         setEditUsername(server.username || '');
-        setEditPassword('');
+        onEditPasswordChange('');
+        onEditApiKeyChange('');
+        onEditUseApiKeyChange(false);
         setEditError(null);
       }
     },
-    [servers]
+    [servers, onEditPasswordChange, onEditApiKeyChange, onEditUseApiKeyChange]
   );
 
   const handleSaveEdit = useCallback(
@@ -261,52 +175,58 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
       setEditError(null);
 
       if (!editingServerId) return;
-      if (!editName.trim() || !editUrl.trim() || !editUsername.trim()) {
+      if (!editName.trim() || !editUrl.trim()) {
+        setEditError('Please fill in all required fields');
+        return;
+      }
+      if (!editUseApiKey && !editUsername.trim()) {
         setEditError('Please fill in all required fields');
         return;
       }
 
       try {
-        let saveUrl = editUrl.trim();
+        const trimmedUrl = editUrl.trim();
+        let finalUrl = trimmedUrl;
 
-        // If the edited URL has no scheme, run auto-detect before saving
-        if (!hasScheme(saveUrl)) {
-          setTestingServerId(editingServerId);
-          const detection = await detectScheme(
-            saveUrl,
-            editUsername.trim(),
-            editPassword,
-            onTestConnection,
-          );
-          setTestingServerId(null);
-
-          if ('error' in detection) {
-            setEditError(detection.error);
-            return;
-          }
-
-          // Use the discovered scheme URL for saving
-          saveUrl = detection.fullUrl;
-          setEditUrl(saveUrl);
+        // If the edited URL has no scheme, normalize it. Scheme probing is now
+        // handled Rust-side during login.
+        if (!trimmedUrl.includes('://')) {
+          finalUrl = normalizeServerUrl(trimmedUrl);
+          setEditUrl(finalUrl);
         }
 
         await onSaveServer(editingServerId, {
           name: editName.trim(),
-          url: saveUrl,
-          username: editUsername.trim(),
-          password: editPassword || undefined,
+          url: finalUrl,
+          username: editUseApiKey ? '' : editUsername.trim(),
+          password: editUseApiKey ? undefined : editPassword || undefined,
+          apiKey: editUseApiKey ? editApiKey || undefined : undefined,
         });
 
         setEditingServerId(null);
         setEditName('');
         setEditUrl('');
         setEditUsername('');
-        setEditPassword('');
+        onEditPasswordChange('');
+        onEditApiKeyChange('');
+        onEditUseApiKeyChange(false);
       } catch (err) {
         setEditError(formatUserMessageForContext(err, 'settings-save'));
       }
     },
-    [editingServerId, editName, editUrl, editUsername, editPassword, onSaveServer, onTestConnection],
+    [
+      editingServerId,
+      editName,
+      editUrl,
+      editUsername,
+      editUseApiKey,
+      editPassword,
+      editApiKey,
+      onSaveServer,
+      onEditPasswordChange,
+      onEditApiKeyChange,
+      onEditUseApiKeyChange,
+    ]
   );
 
   const handleDeleteServer = useCallback(
@@ -318,87 +238,6 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
       }
     },
     [onRemoveServer]
-  );
-
-  const handleTestConnection = useCallback(
-    async (serverId: string) => {
-      setTestingServerId(serverId);
-      try {
-        // If this server is currently being edited and the URL was changed without a scheme,
-        // test the edited URL with auto-detect instead of the saved server
-        if (editingServerId === serverId) {
-          const server = servers.find((s) => s.id === serverId);
-          const trimmedEditUrl = editUrl.trim();
-          const urlChanged = server && trimmedEditUrl !== server.url;
-          const noScheme = !hasScheme(trimmedEditUrl);
-
-          if (urlChanged && noScheme) {
-            const detection = await detectScheme(
-              trimmedEditUrl,
-              editUsername.trim(),
-              editPassword,
-              onTestConnection,
-            );
-
-            if ('error' in detection) {
-              setTestResults((prev) => ({
-                ...prev,
-                [serverId]: {
-                  success: false,
-                  message: detection.error,
-                },
-              }));
-            } else {
-              // Update editUrl with the discovered scheme
-              setEditUrl(detection.fullUrl);
-              setTestResults((prev) => ({
-                ...prev,
-                [serverId]: {
-                  success: detection.result.success,
-                  message: detection.result.success
-                    ? 'Connection successful!'
-                    : formatUserMessageForContext(detection.result.error ?? 'Connection failed', 'connection'),
-                },
-              }));
-            }
-          } else {
-            // URL has scheme or wasn't changed — test the edited URL directly
-            const result = await onTestConnection(trimmedEditUrl, editUsername.trim(), editPassword);
-            setTestResults((prev) => ({
-              ...prev,
-              [serverId]: {
-                success: result.success,
-                message: result.success
-                  ? 'Connection successful!'
-                  : formatUserMessageForContext(result.error ?? 'Connection failed', 'connection'),
-              },
-            }));
-          }
-        } else {
-          const result = await onTestSavedServerConnection(serverId);
-          setTestResults((prev) => ({
-            ...prev,
-            [serverId]: {
-              success: result.success,
-              message: result.success
-                ? 'Connection successful!'
-                : formatUserMessageForContext(result.error ?? 'Connection failed', 'connection'),
-            },
-          }));
-        }
-      } catch {
-        setTestResults((prev) => ({
-          ...prev,
-          [serverId]: {
-            success: false,
-            message: 'Connection test failed',
-          },
-        }));
-      } finally {
-        setTestingServerId(null);
-      }
-    },
-    [editingServerId, editUrl, editUsername, editPassword, onTestConnection, onTestSavedServerConnection, servers],
   );
 
   const handleSwitchServer = useCallback(
@@ -417,7 +256,7 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
     <div className="max-w-4xl space-y-3">
       <SettingsCard
         title="Saved Server List"
-        description="Add, switch, test, edit, or delete saved server profiles. Credentials are saved locally on this device."
+        description="Add, switch, edit, or delete saved server profiles. Credentials are saved locally on this device."
       >
         <div className="flex flex-col gap-4 mt-2">
           {!showAddForm && (
@@ -475,15 +314,15 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
                     key={server.id}
                     className={cn(
                       'group relative flex flex-col rounded-sm border transition-all duration-200 overflow-hidden',
-                      isCurrent 
-                        ? 'border-primary bg-primary/5' 
+                      isCurrent
+                        ? 'border-primary bg-primary/5'
                         : 'border-border bg-surface hover:border-border-focus'
                     )}
                   >
                     {isCurrent && (
                       <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary" />
                     )}
-                    
+
                     <div className="p-3">
                       {editingServerId === server.id ? (
                         <form onSubmit={handleSaveEdit} className="space-y-4">
@@ -520,28 +359,41 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
                               />
                             </div>
 
-                            <div className="space-y-1">
-                              <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                                Username <span className="text-error">*</span>
-                              </label>
-                              <Input
-                                type="text"
-                                value={editUsername}
-                                onChange={setEditUsername}
-                              />
-                            </div>
+                            {!editUseApiKey && (
+                              <div className="space-y-1">
+                                <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                                  Username <span className="text-error">*</span>
+                                </label>
+                                <Input
+                                  type="text"
+                                  value={editUsername}
+                                  onChange={setEditUsername}
+                                />
+                              </div>
+                            )}
 
                             <div className="space-y-1">
                               <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                                New Password <span className="text-text-muted lowercase normal-case font-normal">(leave blank to keep current)</span>
+                                {editUseApiKey ? 'API Key' : 'Password'}
                               </label>
                               <Input
-                                type="password"
-                                value={editPassword}
-                                onChange={setEditPassword}
+                                type={editUseApiKey ? 'text' : 'password'}
+                                value={editUseApiKey ? editApiKey : editPassword}
+                                onChange={editUseApiKey ? onEditApiKeyChange : onEditPasswordChange}
+                                placeholder={editUseApiKey ? 'Enter API key' : 'Enter password to update'}
                               />
                             </div>
                           </div>
+
+                          <label className="flex items-center justify-between gap-3 rounded-sm border border-border bg-background p-3 cursor-pointer select-none transition-colors hover:border-border-focus">
+                            <div className="flex flex-col gap-1">
+                              <span className="text-sm font-medium text-text-primary">Use API Key</span>
+                              <span className="text-xs text-text-secondary">
+                                Authenticate with a qBittorrent API key instead of a username and password
+                              </span>
+                            </div>
+                            <ToggleSwitch checked={editUseApiKey} onChange={onEditUseApiKeyChange} />
+                          </label>
 
                           <div className="flex gap-3 pt-2">
                             <Button
@@ -559,7 +411,7 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
                       ) : (
                         <div className="flex flex-col gap-3">
                           <div className="flex flex-wrap items-center justify-between gap-4">
-                            
+
                             <div className="flex items-center gap-4 flex-1 min-w-0">
                               <div className={cn(
                                 "flex h-10 w-10 shrink-0 items-center justify-center rounded-md transition-colors",
@@ -567,7 +419,7 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
                               )}>
                                 <Icon name="server" iconSize="lg" />
                               </div>
-                              
+
                               <div className="flex flex-col min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
                                   <span className="truncate text-sm font-semibold text-text-primary" title={server.name}>
@@ -579,10 +431,14 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
                                     </span>
                                   )}
                                 </div>
-                                <div className="flex items-center gap-2 mt-1 text-xs text-text-secondary font-mono truncate" title={`${server.url} • ${server.username ? server.username : 'No username'}`}>
+                                <div className="flex items-center gap-2 mt-1 text-xs text-text-secondary font-mono truncate" title={`${server.url} ${server.username ? `• ${server.username}` : ''}`}>
                                   <span>{server.url}</span>
-                                  <span className="text-text-muted">•</span>
-                                  <span className="text-text-muted font-sans">{server.username ? server.username : 'No username'}</span>
+                                  {server.username ? (
+                                    <>
+                                      <span className="text-text-muted">•</span>
+                                      <span className="text-text-muted font-sans">{server.username}</span>
+                                    </>
+                                  ) : null}
                                 </div>
                                 {server.credentialStatus ? (
                                   <CredentialHealthIndicator
@@ -604,20 +460,8 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
                                   Connect
                                 </Button>
                               )}
-                              
+
                               <div className="flex items-center gap-1 border-l border-border pl-2">
-                                <button
-                                  onClick={() => handleTestConnection(server.id)}
-                                  disabled={testingServerId === server.id}
-                                  className="flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-surface-interactive hover:text-text-primary transition-colors disabled:text-text-disabled"
-                                  title="Test connection"
-                                >
-                                  {testingServerId === server.id ? (
-                                    <Spinner variant="ring" size="md" />
-                                  ) : (
-                                    <Icon name="globe" iconSize="md" />
-                                  )}
-                                </button>
                                 <button
                                   onClick={() => handleEditServer(server.id)}
                                   className="flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-surface-interactive hover:text-text-primary transition-colors"
@@ -635,24 +479,6 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
                               </div>
                             </div>
                           </div>
-
-                          {testResults[server.id] && (
-                            <div
-                              className={cn(
-                                'flex items-center gap-2 rounded-md px-3 py-2 text-xs font-medium mt-1 w-fit',
-                                testResults[server.id].success
-                                  ? 'bg-success-20 text-success'
-                                  : 'bg-error-20 text-error'
-                              )}
-                            >
-                              {testResults[server.id].success ? (
-                                <Icon name="check" iconSize="md" />
-                              ) : (
-                                <Icon name="x" iconSize="md" />
-                              )}
-                              {testResults[server.id].message}
-                            </div>
-                          )}
                         </div>
                       )}
                     </div>

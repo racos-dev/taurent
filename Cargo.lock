@@ -3519,6 +3519,7 @@ checksum = "e0c5ccf5294c6ccd63a74f1565028353830a9c2f5eb0c682c355c471726a6e3f"
 name = "qb-core"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "icu_collator",
  "icu_locale",
  "log",
@@ -3553,6 +3554,7 @@ dependencies = [
  "tauri-plugin-window-state",
  "thiserror 2.0.18",
  "tokio",
+ "url",
  "urlencoding",
  "uuid",
 ]

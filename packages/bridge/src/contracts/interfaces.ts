@@ -41,8 +41,6 @@ import type {
   PathMapping,
   AddServerInput,
   UpdateServerInput,
-  ServerCredentialsInput,
-  TestConnectionResult,
   SyncTorrentPeers,
   RSSItemsResponse,
   RSSRulesResponse,
@@ -297,34 +295,12 @@ export interface ServerBridge {
   updateServer(input: UpdateServerInput): Promise<SavedServerSummary>;
   removeServer(serverId: string): Promise<void>;
   selectServer(serverId: string): Promise<void>;
-  testServerConnection(
-    serverUrl: string,
-    credentials: ServerCredentialsInput
-  ): Promise<TestConnectionResult>;
-  testSavedServerConnection(serverId: string): Promise<TestConnectionResult>;
   /** Atomic saved-server switch: commits the new session only on success. On failure the
    *  previous session remains intact. Returns the new session generation on success. */
   sessionSwitchServerById(serverId: string): Promise<number>;
 
   /** Normalize a server URL (strip trailing slashes, prepend scheme, remove /api/v2). */
   normalizeServerUrl(input: { url: string; defaultScheme?: string }): Promise<{ normalized: string }>;
-
-  /** Probe for the correct scheme (https-first, http-fallback on network errors). */
-  probeServerScheme(url: string, username: string, password: string): Promise<{
-    success: boolean;
-    normalizedUrl: string | null;
-    error: string | null;
-  }>;
-}
-
-/** Bridge methods for server URL normalization and scheme probing used by add-server flows. */
-export interface ServerUrlProbeBridge {
-  normalizeServerUrl(input: { url: string; defaultScheme?: string }): Promise<{ normalized: string }>;
-  probeServerScheme(url: string, username: string, password: string): Promise<{
-    success: boolean;
-    normalizedUrl: string | null;
-    error: string | null;
-  }>;
 }
 
 // Full desktop bridge interface
