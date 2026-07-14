@@ -233,7 +233,6 @@ test('buildResolverTestTable accumulates caps monotonically across versions', ()
   const tomlData = parseToml(realTomlPath);
   const caps = collectCapabilities(tomlData);
   const rows = buildResolverTestTable(tomlData, caps);
-  const capIndex = Object.fromEntries(caps.map((cap, idx) => [cap, idx]));
   const stateVector = (row) => caps.map((cap) => (row.state[cap] ? 1 : 0));
 
   for (let i = 1; i < rows.length; i += 1) {
