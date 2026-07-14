@@ -12,7 +12,6 @@ export const ServerOverviewSettings = React.memo(() => {
     error,
     addServer,
     updateServer,
-    updateServerCredentials,
     switchServer,
   } = useServerManager();
   const { connect, serverId: activeServerId } = useQBClient();
@@ -39,26 +38,20 @@ export const ServerOverviewSettings = React.memo(() => {
       serverId: string,
       data: { name: string; url: string; username: string; password?: string; apiKey?: string },
     ) => {
-      // Persist the name/url/username fields.
       await updateServer(serverId, {
         name: data.name,
         url: data.url,
         username: data.username,
+        password: data.password,
+        apiKey: data.apiKey ? data.apiKey : data.password ? null : undefined,
       });
-
-      // Persist credentials only when a new value is supplied.
-      if (data.apiKey) {
-        await updateServerCredentials(serverId, data.url, '', data.apiKey);
-      } else if (data.password) {
-        await updateServerCredentials(serverId, data.url, data.username, data.password);
-      }
 
       // Reconnect if the edited server is the currently active one.
       if (serverId === activeServerId) {
         await connect(serverId);
       }
     },
-    [updateServer, updateServerCredentials, activeServerId, connect],
+    [updateServer, activeServerId, connect],
   );
 
   const requestRemoveServer = React.useCallback(

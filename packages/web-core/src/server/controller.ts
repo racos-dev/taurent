@@ -54,7 +54,7 @@ export interface ServerManagerController extends ServerManagerState {
       username?: string;
       password?: string;
       rememberPassword?: boolean;
-      apiKey?: string;
+      apiKey?: string | null;
     },
   ) => Promise<void>;
   updateServerCredentials?: (serverId: string, url: string, username: string, password: string) => Promise<void>;
@@ -254,7 +254,7 @@ export function useServerManagerController({
         username?: string;
         password?: string;
         rememberPassword?: boolean;
-        apiKey?: string;
+        apiKey?: string | null;
       },
     ) => {
       setState((prev) => ({ ...prev, loading: true, error: null }));
@@ -266,6 +266,7 @@ export function useServerManagerController({
           url: updates.url,
           username: updates.username,
           password: updates.password,
+          api_key: updates.apiKey,
           remember_password: updates.rememberPassword,
         });
 

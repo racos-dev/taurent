@@ -332,6 +332,19 @@ fn delete_credentials<R: Runtime>(app: &AppHandle<R>, server_id: &str) -> Result
 
 // === Repository Operations ===
 
+fn normalize_stored_server_url(url: &str) -> String {
+    let trimmed = url.trim();
+    if trimmed.contains("://") {
+        normalize_server_url(trimmed, "https://")
+    } else {
+        let without_trailing_slash = trimmed.trim_end_matches('/');
+        without_trailing_slash
+            .strip_suffix("/api/v2")
+            .unwrap_or(without_trailing_slash)
+            .to_string()
+    }
+}
+
 /// Returns the credential status for a server given the current repo state.
 /// This checks both keychain (secure storage) and the transient map.
 fn compute_credential_status<R: Runtime>(
@@ -433,10 +446,13 @@ pub fn add_server<R: Runtime>(
     );
 
     // Normalize URL before storing to ensure consistent format
-    let normalized_url = normalize_server_url(&input.url, "https://");
+    let normalized_url = normalize_stored_server_url(&input.url);
 
     let creds = AuthCredentials {
-        api_key: None, // AddServerInput does not yet carry an api_key; API keys are managed via UpdateServerInput
+        api_key: input
+            .api_key
+            .map(|key| key.trim().to_string())
+            .filter(|key| !key.is_empty()),
         username: input.username.clone(),
         password: input.password.clone(),
     };
@@ -506,13 +522,14 @@ pub fn update_server<R: Runtime>(
     let username_provided = input.username.is_some();
     // Load existing credentials BEFORE taking any mutable borrow on `repo`.
     let existing_creds = get_server_credentials(app, repo, &server_id);
+    let had_existing_creds = existing_creds.is_some();
     {
         let meta_mut = repo.servers.get_mut(&server_id).unwrap();
         if let Some(name) = input.name {
             meta_mut.name = name;
         }
         if let Some(url) = input.url {
-            meta_mut.url = normalize_server_url(&url, "https://");
+            meta_mut.url = normalize_stored_server_url(&url);
         }
         if let Some(username) = input.username {
             meta_mut.username = username;
@@ -531,12 +548,17 @@ pub fn update_server<R: Runtime>(
             creds_changed = true;
         }
         if let Some(api_key) = input.api_key.clone() {
-            new_creds.api_key = api_key;
+            new_creds.api_key = api_key
+                .map(|key| key.trim().to_string())
+                .filter(|key| !key.is_empty());
             creds_changed = true;
         }
         // Always reflect the latest username if provided.
         if username_provided {
             new_creds.username = meta_mut.username.clone();
+            if had_existing_creds {
+                creds_changed = true;
+            }
         }
 
         if creds_changed {

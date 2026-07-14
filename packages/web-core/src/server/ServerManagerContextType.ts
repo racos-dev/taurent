@@ -25,7 +25,7 @@ export interface ServerManagerContextType extends ServerManagerState {
       username?: string;
       password?: string;
       rememberPassword?: boolean;
-      apiKey?: string;
+      apiKey?: string | null;
     },
   ) => Promise<void>;
   updateServerCredentials?: (

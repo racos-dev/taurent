@@ -157,10 +157,11 @@ export function useAddServerScreenController({
     const hasName = name.trim().length > 0;
     const hasUrl = url.trim().length > 0;
     const hasUsername = useApiKey || username.trim().length > 0;
+    const hasApiKey = !useApiKey || apiKey.trim().length > 0;
     const hasNoErrors =
       !validationErrors.name && !validationErrors.url && !validationErrors.username;
-    return hasName && hasUrl && hasUsername && hasNoErrors;
-  }, [name, url, username, useApiKey, validationErrors]);
+    return hasName && hasUrl && hasUsername && hasApiKey && hasNoErrors;
+  }, [name, url, username, apiKey, useApiKey, validationErrors]);
 
   // ─── Submit ───────────────────────────────────────────────
   const handleSubmit = useCallback(async () => {
@@ -174,7 +175,10 @@ export function useAddServerScreenController({
 
     try {
       const trimmedUrl = url.trim();
-      const { normalized } = await bridgeServers.normalizeServerUrl({ url: trimmedUrl });
+      const normalizeInput = trimmedUrl.includes('://')
+        ? { url: trimmedUrl }
+        : { url: trimmedUrl, defaultScheme: '' };
+      const { normalized } = await bridgeServers.normalizeServerUrl(normalizeInput);
       const finalUrl = normalized;
 
       if (finalUrl !== url) {
@@ -186,8 +190,8 @@ export function useAddServerScreenController({
         finalUrl,
         useApiKey ? '' : username.trim(),
         useApiKey ? '' : password,
-        useApiKey ? false : rememberPassword,
-        useApiKey ? apiKey : '',
+        rememberPassword,
+        useApiKey ? apiKey.trim() : undefined,
       );
       await onSuccess(newServer.id);
     } catch (err) {

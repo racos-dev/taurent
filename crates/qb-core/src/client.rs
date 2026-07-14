@@ -120,7 +120,7 @@ fn body_snippet(bytes: &[u8]) -> Option<String> {
 /// # Authentication modes
 ///
 /// - **API key** (`api_key = Some(_)`): builds a `reqwest::Client` whose
-///   `default_headers` carry `Authorization: Bearer qbt_<key>`. No login
+///   `default_headers` carry `Authorization: Bearer <key>`. No login
 ///   POST is performed and the returned cookie is the empty string.
 ///
 /// - **Username + password** (`api_key = None`): POSTs the credentials to
@@ -139,10 +139,11 @@ fn body_snippet(bytes: &[u8]) -> Option<String> {
 /// warning when credentials are sent over plaintext HTTP.
 pub async fn qbittorrent_login(
     url: &Url,
+    allow_http_fallback: bool,
     api_key: Option<&str>,
     username: &str,
     password: &str,
-) -> BackendResult<(Client, String)> {
+) -> BackendResult<(Client, String, String)> {
     const LOGIN_TIMEOUT_SECS: u64 = 10;
     const REQUEST_TIMEOUT_SECS: u64 = 30;
     const REQUEST_TIMEOUT: std::time::Duration =
@@ -150,31 +151,42 @@ pub async fn qbittorrent_login(
     const LOGIN_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(LOGIN_TIMEOUT_SECS);
 
     // API key path: no login POST, just build a bearer-auth client.
-    if let Some(key) = api_key.filter(|k| !k.is_empty()) {
+    if let Some(key) = api_key.map(str::trim).filter(|key| !key.is_empty()) {
         log::info!(
             "Using API key authentication for {}",
             redact_credentials_in_url(url)
         );
-        let mut headers = HeaderMap::new();
-        let auth_value = format!("Bearer qbt_{}", key);
-        let header_value = HeaderValue::from_str(&auth_value)
-            .map_err(|err| BackendError::new(format!("Invalid API key header value: {}", err)))?;
-        headers.insert(AUTHORIZATION, header_value);
-        let client = Client::builder()
-            .timeout(REQUEST_TIMEOUT)
-            .default_headers(headers)
-            .build()
-            .map_err(|err| {
-                BackendError::new(format!("Failed to create API-key HTTP client: {}", err))
-            })?;
-        return Ok((client, String::new()));
+        let (client, base_url, used_http_fallback) = if allow_http_fallback {
+            match build_api_key_client_for_scheme(url, "https", key, REQUEST_TIMEOUT).await {
+                Ok((client, base_url)) => (client, base_url, false),
+                Err(err) if err.is_network_error() => {
+                    log::warn!(
+                        "HTTPS API-key probe failed for {}, falling back to HTTP",
+                        redact_credentials_in_url(url)
+                    );
+                    let (client, base_url) =
+                        build_api_key_client_for_scheme(url, "http", key, REQUEST_TIMEOUT).await?;
+                    (client, base_url, true)
+                }
+                Err(err) => return Err(err),
+            }
+        } else {
+            let scheme = url.scheme();
+            let (client, base_url) =
+                build_api_key_client_for_scheme(url, scheme, key, REQUEST_TIMEOUT).await?;
+            (client, base_url, scheme.eq_ignore_ascii_case("http"))
+        };
+        if used_http_fallback {
+            log::warn!(
+                "API-key authenticated session established over plaintext HTTP for {}",
+                redact_credentials_in_url(url)
+            );
+        }
+        return Ok((client, String::new(), base_url));
     }
 
     // Username/password path: try login with scheme fallback if needed.
-    let (login_outcome, used_http_fallback) = if url.scheme().is_empty()
-        || (!url.scheme().eq_ignore_ascii_case("http")
-            && !url.scheme().eq_ignore_ascii_case("https"))
-    {
+    let (login_outcome, used_http_fallback) = if allow_http_fallback {
         // Try https first
         let https_attempt = attempt_login(url, "https", username, password, LOGIN_TIMEOUT).await;
         match https_attempt {
@@ -218,7 +230,7 @@ pub async fn qbittorrent_login(
         ))
     })?;
 
-    Ok((client, login_outcome.cookie))
+    Ok((client, login_outcome.cookie, login_outcome.base_url))
 }
 
 /// Outcome of a login attempt that may need Authorization headers
@@ -229,6 +241,46 @@ struct LoginOutcome {
     /// Optional default headers (e.g. `Authorization: Bearer …` or `Basic …`)
     /// to bake into the long-lived HTTP client.
     default_headers: Option<HeaderMap>,
+    /// Effective base URL used for the successful authentication attempt.
+    base_url: String,
+}
+
+fn canonical_base_url(url: &Url) -> String {
+    url.as_str().trim_end_matches('/').to_string()
+}
+
+async fn build_api_key_client_for_scheme(
+    base: &Url,
+    scheme: &str,
+    key: &str,
+    request_timeout: std::time::Duration,
+) -> BackendResult<(Client, String)> {
+    let mut resolved = base.clone();
+    resolved
+        .set_scheme(scheme)
+        .map_err(|err| BackendError::new(format!("Invalid URL scheme: {:?}", err)))?;
+    if resolved.path().is_empty() {
+        resolved.set_path("/");
+    }
+    let base_url = canonical_base_url(&resolved);
+
+    let mut headers = HeaderMap::new();
+    let auth_value = format!("Bearer {}", key);
+    let header_value = HeaderValue::from_str(&auth_value)
+        .map_err(|err| BackendError::new(format!("Invalid API key header value: {}", err)))?;
+    headers.insert(AUTHORIZATION, header_value);
+    let client = Client::builder()
+        .timeout(request_timeout)
+        .default_headers(headers)
+        .build()
+        .map_err(|err| {
+            BackendError::new(format!("Failed to create API-key HTTP client: {}", err))
+        })?;
+
+    let probe_url = format!("{}api/v2/app/version", resolved);
+    client.get(probe_url).send().await?;
+
+    Ok((client, base_url))
 }
 
 /// Attempt a single username/password login against the given scheme.
@@ -251,6 +303,7 @@ async fn attempt_login(
     if resolved.path().is_empty() {
         resolved.set_path("/");
     }
+    let base_url = canonical_base_url(&resolved);
 
     let login_url = format!("{}api/v2/auth/login", resolved);
     log::info!("Attempting login to: {}", login_url);
@@ -290,6 +343,7 @@ async fn attempt_login(
                 Ok(LoginOutcome {
                     cookie,
                     default_headers: None,
+                    base_url,
                 })
             }
             _ => {
@@ -308,6 +362,7 @@ async fn attempt_login(
                 Ok(LoginOutcome {
                     cookie: String::new(),
                     default_headers: None,
+                    base_url,
                 })
             }
         }
@@ -332,6 +387,7 @@ async fn try_basic_auth_probe(
     login_timeout: std::time::Duration,
 ) -> BackendResult<LoginOutcome> {
     let version_url = format!("{}api/v2/app/version", resolved);
+    let base_url = canonical_base_url(resolved);
     let basic = format!(
         "Basic {}",
         base64::engine::general_purpose::STANDARD
@@ -373,12 +429,14 @@ async fn try_basic_auth_probe(
         Some(cookie) => Ok(LoginOutcome {
             cookie,
             default_headers: None,
+            base_url,
         }),
         None => Ok(LoginOutcome {
             // No cookie — downstream clients should attach Authorization header
             // to every request.
             cookie: String::new(),
             default_headers: Some(headers),
+            base_url,
         }),
     }
 }

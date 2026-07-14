@@ -205,6 +205,11 @@ export interface UpdateServerInput {
   url?: string;
   username?: string;
   password?: string;
+  /**
+   * Optional qBittorrent API key. Omit to leave unchanged, pass a string to set
+   * API-key auth, or pass null to clear a previously stored API key.
+   */
+  api_key?: string | null;
   remember_password?: boolean;
 }
 

@@ -133,6 +133,9 @@ pub struct AddServerInput {
     pub url: String,
     pub username: String,
     pub password: String,
+    /// Optional API key for qBittorrent bearer-token auth.
+    #[serde(default)]
+    pub api_key: Option<String>,
     /// Whether to persist the password in secure storage.
     /// Defaults to true when omitted.
     #[serde(default = "default_remember_password")]

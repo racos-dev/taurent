@@ -188,10 +188,10 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
         const trimmedUrl = editUrl.trim();
         let finalUrl = trimmedUrl;
 
-        // If the edited URL has no scheme, normalize it. Scheme probing is now
-        // handled Rust-side during login.
-        if (!trimmedUrl.includes('://')) {
+        if (trimmedUrl.includes('://')) {
           finalUrl = normalizeServerUrl(trimmedUrl);
+        } else {
+          finalUrl = trimmedUrl.replace(/\/+$/, '').replace(/\/api\/v2$/, '');
           setEditUrl(finalUrl);
         }
 
