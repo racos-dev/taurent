@@ -33,7 +33,7 @@ Taurent is a pnpm/Rust monorepo for Tauri-based qBittorrent clients. Keep future
 - Mobile dev commands are long-lived watch processes: `pnpm mobile:dev`, `pnpm mobile:dev:ios`, `pnpm mobile:dev:android`. Use bounded timeouts when verifying.
 - `pnpm mobile:smoke` is `tauri dev` for the mobile app, so it is also long-lived.
 - Root `pnpm test:unit` covers `@taurent/shared`, `@taurent/bridge`, `@taurent/web-core`, and `taurent`; it does not include `taurent-mobile`.
-- Root `pnpm desktop:ci` includes lint, typecheck, both app frontend builds, unit tests, and desktop renderer E2E. It still does not run native Tauri E2E.
+- Root `pnpm desktop:ci` includes lint, typecheck, both app frontend builds, unit tests, and desktop renderer E2E.
 
 ## Focused verification
 
@@ -45,7 +45,6 @@ Taurent is a pnpm/Rust monorepo for Tauri-based qBittorrent clients. Keep future
   - `pnpm desktop:test` -> Vitest
   - `pnpm desktop:test:browser` -> Vitest browser mode
   - `pnpm desktop:renderer:e2e` -> Playwright against mocked desktop renderer runtime
-  - `pnpm desktop:tauri:e2e` -> native Tauri E2E runner
 - Mobile tests:
   - `pnpm mobile:test` -> Vitest
   - `pnpm mobile:renderer:e2e` -> Playwright renderer E2E

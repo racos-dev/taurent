@@ -12,9 +12,6 @@ export * from './theme/tokens';
 export type { ThemePalette, ThemeVariant, AccentHex, AccentPreference } from './theme/types';
 export { normalizeAccent, isAccentValue, deriveMidnightAccentTokens, getContrastText, serializeAccentCss } from './theme/accent';
 
-// Global type augmentations
-import './types/globals';
-
 export * from './platform';
 
 export * from './utils/sortTorrents';

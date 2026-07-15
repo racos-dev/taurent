@@ -1,4 +1,4 @@
-import { appendFileSync, readFileSync } from 'node:fs';
+import { appendFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 
@@ -94,86 +94,6 @@ export function writeRustQualitySummary() {
   ].join('\n');
 }
 
-export function writeNativeSmokeSummary() {
-  const jobResult = process.env.CI_JOB_RESULT ?? 'unknown';
-  const perfPath = process.env.CI_PERF_ARTIFACT_PATH;
-
-  let scenario = 'N/A';
-  let duration = 'N/A';
-  let syncPass = 'N/A';
-  let backendChecks = 'N/A';
-
-  if (!perfPath) {
-    duration = 'No perf data — artifact not produced';
-  } else {
-    let raw;
-    try {
-      raw = readFileSync(perfPath, 'utf8');
-    } catch (err) {
-      console.error(`write-pr-ci-summary: cannot read perf artifact: ${err.message}`);
-      duration = 'No perf data — artifact not produced';
-    }
-    if (raw !== undefined) {
-      try {
-        const data = JSON.parse(raw);
-        scenario = data.scenario ?? 'N/A';
-        if (typeof data.durationMs === 'number') {
-          duration = `${(data.durationMs / 1000).toFixed(1)}s`;
-        }
-        if (data.sync && typeof data.sync.pass === 'boolean') {
-          syncPass = data.sync.pass ? '✅' : '❌';
-        }
-        if (Array.isArray(data.backendChecks)) {
-          backendChecks = data.backendChecks.length;
-        }
-      } catch (err) {
-        console.error(`write-pr-ci-summary: cannot parse perf artifact: ${err.message}`);
-        duration = 'Perf data unreadable';
-      }
-    }
-  }
-
-  return [
-    '## Desktop Tauri Smoke Summary',
-    '',
-    '| Metric | Value |',
-    '|--------|-------|',
-    `| Scenario | ${escapeMarkdown(scenario)} |`,
-    `| Duration | ${escapeMarkdown(duration)} |`,
-    `| Sync Pass | ${syncPass} |`,
-    `| Backend Checks | ${backendChecks} |`,
-    '| Artifacts | desktop-tauri-e2e-artifacts, desktop-tauri-perf |',
-    '',
-    `**Job result: ${statusEmoji(jobResult)} ${jobResult}**`,
-    '',
-  ].join('\n');
-}
-
-export function writeAggregateSummary() {
-  const jsResult = process.env.CI_JS_RESULT ?? 'skipped';
-  const rustResult = process.env.CI_RUST_RESULT ?? 'skipped';
-  const smokeResult = process.env.CI_SMOKE_RESULT ?? 'skipped';
-  const runId = process.env.GITHUB_RUN_ID ?? '';
-  const repo = process.env.GITHUB_REPOSITORY ?? '';
-
-  const lines = [
-    '## PR CI Overview',
-    '',
-    '| Lane | Result |',
-    '|------|--------|',
-    `| JS Quality | ${statusEmoji(jsResult)} ${jsResult} |`,
-    `| Rust Quality | ${statusEmoji(rustResult)} ${rustResult} |`,
-    `| Desktop Tauri Smoke (Linux) | ${statusEmoji(smokeResult)} ${smokeResult} |`,
-    '',
-  ];
-
-  if (runId && repo) {
-    lines.push(`[View artifacts](https://github.com/${repo}/actions/runs/${runId})`, '');
-  }
-
-  return lines.join('\n');
-}
-
 function main() {
   const kind = process.env.CI_JOB_KIND;
   const output = process.env.GITHUB_STEP_SUMMARY;
@@ -186,12 +106,6 @@ function main() {
         break;
       case 'rust-quality':
         md = writeRustQualitySummary();
-        break;
-      case 'native-smoke':
-        md = writeNativeSmokeSummary();
-        break;
-      case 'aggregate':
-        md = writeAggregateSummary();
         break;
       default:
         throw new Error(`Unknown CI_JOB_KIND: ${kind}`);

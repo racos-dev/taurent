@@ -27,18 +27,6 @@ declare global {
 
 window.__IS_SETTINGS_WINDOW__ = true;
 
-// ── Window label for investigation perf counters ──────────────────────────────
-// Set before first render; guard against non-Tauri environments (browser automation,
-// vite dev server preview).
-try {
-  const { getCurrentWindow } = await import('@tauri-apps/api/window');
-  window.__TAURENT_WINDOW_LABEL__ = getCurrentWindow().label;
-} catch {
-  // getCurrentWindow is unavailable outside Tauri runtime — this is expected in
-  // browser automation, plain vite preview, and unit test environments.
-  window.__TAURENT_WINDOW_LABEL__ = 'settings';
-}
-
 createRoot(settingsRoot).render(
   <StrictMode>
     <App />

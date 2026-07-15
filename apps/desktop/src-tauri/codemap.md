@@ -18,7 +18,6 @@ This crate is intentionally thin. Most business logic lives in shared `qb-core` 
 | `tauri-plugin-shell` | shell/open commands for external links |
 | `tauri-plugin-single-instance` | torrent file opens from second instance |
 | `tauri-plugin-autostart` | macOS LaunchAgent (auto-start on login) |
-| `tauri-plugin-webdriver` | optional (`#[cfg(feature = "webdriver")]`) |
 | `tauri-plugin-log` | webview-origin log forwarding only (native logs stay on stdout) |
 
 **Managed state** (registered in `lib.rs::run()`):

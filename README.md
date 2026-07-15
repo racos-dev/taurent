@@ -186,12 +186,6 @@ Desktop renderer E2E:
 pnpm desktop:renderer:e2e
 ```
 
-Native desktop smoke test:
-
-```bash
-pnpm desktop:tauri:e2e
-```
-
 ## Repository layout
 
 ```text

@@ -54,7 +54,7 @@ The desktop shell exposes a qBittorrent-style tray context menu for common nativ
 - `Set Global Speed Limits...` opens the combined global upload/download speed-limit dialog directly, without restoring the main window first.
 - `Quit` performs the app's intentional quit flow.
 
-Tray behavior depends on the native runtime. Validate changes with a real desktop smoke path (`pnpm desktop:dev` or native Tauri E2E), not only mocked renderer tests.
+Tray behavior depends on the native runtime. Validate changes manually with `pnpm desktop:dev`, not only mocked renderer tests.
 
 ## Desktop testing layers
 
@@ -65,16 +65,14 @@ Use the narrowest layer that can prove the behavior honestly:
 | Fast unit/contract suite | `pnpm test:unit` | shared/package Vitest plus desktop/web-core correctness checks that should stay cheap in CI | route orchestration or native runtime behavior |
 | Desktop unit/browser tests | `pnpm desktop:test`, `pnpm desktop:test:browser` | hooks, components, selectors, state transitions, dirty-state logic | multi-window Tauri behavior |
 | Mocked renderer integration | `pnpm desktop:renderer:e2e` | route orchestration, dialog routing, selection flows, mocked side-effect assertions | claiming native Tauri coverage |
-| Native Tauri smoke | `pnpm desktop:tauri:e2e` | real window labels/lifecycle, plugin-backed flows, fake-backend auth/session contract checks, dialog result delivery, packaged-app smoke timings | exhaustive workflow coverage |
 
 ### Choosing the right layer
 
 - Put pure logic in package/app Vitest first.
 - Keep `pnpm test:unit` as the default CI entrypoint for fast correctness coverage.
 - Add mocked renderer Playwright only when the behavior depends on route orchestration or cross-component integration.
-- Add native Tauri smoke only when the behavior depends on real windows, Tauri plugins, or packaged runtime boundaries.
-- Keep correctness assertions and perf assertions separate.
-- Treat native timings as light smoke observations, not hard production budgets.
+- Validate behavior that truly depends on real windows or Tauri plugins manually with `pnpm desktop:dev`.
+- Rely on the Linux Tauri build in PR CI to catch native compilation and bundling integration failures.
 
 ## Local hooks and CI lanes
 
@@ -96,7 +94,7 @@ The GitHub Actions lanes are split by purpose:
 - `.github/workflows/pr-ci.yml` runs the review-time lane on pull requests:
   - `js-quality`
   - `rust-quality`
-  - `native-smoke`
+  - `native-build`
   - Run `pnpm ci:local:full` locally before opening high-risk PRs.
 - `.github/workflows/release-build.yml` runs release preflight, multi-platform desktop packaging, unsigned Android APK packaging, and GitHub Release publishing for `v*` tags or manual dispatch.
 

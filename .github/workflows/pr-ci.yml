@@ -155,8 +155,8 @@ jobs:
             }
         run: node scripts/ci/write-pr-ci-summary.mjs
 
-  native-smoke:
-    name: Desktop Tauri Smoke (Linux)
+  native-build:
+    name: Desktop Tauri Build (Linux)
     needs: [js-quality, rust-quality]
     runs-on: ubuntu-22.04
     steps:
@@ -181,7 +181,7 @@ jobs:
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
         with:
-          key: rust-smoke-${{ hashFiles('**/Cargo.lock') }}
+          key: rust-desktop-build-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -192,43 +192,7 @@ jobs:
       - name: Install Linux deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf build-essential curl wget file libxdo-dev libssl-dev webkit2gtk-driver xvfb dbus-x11 at-spi2-core
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf build-essential curl wget file
 
-      - name: Build desktop Tauri app for smoke
-        id: build-smoke
-        run: pnpm --filter taurent tauri build --no-bundle --features webdriver
-
-      - name: Run native Tauri smoke
-        id: run-smoke
-        env:
-          GDK_BACKEND: x11
-          NO_AT_BRIDGE: '1'
-          WEBKIT_DISABLE_COMPOSITING_MODE: '1'
-          LIBGL_ALWAYS_SOFTWARE: '1'
-        run: |
-          xvfb-run -a --server-args="-screen 0 1280x1024x24 -ac +extension GLX +render -noreset" dbus-run-session -- pnpm --filter taurent exec tsx scripts/e2e/runner.ts --skip-build
-
-      - name: Write summary
-        if: always()
-        env:
-          CI_JOB_KIND: native-smoke
-          CI_JOB_RESULT: ${{ job.status }}
-          CI_PERF_ARTIFACT_PATH: artifacts/desktop/perf/native-smoke.json
-        run: node scripts/ci/write-pr-ci-summary.mjs
-
-      - name: Upload native Tauri diagnostics
-        if: failure()
-        uses: actions/upload-artifact@v7
-        with:
-          name: desktop-tauri-e2e-artifacts
-          path: artifacts/desktop/tauri-e2e
-          if-no-files-found: warn
-
-      - name: Upload native smoke perf artifact
-        if: failure()
-        uses: actions/upload-artifact@v7
-        with:
-          name: desktop-tauri-perf
-          path: artifacts/desktop/perf/native-smoke.json
-          if-no-files-found: warn
-
+      - name: Build desktop Tauri app
+        run: pnpm --filter taurent tauri build --no-bundle

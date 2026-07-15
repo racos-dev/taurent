@@ -9,11 +9,10 @@ Playwright E2E test helpers for the desktop renderer. Provides page navigation, 
 - **Scenario-driven navigation**: `gotoDesktop(page, options)` navigates to a route with `scenario` and `mockAppState` query params, waits for `window.__TAURENT_AUTOMATION__` to be installed, and clears emitted events.
 - **Torrent row locators**: Stable `data-testid="torrent-row"` based locators (`getTorrentRowLocator`, `getTorrentRowByHash`, `readTorrentRowHash`, `readTorrentRowName`) that avoid depending on cell text or column position.
 - **Mocked webview polling**: `waitForMockWebview(page, options)` polls the `window.__TAURENT_TAURI_WEBVIEWS__` record list for dialog windows, matching by label, dialog type, URL predicate, and visibility — replacing immediate reads after async actions.
-- **Diagnostic capture**: `captureWebDriverDiagnostics`, `captureDevToolsDiagnostics` capture state for debugging automation bootstrap failures.
 
 ## Key Files
 
-- **desktop.ts** — Core helpers: `gotoDesktop`, `waitForHomeReady`, `readRecordedCalls`, `failNextMutation`, torrent row locators (`getTorrentRowLocator`, `getFirstVisibleTorrentRow`, `getVisibleTorrentRow`, `getTorrentRowByHash`, `readTorrentRowHash`, `readTorrentRowName`), mocked webview polling (`waitForMockWebview`), event/window/webview readers, and diagnostic capture functions.
+- **desktop.ts** — Core helpers: `gotoDesktop`, `waitForHomeReady`, `readRecordedCalls`, `failNextMutation`, torrent row locators (`getTorrentRowLocator`, `getFirstVisibleTorrentRow`, `getVisibleTorrentRow`, `getTorrentRowByHash`, `readTorrentRowHash`, `readTorrentRowName`), mocked webview polling (`waitForMockWebview`), and event/window/webview readers.
 
 ## Flow
 
