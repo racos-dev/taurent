@@ -17,7 +17,6 @@
 //     updatePreference,
 //     removeServer,
 //     updateServer,
-//     testSavedServerConnection,
 //     switchServer,
 //     disconnect,
 //     onNavigateToLogin: () => navigate('/servers'),
@@ -26,7 +25,6 @@
 
 import { useMemo, useState, useCallback } from 'react';
 import { getThemeMetadata } from '@taurent/shared/theme/registry';
-import { formatUserMessageForContext } from '@taurent/shared/utils/error';
 import type { ThemePalette, ThemeVariant, AccentPreference } from '@taurent/shared/theme/types';
 import type { Server } from '@taurent/shared/types/server';
 import { reportOperationFailure } from '../../hooks/operationFailureReporter';
@@ -62,7 +60,6 @@ export interface SettingsScreenControllerOptions {
     serverId: string,
     updates: { name?: string; url?: string; username?: string },
   ) => Promise<void>;
-  testSavedServerConnection: (serverId: string) => Promise<{ success: boolean; error?: string }>;
   switchServer: (serverId: string) => Promise<void>;
   disconnect: () => Promise<void>;
 
@@ -108,11 +105,6 @@ export interface InputModalState {
   unitDefault?: 'b' | 'kb' | 'mb' | 'gb' | 'tb';
 }
 
-export interface TestResult {
-  success: boolean;
-  message: string;
-}
-
 export interface SettingsScreenControllerResult {
   // ─── Section expand state ────────────────────────────────
   expandedSections: Record<SectionKey, boolean>;
@@ -135,16 +127,13 @@ export interface SettingsScreenControllerResult {
   setEditUrl: (url: string) => void;
   setEditUsername: (username: string) => void;
 
-  // ─── Server test/switch state ───────────────────────────
-  testingServerId: string | null;
-  testResults: Record<string, TestResult>;
+  // ─── Server switch state ────────────────────────────────
   switchingServerId: string | null;
 
   // ─── Server action handlers ─────────────────────────────
   handleEditServer: (serverId: string) => void;
   handleSaveEdit: () => Promise<void>;
   handleCancelEdit: () => void;
-  handleTestConnection: (serverId: string) => Promise<void>;
   handleSwitchServer: (serverId: string) => Promise<void>;
   handleRemoveServer: (id: string, name: string) => void;
 
@@ -172,7 +161,6 @@ export function useSettingsScreenController({
   updatePreference,
   removeServer,
   updateServer,
-  testSavedServerConnection,
   switchServer,
   disconnect,
   config,
@@ -210,9 +198,7 @@ export function useSettingsScreenController({
   const [editUrl, setEditUrl] = useState('');
   const [editUsername, setEditUsername] = useState('');
 
-// ─── Server test/switch state ────────────────────────────
-  const [testingServerId, setTestingServerId] = useState<string | null>(null);
-  const [testResults, setTestResults] = useState<Record<string, TestResult>>({});
+  // ─── Server switch state ────────────────────────────────
   const [switchingServerId, setSwitchingServerId] = useState<string | null>(null);
 
   const handleEditServer = useCallback(
@@ -247,32 +233,6 @@ export function useSettingsScreenController({
   const handleCancelEdit = useCallback(() => {
     setEditingServerId(null);
   }, []);
-
-  const handleTestConnection = useCallback(
-    async (serverId: string) => {
-      setTestingServerId(serverId);
-      try {
-        const result = await testSavedServerConnection(serverId);
-        setTestResults((prev) => ({
-          ...prev,
-          [serverId]: {
-            success: result.success,
-            message: result.success
-              ? 'Connection successful'
-              : formatUserMessageForContext(result.error ?? 'Connection failed', 'connection'),
-          },
-        }));
-      } catch {
-        setTestResults((prev) => ({
-          ...prev,
-          [serverId]: { success: false, message: 'Connection test failed' },
-        }));
-      } finally {
-        setTestingServerId(null);
-      }
-    },
-    [testSavedServerConnection]
-  );
 
   // ─── Server action handlers ──────────────────────────────
 
@@ -388,13 +348,10 @@ export function useSettingsScreenController({
     setEditName,
     setEditUrl,
     setEditUsername,
-    testingServerId,
-    testResults,
     switchingServerId,
     handleEditServer,
     handleSaveEdit,
     handleCancelEdit,
-    handleTestConnection,
     handleSwitchServer,
     handleRemoveServer,
     handleSpeedModeToggle,

@@ -3,7 +3,7 @@ import { BridgeAdapter } from '@taurent/bridge/adapters/mobile-tauri';
 import { useServerManager } from '../connection/ServerManager';
 import { Button, StateCard } from '@taurent/web-ui';
 import { Icon } from '../ui/Icon';
-import { AddServerFormBody } from '@taurent/web-ui';
+import { AddServerForm } from '@taurent/web-ui';
 import { useAddServerScreenController } from '@taurent/web-core/screens';
 import {
   mobileCenteredStateClassName,
@@ -25,33 +25,17 @@ export function AddServerScreen() {
   });
 
   const handleCancel = () => {
-    if (!controller.isTesting && !controller.isSubmitting) {
+    if (!controller.isSubmitting) {
       navigate('/servers', { replace: true });
     }
   };
 
-  // Mobile combines test + submit: validate, test, then add on success
   const handleAddServer = async () => {
     if (!controller.isFormValid) {
       return;
     }
-
-    controller.clearTestResult();
-
-    // Test first - if fails, error surfaces through testResult
-    const testResult = await controller.handleTestConnection();
-
-    // Only proceed if test succeeded
-    if (!testResult?.success) {
-      return;
-    }
-
-    // Now add the server
     await controller.handleSubmit();
   };
-
-  // Use test error as the displayed error when test has run
-  const displayError = controller.error ?? (controller.testResult && !controller.testResult.success ? controller.testResult.error : null);
 
   if (loading) {
     return (
@@ -73,7 +57,7 @@ export function AddServerScreen() {
             variant="ghost"
             size="sm"
             onClick={handleCancel}
-            disabled={controller.isTesting || controller.isSubmitting}
+            disabled={controller.isSubmitting}
           >
             Cancel
           </Button>
@@ -93,8 +77,7 @@ export function AddServerScreen() {
           {/* Polished form card */}
           <div className="overflow-hidden rounded-md border border-border bg-surface shadow-sm">
             <div className="space-y-4 p-4">
-              <AddServerFormBody
-                variant="mobile"
+              <AddServerForm
                 name={controller.name}
                 onNameChange={controller.setName}
                 url={controller.url}
@@ -103,13 +86,18 @@ export function AddServerScreen() {
                 onUsernameChange={controller.setUsername}
                 password={controller.password}
                 onPasswordChange={controller.setPassword}
+                apiKey={controller.apiKey}
+                onApiKeyChange={controller.setApiKey}
                 rememberPassword={controller.rememberPassword}
                 onRememberPasswordChange={controller.setRememberPassword}
+                useApiKey={controller.useApiKey}
+                onUseApiKeyChange={controller.setUseApiKey}
                 validationErrors={controller.validationErrors}
-                error={displayError}
-                testingConnection={controller.isTesting || controller.isSubmitting}
-                testErrorSuggestion={controller.urlSuggestion}
+                error={controller.error}
+                isSubmitting={controller.isSubmitting}
+                urlSuggestion={controller.urlSuggestion}
                 onSubmit={handleAddServer}
+                onCancel={handleCancel}
               />
             </div>
           </div>

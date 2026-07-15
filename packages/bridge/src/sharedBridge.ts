@@ -20,8 +20,6 @@ import type {
   SavedServerSummary,
   AddServerInput,
   UpdateServerInput,
-  ServerCredentialsInput,
-  TestConnectionResult,
   RSSItemsResponse,
   RSSRulesResponse,
   RssRuleInput,
@@ -146,20 +144,6 @@ export function createServerHelpers(t: Transport) {
     return t.invoke<void>('select_server', { serverId });
   }
 
-  async function testServerConnection(
-    serverUrl: string,
-    credentials: ServerCredentialsInput
-  ): Promise<TestConnectionResult> {
-    return t.invoke<TestConnectionResult>('test_server_connection', {
-      serverUrl,
-      credentials,
-    });
-  }
-
-  async function testSavedServerConnection(serverId: string): Promise<TestConnectionResult> {
-    return t.invoke<TestConnectionResult>('test_saved_server_connection', { serverId });
-  }
-
   return {
     listServers,
     getActiveServer,
@@ -167,8 +151,6 @@ export function createServerHelpers(t: Transport) {
     updateServer,
     removeServer,
     selectServer,
-    testServerConnection,
-    testSavedServerConnection,
   };
 }
 

@@ -15,7 +15,7 @@ pub enum SessionStatus {
 
 /// Identity of the server we are connected to.
 /// Stored internally in Rust; NOT exposed to the Tauri host.
-/// (Password lives here only for reconnection convenience; it must never leak.)
+/// (Credentials live here only for reconnection convenience; they must never leak.)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServerIdentity {
     pub id: String,
@@ -23,6 +23,11 @@ pub struct ServerIdentity {
     pub url: String,
     pub username: String,
     pub password: String,
+    /// Optional qBittorrent API key used for bearer-token auth.
+    /// When `Some(_)`, qBittorrent is contacted via
+    /// `Authorization: Bearer qbt_<key>` and username/password are unused.
+    #[serde(default)]
+    pub api_key: Option<String>,
 }
 
 /// Public session state returned to Tauri host (renderer).

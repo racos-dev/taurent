@@ -20,6 +20,15 @@ export interface ServerConnectionFieldsProps {
   onPasswordChange: (value: string) => void;
   passwordPlaceholder?: string;
 
+  /** API Key (used when useApiKey is true) */
+  apiKey?: string;
+  onApiKeyChange?: (value: string) => void;
+  apiKeyPlaceholder?: string;
+
+  /** Toggle API key authentication */
+  useApiKey?: boolean;
+  onUseApiKeyChange?: (value: boolean) => void;
+
   /** Remember password checkbox (optional - hidden by default) */
   rememberPassword?: boolean;
   onRememberPasswordChange?: (value: boolean) => void;

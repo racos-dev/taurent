@@ -32,7 +32,7 @@ const MOBILE_REMOTE_SECTION_KEYS: RemoteSettingsSectionKey[] = [
 export function SettingsScreen() {
   const navigate = useNavigate();
   const { isConnected, isHydrated, serverId, serverName, serverUrl, disconnect } = useQBClient();
-  const { servers, removeServer, updateServer, testSavedServerConnection, switchServer } = useServerManager();
+  const { servers, removeServer, updateServer, switchServer } = useServerManager();
   const { preferences, isLoading, error, refetch } = usePreferences();
   const setPreferencesMutation = useSetPreferences();
   const { config, setMode, setSystemPalette, setManualPalette, setManualVariant, setAccent } = useTheme();
@@ -91,7 +91,6 @@ export function SettingsScreen() {
     updatePreference: handlePreferenceStage,
     removeServer,
     updateServer,
-    testSavedServerConnection,
     switchServer,
     disconnect,
     config,

@@ -34,8 +34,6 @@ import type {
   SavedServerSummary,
   AddServerInput,
   UpdateServerInput,
-  ServerCredentialsInput,
-  TestConnectionResult,
   SyncTorrentPeers,
   RSSItemsResponse,
   RSSRulesResponse,
@@ -423,17 +421,6 @@ export function createMobileTauriBridge(transport?: Transport): MobileBridge {
 
   async function selectServer(serverId: string): Promise<void> {
     return servers.selectServer(serverId);
-  }
-
-  async function testServerConnection(
-    serverUrl: string,
-    credentials: ServerCredentialsInput
-  ): Promise<TestConnectionResult> {
-    return servers.testServerConnection(serverUrl, credentials);
-  }
-
-  async function testSavedServerConnection(serverId: string): Promise<TestConnectionResult> {
-    return servers.testSavedServerConnection(serverId);
   }
 
   // Search commands
@@ -845,27 +832,8 @@ export function createMobileTauriBridge(transport?: Transport): MobileBridge {
         return sessionSwitchServerById(serverId);
       },
 
-      async testServerConnection(
-        serverUrl: string,
-        credentials: ServerCredentialsInput
-      ): Promise<TestConnectionResult> {
-        return testServerConnection(serverUrl, credentials);
-      },
-
-      async testSavedServerConnection(serverId: string): Promise<TestConnectionResult> {
-        return testSavedServerConnection(serverId);
-      },
-
       async normalizeServerUrl(input: { url: string; defaultScheme?: string }): Promise<{ normalized: string }> {
         return t.invoke('normalize_server_url_cmd', { input });
-      },
-
-      async probeServerScheme(url: string, username: string, password: string): Promise<{
-        success: boolean;
-        normalizedUrl: string | null;
-        error: string | null;
-      }> {
-        return t.invoke('probe_server_scheme', { url, username, password });
       },
     },
 

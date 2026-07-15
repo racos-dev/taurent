@@ -47,7 +47,14 @@ export function createServerManagerContextValue({
     // Controller already handles the internals; we just surface it.
     updateServer: async (
       serverId: string,
-      updates: { name?: string; url?: string; username?: string; password?: string; rememberPassword?: boolean },
+      updates: {
+        name?: string;
+        url?: string;
+        username?: string;
+        password?: string;
+        rememberPassword?: boolean;
+        apiKey?: string | null;
+      },
     ) => {
       await controller.updateServer(serverId, {
         name: updates.name,
@@ -55,6 +62,7 @@ export function createServerManagerContextValue({
         username: updates.username,
         password: updates.password,
         rememberPassword: updates.rememberPassword,
+        apiKey: updates.apiKey,
       });
     },
   };

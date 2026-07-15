@@ -5,10 +5,8 @@
 use std::collections::HashMap;
 
 use qb_core::{
-    client::{normalize_server_url, qbittorrent_login},
-    server::PathMapping,
-    AddServerInput, NormalizeServerUrlInput, NormalizeServerUrlOutput, ProbeServerSchemeResult,
-    SavedServerSummary, ServerCredentialsInput, TestConnectionResult, UpdateServerInput,
+    client::normalize_server_url, server::PathMapping, AddServerInput, NormalizeServerUrlInput,
+    NormalizeServerUrlOutput, SavedServerSummary, UpdateServerInput,
 };
 #[cfg(any(feature = "desktop", test))]
 use serde::{Deserialize, Serialize};
@@ -18,10 +16,9 @@ use tauri_plugin_store::StoreExt;
 use crate::app_builder::DESKTOP_SERVER_STORE_FILE;
 use crate::server_repo::{
     add_server as repo_add_server, get_active_server as repo_get_active_server,
-    get_server_meta as repo_get_server_meta, get_server_password as repo_get_server_password,
-    list_servers as repo_list_servers, remove_server as repo_remove_server, save_repository,
-    select_server as repo_select_server, test_connection_raw, update_server as repo_update_server,
-    ServerRepoStateHandle,
+    get_server_meta as repo_get_server_meta, list_servers as repo_list_servers,
+    remove_server as repo_remove_server, save_repository, select_server as repo_select_server,
+    update_server as repo_update_server, ServerRepoStateHandle,
 };
 
 // ─── Path mapping types ────────────────────────────────────────────────────────
@@ -780,118 +777,11 @@ pub fn set_path_mappings(
     Ok(())
 }
 
-/// Test connection using raw credentials (for add server flow).
-#[tauri::command]
-pub async fn test_server_connection(
-    server_url: String,
-    credentials: ServerCredentialsInput,
-) -> TestConnectionResult {
-    test_connection_raw(&server_url, &credentials.username, &credentials.password).await
-}
-
-/// Test connection for a saved server by ID (for UI testing saved server).
-#[tauri::command]
-pub async fn test_saved_server_connection(
-    state: State<'_, ServerRepoStateHandle>,
-    app: AppHandle,
-    server_id: String,
-) -> Result<TestConnectionResult, String> {
-    let (server_url, username) = {
-        let repo = state.lock().unwrap();
-        let meta = repo_get_server_meta(&repo, &server_id)
-            .ok_or_else(|| format!("Server '{}' not found", server_id))?;
-        (meta.url.clone(), meta.username.clone())
-    };
-    let password = {
-        let repo = state.lock().unwrap();
-        repo_get_server_password(&app, &repo, &server_id)
-            .ok_or_else(|| format!("Password not found for server '{}'", server_id))?
-    };
-    Ok(test_connection_raw(&server_url, &username, &password).await)
-}
-
-// ─── URL normalization / probing / validation ────────────────────────────────
+// ─── URL normalization ────────────────────────────────────────────────────────
 
 /// Normalize a server URL (add scheme if missing, strip trailing slash, strip /api/v2).
 #[tauri::command]
 pub fn normalize_server_url_cmd(input: NormalizeServerUrlInput) -> NormalizeServerUrlOutput {
     let normalized = normalize_server_url(&input.url, &input.default_scheme);
     NormalizeServerUrlOutput { normalized }
-}
-
-/// Probe a server URL to determine reachable scheme (https-first, http-fallback
-/// on network errors). Mirrors the TS `detectScheme` logic.
-///
-/// # Security note
-///
-/// When the HTTPS probe fails with a network error, the function retries with `http://`,
-/// sending the username and password in plaintext over an unencrypted connection.
-/// This is a faithful migration of the existing TypeScript behavior.
-///
-/// # Future improvement
-///
-/// Perform a credential-free HEAD request for scheme detection only, then re-attempt
-/// login with the detected scheme. This would avoid sending credentials over HTTP.
-#[tauri::command]
-pub async fn probe_server_scheme(
-    url: String,
-    username: String,
-    password: String,
-) -> ProbeServerSchemeResult {
-    // If URL already has scheme, test directly
-    if url.starts_with("http://") || url.starts_with("https://") {
-        let normalized = normalize_server_url(&url, "https://");
-        match qbittorrent_login(&normalized, &username, &password).await {
-            Ok(_) => ProbeServerSchemeResult {
-                success: true,
-                normalized_url: Some(normalized),
-                error: None,
-            },
-            Err(e) => ProbeServerSchemeResult {
-                success: false,
-                normalized_url: None,
-                error: Some(e.to_string()),
-            },
-        }
-    } else {
-        // Try https first
-        let https_url = normalize_server_url(&url, "https://");
-        let https_result = qbittorrent_login(&https_url, &username, &password).await;
-
-        if https_result.is_ok() {
-            return ProbeServerSchemeResult {
-                success: true,
-                normalized_url: Some(https_url),
-                error: None,
-            };
-        }
-
-        // Only retry http on network-level failures
-        let https_error = https_result.unwrap_err();
-        if https_error.is_network_error() {
-            let http_url = normalize_server_url(&url, "http://");
-            let http_result = qbittorrent_login(&http_url, &username, &password).await;
-
-            if http_result.is_ok() {
-                return ProbeServerSchemeResult {
-                    success: true,
-                    normalized_url: Some(http_url),
-                    error: None,
-                };
-            }
-            // Both failed — return https error
-            return ProbeServerSchemeResult {
-                success: false,
-                normalized_url: None,
-                error: Some(https_error.to_string()),
-            };
-        }
-
-        // Non-network error (auth, TLS, HTTP error) — surface to user
-        ProbeServerSchemeResult {
-            success: false,
-            normalized_url: None,
-            error: Some(https_error.to_string()),
-        }
-    }
 }

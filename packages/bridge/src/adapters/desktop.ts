@@ -508,17 +508,6 @@ export function createDesktopBridge(transport?: Transport): DesktopBridge {
     return servers.selectServer(serverId);
   }
 
-  async function testServerConnection(
-    serverUrl: string,
-    credentials: { username: string; password: string }
-  ): Promise<{ success: boolean; error?: string }> {
-    return servers.testServerConnection(serverUrl, { username: credentials.username, password: credentials.password });
-  }
-
-  async function testSavedServerConnection(serverId: string): Promise<{ success: boolean; error?: string }> {
-    return servers.testSavedServerConnection(serverId);
-  }
-
   async function getPathMappings(serverId: string): Promise<PathMapping[]> {
     return t.invoke<PathMapping[]>('get_path_mappings', { serverId });
   }
@@ -1073,27 +1062,8 @@ export function createDesktopBridge(transport?: Transport): DesktopBridge {
         return sessionSwitchServerById(serverId);
       },
 
-      async testServerConnection(
-        serverUrl: string,
-        credentials: { username: string; password: string }
-      ): Promise<{ success: boolean; error?: string }> {
-        return testServerConnection(serverUrl, credentials);
-      },
-
-      async testSavedServerConnection(serverId: string): Promise<{ success: boolean; error?: string }> {
-        return testSavedServerConnection(serverId);
-      },
-
       async normalizeServerUrl(input: { url: string; defaultScheme?: string }): Promise<{ normalized: string }> {
         return t.invoke('normalize_server_url_cmd', { input });
-      },
-
-      async probeServerScheme(url: string, username: string, password: string): Promise<{
-        success: boolean;
-        normalizedUrl: string | null;
-        error: string | null;
-      }> {
-        return t.invoke('probe_server_scheme', { url, username, password });
       },
     },
   };
