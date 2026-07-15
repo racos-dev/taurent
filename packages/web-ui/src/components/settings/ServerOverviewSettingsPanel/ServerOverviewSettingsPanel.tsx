@@ -186,12 +186,11 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
 
       try {
         const trimmedUrl = editUrl.trim();
-        let finalUrl = trimmedUrl;
+        const finalUrl = trimmedUrl.includes('://')
+          ? normalizeServerUrl(trimmedUrl)
+          : trimmedUrl.replace(/\/+$/, '').replace(/\/api\/v2$/, '');
 
-        if (trimmedUrl.includes('://')) {
-          finalUrl = normalizeServerUrl(trimmedUrl);
-        } else {
-          finalUrl = trimmedUrl.replace(/\/+$/, '').replace(/\/api\/v2$/, '');
+        if (!trimmedUrl.includes('://')) {
           setEditUrl(finalUrl);
         }
 
