@@ -11,6 +11,22 @@ import { CredentialHealthIndicator } from '../../CredentialHealthIndicator';
 import { SettingsCard } from '../SettingsCard';
 import { StatusPanel } from '../../shared/StatusPanel';
 
+const API_V2_SUFFIX = '/api/v2';
+
+function stripServerUrlSuffixes(url: string): string {
+  let normalized = url;
+
+  while (normalized.endsWith('/')) {
+    normalized = normalized.slice(0, -1);
+  }
+
+  if (normalized.endsWith(API_V2_SUFFIX)) {
+    normalized = normalized.slice(0, -API_V2_SUFFIX.length);
+  }
+
+  return normalized;
+}
+
 // Subset of Server from @taurent/shared/types/server — omits isAuthenticated
 // so desktop's useServerManager result (which spreads anonymous server objects)
 // can be passed directly without casting.
@@ -188,7 +204,7 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
         const trimmedUrl = editUrl.trim();
         const finalUrl = trimmedUrl.includes('://')
           ? normalizeServerUrl(trimmedUrl)
-          : trimmedUrl.replace(/\/+$/, '').replace(/\/api\/v2$/, '');
+          : stripServerUrlSuffixes(trimmedUrl);
 
         if (!trimmedUrl.includes('://')) {
           setEditUrl(finalUrl);
