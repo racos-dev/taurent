@@ -9,6 +9,7 @@ use qb_core::{
 use serde::{Deserialize, Serialize};
 use tauri::{Emitter, State};
 
+use crate::client::response_text;
 use crate::server_repo::{
     get_server_meta as repo_get_server_meta, get_server_password as repo_get_server_password,
     select_server_and_persist as repo_select_server_and_persist, ServerRepoStateHandle,
@@ -116,14 +117,14 @@ async fn load_app_version(
         return Err(message);
     }
 
-    let version = probe.data.as_str().unwrap_or("");
+    let version = response_text(&probe.data).unwrap_or_default();
     log::info!(
         "Startup protected request succeeded: server_id={}, path={}, version={}",
         server_id,
         STARTUP_PROBE_PATH,
         version
     );
-    Ok(version.to_string())
+    Ok(version)
 }
 
 /// Resolve the server's `webapiVersion` and the corresponding
@@ -153,11 +154,7 @@ async fn load_resolved_capabilities(
 
     match qb_probe(client, base_url, sid_cookie, WEBAPI_VERSION_PATH).await {
         Ok(probe) if probe.status_code == 200 => {
-            let version = probe
-                .data
-                .as_str()
-                .map(|s| s.trim().to_string())
-                .unwrap_or_default();
+            let version = response_text(&probe.data).unwrap_or_default();
             if version.is_empty() {
                 let message = format!(
                     "Login succeeded, but capability hydration failed: {} returned an empty webapiVersion",

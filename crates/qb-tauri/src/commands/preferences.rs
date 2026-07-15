@@ -1,6 +1,6 @@
 //! Canonical shared preferences command group.
 
-use crate::client::{capture_request_context, qb_get, qb_post};
+use crate::client::{capture_request_context, qb_get, qb_post, response_text};
 use crate::session::{emit_resource_invalidated, SessionStateHandle};
 use qb_core::{
     parse_build_info, parse_preferences, BuildInfoDto, PreferencesDto, PreferencesUpdateDto,
@@ -123,7 +123,7 @@ pub async fn get_version(state: State<'_, SessionStateHandle>) -> Result<Version
     let server_id = request.server_id.clone();
 
     let response = qb_get(&state, "/api/v2/app/version").await?;
-    let version = response.as_str().unwrap_or("").to_string();
+    let version = response_text(&response).unwrap_or_default();
 
     Ok(VersionResponse {
         session_generation: gen,
@@ -141,7 +141,7 @@ pub async fn get_webapi_version(
     let server_id = request.server_id.clone();
 
     let response = qb_get(&state, "/api/v2/app/webapiVersion").await?;
-    let webapi_version = response.as_str().unwrap_or("").to_string();
+    let webapi_version = response_text(&response).unwrap_or_default();
 
     Ok(WebApiVersionResponse {
         session_generation: gen,
