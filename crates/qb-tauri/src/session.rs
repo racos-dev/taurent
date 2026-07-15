@@ -12,7 +12,7 @@ use url::Url;
 
 use crate::server_repo::{
     get_server_credentials as repo_get_server_credentials, get_server_meta as repo_get_server_meta,
-    select_server_and_persist as repo_select_server_and_persist, ServerRepoStateHandle,
+    persist_authenticated_server as repo_persist_authenticated_server, ServerRepoStateHandle,
 };
 
 const STARTUP_PROBE_PATH: &str = "/api/v2/app/version";
@@ -482,6 +482,28 @@ pub async fn session_connect_by_id(
 
             let supports_pause_resume = capabilities.supports_pause_resume;
 
+            if let Err(error_message) = {
+                let mut repo = server_repo_state.lock().unwrap();
+                repo_persist_authenticated_server(
+                    &app,
+                    &mut repo,
+                    &server_id,
+                    &authenticated_base_url,
+                    false,
+                )
+            } {
+                let mut session = session_state.lock().unwrap();
+                let generation = session.set_error(error_message.clone());
+                emit_session_changed(
+                    &app,
+                    generation,
+                    Some(server_id),
+                    SessionStatus::Error,
+                    Some(error_message.clone()),
+                );
+                return Err(error_message);
+            }
+
             let mut session = session_state.lock().unwrap();
             let generation = session.connect(identity, client, sid_cookie, supports_pause_resume);
             session.set_resolved_capabilities(api_version, app_version.clone(), capabilities);
@@ -609,11 +631,11 @@ pub async fn session_switch_server_by_id(
             }
         };
 
-    // Step 3: Candidate is verified — persist active server FIRST.
-    // If this fails, session is untouched (command returns error without session mutation).
+    // Step 3: Candidate is verified — persist its proven effective URL and active
+    // selection together. If this fails, session and repository state are untouched.
     {
         let mut repo = server_repo_state.lock().unwrap();
-        repo_select_server_and_persist(&app, &mut repo, &server_id)?;
+        repo_persist_authenticated_server(&app, &mut repo, &server_id, &identity.url, true)?;
     }
 
     // Step 4: Repo is saved — now commit the session.

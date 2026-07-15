@@ -634,22 +634,43 @@ pub fn remove_server<R: Runtime>(
     Ok(())
 }
 
-/// Select a server as active and persist the change to disk.
-pub fn select_server_and_persist<R: Runtime>(
+fn apply_authenticated_server_metadata(
+    repo: &mut ServerRepositoryState,
+    server_id: &str,
+    authenticated_url: &str,
+    make_active: bool,
+) -> Result<(String, Option<String>), String> {
+    let meta = repo
+        .servers
+        .get_mut(server_id)
+        .ok_or_else(|| format!("Server with id '{}' not found", server_id))?;
+    let original_url = std::mem::replace(
+        &mut meta.url,
+        normalize_stored_server_url(authenticated_url),
+    );
+    let original_active = repo.active_server_id.clone();
+    if make_active {
+        repo.active_server_id = Some(server_id.to_string());
+    }
+    Ok((original_url, original_active))
+}
+
+/// Persist the effective URL proven by a successful authenticated request and,
+/// for atomic switches, select the server in the same repository transaction.
+/// On persistence failure both in-memory metadata changes are rolled back.
+pub fn persist_authenticated_server<R: Runtime>(
     app: &AppHandle<R>,
     repo: &mut ServerRepositoryState,
     server_id: &str,
+    authenticated_url: &str,
+    make_active: bool,
 ) -> Result<(), String> {
-    if !repo.servers.contains_key(server_id) {
-        return Err(format!("Server with id '{}' not found", server_id));
-    }
-
-    let new_active = Some(server_id.to_string());
-    let original_active = repo.active_server_id.clone();
-    repo.active_server_id = new_active;
+    let (original_url, original_active) =
+        apply_authenticated_server_metadata(repo, server_id, authenticated_url, make_active)?;
     if let Err(persist_err) = save_repository(app, repo) {
-        // Rollback: restore original active_server_id so both in-memory and
-        // persisted state remain unchanged on persistence failure.
+        if let Some(meta) = repo.servers.get_mut(server_id) {
+            meta.url = original_url;
+        }
         repo.active_server_id = original_active;
         return Err(persist_err);
     }
@@ -664,4 +685,65 @@ pub fn select_server(repo: &mut ServerRepositoryState, server_id: &str) -> Resul
 
     repo.active_server_id = Some(server_id.to_string());
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn test_repository() -> ServerRepositoryState {
+        ServerRepositoryState {
+            store_file: "test-servers.json".to_string(),
+            servers: HashMap::from([
+                (
+                    "candidate".to_string(),
+                    ServerRecordMeta {
+                        id: "candidate".to_string(),
+                        name: "Candidate".to_string(),
+                        url: "localhost:8080".to_string(),
+                        username: "admin".to_string(),
+                    },
+                ),
+                (
+                    "current".to_string(),
+                    ServerRecordMeta {
+                        id: "current".to_string(),
+                        name: "Current".to_string(),
+                        url: "https://example.test".to_string(),
+                        username: "admin".to_string(),
+                    },
+                ),
+            ]),
+            active_server_id: Some("current".to_string()),
+            transient_credentials: HashMap::new(),
+        }
+    }
+
+    #[test]
+    fn authenticated_switch_updates_effective_url_and_active_server_together() {
+        let mut repo = test_repository();
+
+        apply_authenticated_server_metadata(&mut repo, "candidate", "http://localhost:8080/", true)
+            .unwrap();
+
+        assert_eq!(
+            repo.servers.get("candidate").unwrap().url,
+            "http://localhost:8080"
+        );
+        assert_eq!(repo.active_server_id.as_deref(), Some("candidate"));
+    }
+
+    #[test]
+    fn authenticated_reconnect_updates_url_without_changing_active_server() {
+        let mut repo = test_repository();
+
+        apply_authenticated_server_metadata(&mut repo, "candidate", "http://localhost:8080", false)
+            .unwrap();
+
+        assert_eq!(
+            repo.servers.get("candidate").unwrap().url,
+            "http://localhost:8080"
+        );
+        assert_eq!(repo.active_server_id.as_deref(), Some("current"));
+    }
 }

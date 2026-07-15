@@ -1,8 +1,8 @@
 use base64::Engine;
 use reqwest::{
-    header::{HeaderMap, HeaderValue, AUTHORIZATION, COOKIE, ORIGIN, REFERER},
+    header::{HeaderMap, HeaderValue, AUTHORIZATION, COOKIE, ORIGIN, REFERER, SET_COOKIE},
     multipart::Form,
-    Client, Method, RequestBuilder, Url,
+    Client, Method, RequestBuilder, StatusCode, Url,
 };
 
 use crate::error::{BackendError, BackendResult};
@@ -124,11 +124,12 @@ fn body_snippet(bytes: &[u8]) -> Option<String> {
 ///   POST is performed and the returned cookie is the empty string.
 ///
 /// - **Username + password** (`api_key = None`): POSTs the credentials to
-///   `/api/v2/auth/login`. On 2xx, the `Set-Cookie: SID=...` header is
-///   extracted and returned alongside a fresh `reqwest::Client`. On
+///   `/api/v2/auth/login`. On 2xx, all session/proxy cookie name-value pairs
+///   from `Set-Cookie` are extracted and returned alongside a fresh
+///   `reqwest::Client`. On
 ///   non-2xx, retries with HTTP Basic auth against `/api/v2/app/version`
-///   (used by some reverse-proxy setups). When the proxy issues an SID
-///   cookie the client is plain and the cookie is returned; otherwise the
+///   (used by some reverse-proxy setups). When the proxy issues a cookie the
+///   client is plain and the cookie is returned; otherwise the
 ///   client carries an `Authorization: Basic …` default header.
 ///
 /// # Scheme fallback
@@ -245,6 +246,27 @@ struct LoginOutcome {
     base_url: String,
 }
 
+pub(crate) fn is_successful_cookie_less_login(status: StatusCode, body: &str) -> bool {
+    body.trim() == "Ok." || (status == StatusCode::NO_CONTENT && body.trim().is_empty())
+}
+
+/// Convert all response `Set-Cookie` headers into the value for a subsequent
+/// `Cookie` request header. qBittorrent 5.2+ appends the WebUI port to its
+/// session cookie name (for example `QBT_SID_8080`) and also supports custom
+/// cookie names, so authentication must not require the legacy `SID` name.
+pub(crate) fn extract_response_cookies(headers: &HeaderMap) -> Option<String> {
+    let cookies = headers
+        .get_all(SET_COOKIE)
+        .iter()
+        .filter_map(|value| value.to_str().ok())
+        .filter_map(|value| value.split(';').next())
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .collect::<Vec<_>>();
+
+    (!cookies.is_empty()).then(|| cookies.join("; "))
+}
+
 fn canonical_base_url(url: &Url) -> String {
     url.as_str().trim_end_matches('/').to_string()
 }
@@ -322,12 +344,9 @@ async fn attempt_login(
     let status = response.status();
 
     if status.is_success() {
-        // Extract SID cookie from Set-Cookie header before consuming body.
-        let sid_cookie = response
-            .headers()
-            .get("set-cookie")
-            .and_then(|value| value.to_str().ok())
-            .and_then(|cookie| cookie.split(';').next().map(|value| value.to_string()));
+        // Extract cookies before consuming the body. The session cookie name is
+        // server-defined and must be replayed exactly as returned.
+        let session_cookie = extract_response_cookies(response.headers());
 
         let bytes = response
             .bytes()
@@ -337,8 +356,8 @@ async fn attempt_login(
         let body_text = String::from_utf8_lossy(&bytes);
         log::info!("Login response status: {}, body: {}", status, body_text);
 
-        match sid_cookie {
-            Some(cookie) if cookie.starts_with("SID=") => {
+        match session_cookie {
+            Some(cookie) => {
                 log::info!("Login successful, session cookie acquired");
                 Ok(LoginOutcome {
                     cookie,
@@ -347,16 +366,18 @@ async fn attempt_login(
                 })
             }
             _ => {
-                if body_text.trim() != "Ok." {
+                if !is_successful_cookie_less_login(status, &body_text) {
                     return Err(BackendError::auth(
                         format!("unexpected response '{}'", body_text.trim()),
                         Some(body_text.trim().to_string()),
                     ));
                 }
-                // No SID cookie but 2xx + "Ok.": trust the login but use empty cookie.
-                // The downstream client will need to add Authorization header separately.
+                // qBittorrent may omit a cookie when WebUI authentication is bypassed for the
+                // caller's address. Older versions return 200 + "Ok." while newer versions
+                // can return 204 with an empty body. Subsequent requests are authorized by
+                // the same bypass rule, so an empty cookie is expected in both cases.
                 log::warn!(
-                    "Login succeeded with no Set-Cookie SID for {}; downstream requests may need Authorization header",
+                    "Login succeeded with no session cookie for {}; continuing without a session cookie",
                     login_url
                 );
                 Ok(LoginOutcome {
@@ -417,15 +438,10 @@ async fn try_basic_auth_probe(
         return Err(BackendError::http(status.as_u16(), body_snippet(&bytes)));
     }
 
-    // 2xx: did the proxy also issue an SID cookie?
-    let sid_cookie = response
-        .headers()
-        .get("set-cookie")
-        .and_then(|value| value.to_str().ok())
-        .and_then(|cookie| cookie.split(';').next().map(|value| value.to_string()))
-        .filter(|c| c.starts_with("SID="));
+    // 2xx: did the proxy or qBittorrent also issue cookies?
+    let session_cookie = extract_response_cookies(response.headers());
 
-    match sid_cookie {
+    match session_cookie {
         Some(cookie) => Ok(LoginOutcome {
             cookie,
             default_headers: None,

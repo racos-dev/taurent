@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { BridgeAdapter } from '@taurent/bridge/adapters/desktop';
-import { useQBClient, useServerManager } from '../connection';
+import { useServerManager } from '../connection';
 import { AddServerForm } from '@taurent/web-ui';
 import { useAddServerScreenController } from '@taurent/web-core/screens';
 
@@ -12,16 +12,26 @@ const ServerIcon = ({ className = 'w-6 h-6' }: { className?: string }) => (
 
 export function AddServerScreen() {
   const navigate = useNavigate();
-  const { connect } = useQBClient();
-  const { addServer, switchServer, loading } = useServerManager();
+  const { addServer, removeServer, switchServer, loading } = useServerManager();
 
   const controller = useAddServerScreenController({
     addServer,
     bridgeServers: BridgeAdapter.servers,
     onSuccess: async (serverId) => {
-      await switchServer(serverId);
-      await connect(serverId);
-      navigate('/', { replace: true });
+      try {
+        // switchServer authenticates and atomically activates the saved candidate.
+        await switchServer(serverId);
+        navigate('/', { replace: true });
+      } catch (error) {
+        // A failed first connection should not leave a saved server that triggers
+        // bootstrap navigation away from this form. Preserve the original error.
+        try {
+          await removeServer(serverId);
+        } catch (cleanupError) {
+          console.warn('Failed to roll back server after connection failure', cleanupError);
+        }
+        throw error;
+      }
     },
   });
 

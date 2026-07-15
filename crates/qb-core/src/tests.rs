@@ -436,6 +436,69 @@ fn login_client_constructed_with_shorter_timeout_than_request_client() {
     assert_ne!(short_timeout, long_timeout);
 }
 
+#[test]
+fn cookie_less_login_accepts_qbittorrent_no_content_response() {
+    use crate::client::is_successful_cookie_less_login;
+    use reqwest::StatusCode;
+
+    assert!(is_successful_cookie_less_login(StatusCode::NO_CONTENT, ""));
+    assert!(is_successful_cookie_less_login(
+        StatusCode::NO_CONTENT,
+        "  "
+    ));
+}
+
+#[test]
+fn cookie_less_login_preserves_legacy_ok_response_and_rejects_unexpected_bodies() {
+    use crate::client::is_successful_cookie_less_login;
+    use reqwest::StatusCode;
+
+    assert!(is_successful_cookie_less_login(StatusCode::OK, "Ok."));
+    assert!(!is_successful_cookie_less_login(StatusCode::OK, ""));
+    assert!(!is_successful_cookie_less_login(
+        StatusCode::NO_CONTENT,
+        "Fails."
+    ));
+}
+
+#[test]
+fn response_cookie_extraction_accepts_port_scoped_qbittorrent_cookie_name() {
+    use crate::client::extract_response_cookies;
+    use reqwest::header::{HeaderMap, HeaderValue, SET_COOKIE};
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        SET_COOKIE,
+        HeaderValue::from_static("QBT_SID_8080=session-token; HttpOnly; SameSite=Lax; path=/"),
+    );
+
+    assert_eq!(
+        extract_response_cookies(&headers).as_deref(),
+        Some("QBT_SID_8080=session-token")
+    );
+}
+
+#[test]
+fn response_cookie_extraction_preserves_custom_and_proxy_cookie_pairs() {
+    use crate::client::extract_response_cookies;
+    use reqwest::header::{HeaderMap, HeaderValue, SET_COOKIE};
+
+    let mut headers = HeaderMap::new();
+    headers.append(
+        SET_COOKIE,
+        HeaderValue::from_static("proxy_session=proxy-token; Secure; path=/"),
+    );
+    headers.append(
+        SET_COOKIE,
+        HeaderValue::from_static("custom_qbt_session=qbt-token; HttpOnly; path=/"),
+    );
+
+    assert_eq!(
+        extract_response_cookies(&headers).as_deref(),
+        Some("proxy_session=proxy-token; custom_qbt_session=qbt-token")
+    );
+}
+
 // =============================================================================
 // normalize_server_url /api/v2 stripping
 // =============================================================================

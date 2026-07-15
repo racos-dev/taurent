@@ -196,8 +196,10 @@ export function useServerManagerController({
         setState((prev) => ({
           ...prev,
           servers: [...prev.servers, newServer],
-          // Keep the first add flow stable until the caller persists selection.
-          currentServer: prev.currentServer ?? newServer,
+          // Adding only persists the candidate. Do not make it current until an
+          // authenticated switch succeeds; otherwise session bootstrap can redirect
+          // away from the add form while its connection attempt is still failing.
+          currentServer: prev.currentServer,
           loading: false,
           error: null,
         }));
