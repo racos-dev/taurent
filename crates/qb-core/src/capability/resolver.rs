@@ -392,7 +392,7 @@ mod tests {
                 };
                 assert_eq!(
                     got, *want,
-                    "resolver mismatch for webapi {version:?}: {name:?} expected {want}, got {got}"
+                    "resolver mismatch in generated test table"
                 );
             }
         }
