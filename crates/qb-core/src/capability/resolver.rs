@@ -390,10 +390,7 @@ mod tests {
                     "supports_webseed_management" => caps.supports_webseed_management,
                     other => panic!("unknown capability in test table: {other}"),
                 };
-                assert_eq!(
-                    got, *want,
-                    "resolver mismatch in generated test table"
-                );
+                assert_eq!(got, *want, "resolver mismatch in generated test table");
             }
         }
     }
