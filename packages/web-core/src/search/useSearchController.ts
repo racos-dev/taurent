@@ -15,7 +15,7 @@
  * Usage:
  *   const controller = useSearchController({
  *     scope: { serverId, sessionGeneration, isConnected },
- *     isSupported: capabilities?.supportsSearch ?? null,
+ *     capabilities: { supportsSearch, supportsRss, supportsWebseedManagement },
  *     adapters: {
  *       startSearch: (query, plugins, category) => bridge.qBClient.startSearch(...),
  *       stopSearch: (id) => bridge.qBClient.stopSearch(id),
@@ -42,6 +42,7 @@ import type {
   SearchStatus,
 } from '@taurent/bridge';
 import type { QueryScope } from '../query/scope';
+import type { AppCapabilities } from '../capabilities';
 import {
   sortSearchResults,
   DEFAULT_SEARCH_SORT_KEY,
@@ -97,17 +98,20 @@ export interface SearchAdapters {
 
 export interface UseSearchControllerOptions {
   scope: QueryScope;
-  /** Whether the server supports Search. null = unknown, true = supported, false = not */
-  isSupported: boolean | null;
+  /**
+   * Server capabilities (Rust-resolved, camelCase). `supportsSearch` gates
+   * the plugin list query and downstream search execution paths.
+   */
+  capabilities: AppCapabilities;
   /** Bridge adapters for search operations */
   adapters: SearchAdapters;
 }
 
 export interface UseSearchControllerResult {
-  // Capability state
-  isSupported: boolean | null;
+  // Capability state — non-nullable booleans. The "unknown" tri-state is
+  // gone in v2: capabilities arrive via the session snapshot.
+  isSupported: boolean;
   isUnsupported: boolean;
-  isCapabilityLoading: boolean;
 
   // Query input state
   query: string;
@@ -230,11 +234,14 @@ const SEARCH_ERROR_THRESHOLD = 5;
 
 export function useSearchController({
   scope,
-  isSupported,
+  capabilities,
   adapters,
 }: UseSearchControllerOptions): UseSearchControllerResult {
   const { isConnected, serverId } = scope;
   const queryClient = useQueryClient();
+
+  // ─── Capability state — non-nullable booleans (v2) ────────────────────────
+  const isSupported = capabilities.supportsSearch;
 
   // ─── Query input state ──────────────────────────────────────────────────
   const [query, setQuery] = useState('');
@@ -262,9 +269,6 @@ export function useSearchController({
 
   // Error counter to stop polling after repeated failures
   const searchErrorCountRef = useRef(0);
-
-  // ─── Capability state ───────────────────────────────────────────────────
-  const isCapabilityLoading = isSupported === null && isConnected;
 
   // ─── Stop search if scope changes or disconnected ──────────────────────
   useEffect(() => {
@@ -425,7 +429,7 @@ export function useSearchController({
       const plugins = await adapters.getSearchPlugins();
       return plugins.map(withPluginCategoryDefault);
     },
-    enabled: isConnected && isSupported === true,
+    enabled: isConnected && isSupported,
     staleTime: 30000, // 30 seconds
   });
 
@@ -484,8 +488,7 @@ export function useSearchController({
 
   return {
     isSupported,
-    isUnsupported: isSupported === false,
-    isCapabilityLoading,
+    isUnsupported: !isSupported,
 
     query,
     setQuery,

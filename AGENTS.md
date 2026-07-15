@@ -29,6 +29,7 @@ Taurent is a pnpm/Rust monorepo for Tauri-based qBittorrent clients. Keep future
 
 - Prefer `pnpm desktop:dev`. `pnpm desktop` only starts plain Vite in a browser and skips the native Tauri runtime.
 - `pnpm desktop:build` runs the desktop frontend build (`pnpm --filter taurent build`), not a native Tauri bundle. For a native desktop bundle use `pnpm --filter taurent tauri:build`.
+- Server capabilities are sourced from `crates/qb-core/capabilities/qbittorrent-capabilities.toml`. Generated Rust/TypeScript outputs are gitignored; when changing capability flags or version thresholds, edit that TOML first, then run `pnpm codegen:capabilities`. Common pnpm dev/build/test/CI scripts run codegen before they need those files.
 - Mobile dev commands are long-lived watch processes: `pnpm mobile:dev`, `pnpm mobile:dev:ios`, `pnpm mobile:dev:android`. Use bounded timeouts when verifying.
 - `pnpm mobile:smoke` is `tauri dev` for the mobile app, so it is also long-lived.
 - Root `pnpm test:unit` covers `@taurent/shared`, `@taurent/bridge`, `@taurent/web-core`, and `taurent`; it does not include `taurent-mobile`.

@@ -2,23 +2,17 @@
  * useStandardContextValue.test.ts
  *
  * Integration tests for useStandardContextValue verifying that the
- * Rust capability fetch path (getServerCapabilities) is the single source
- * of truth for capability flags.
- *
- * The legacy TypeScript probe/merge pipeline has been removed (Phase 3):
- *   - useServerCapabilities (version parsing)
- *   - useServerCapabilityProbes (HTTP probes)
- *   - ServerCapabilities type with version/buildInfo fields
- * The renderer now only consumes AppCapabilities — a 4-field tri-state
- * derived directly from Rust's ResolvedCapabilities.
+ * `SessionSnapshot.capabilities` block (Rust-resolved) is the single source
+ * of truth for capability flags. There is no separate `getServerCapabilities`
+ * Tauri command in v2 — capabilities ride alongside session metadata.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, renderHook, waitFor } from '@testing-library/react';
+import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { useStandardContextValue, type CapabilityBridge } from './useStandardContextValue';
-import type { RustCapabilitiesResponse } from '@taurent/bridge';
+import { makeServerCapabilities, type ServerCapabilities } from '@taurent/bridge';
 import type { SessionController } from './sessionController';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -37,7 +31,7 @@ function makeWrapper() {
 function createMockController(overrides: Partial<SessionController> = {}): SessionController {
   return {
     serverId: 'test-server-id',
-    sessionGeneration: 0,
+    sessionGeneration: 1,
     isConnected: true,
     connect: vi.fn(),
     disconnect: vi.fn(),
@@ -49,45 +43,66 @@ function createMockController(overrides: Partial<SessionController> = {}): Sessi
 function createMockBridge(overrides: Partial<CapabilityBridge> = {}): CapabilityBridge {
   return {
     getSessionSnapshot: vi.fn().mockResolvedValue({
+      session_generation: 1,
+      server_id: 'test-server-id',
       server_name: 'Test Server',
       server_url: 'http://localhost:8080',
+      api_version: '5.1.0',
+      app_version: 'v5.0.0',
+      status: 'connected',
+      last_error: null,
+      capabilities: makeServerCapabilities({
+        supports_search: false,
+        supports_rss: false,
+        supports_webseed_management: false,
+      }),
     }),
     ...overrides,
   };
 }
 
-function makeRustCapabilitiesResponse(
-  search: 'confirmed' | 'unsupported' | 'unknown',
-  rss: 'confirmed' | 'unsupported' | 'unknown',
-  pauseResume: 'confirmed' | 'unsupported' | 'unknown',
-  webSeedManagement: 'confirmed' | 'unsupported' | 'unknown' = 'unknown',
-): RustCapabilitiesResponse {
+function makeCapabilitiesSnapshot(
+  capabilities: Partial<ServerCapabilities> = {},
+  apiVersion: string | null = '5.1.0',
+  overrides: Partial<import('@taurent/bridge').SessionSnapshot> = {},
+) {
   return {
     session_generation: 1,
     server_id: 'test-server-id',
-    capabilities: {
-      supports_search: search,
-      supports_rss: rss,
-      supports_pause_resume: pauseResume,
-      supports_webseed_management: webSeedManagement,
-    },
-  };
+    server_name: 'Test Server',
+    server_url: 'http://localhost:8080',
+    api_version: apiVersion,
+    app_version: 'v5.0.0',
+    status: 'connected',
+    last_error: null,
+    capabilities: makeServerCapabilities({
+      supports_search: false,
+      supports_rss: false,
+      supports_webseed_management: false,
+      ...capabilities,
+    }),
+    ...overrides,
+  } as const;
 }
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
-describe('useStandardContextValue — Rust capability path', () => {
+describe('useStandardContextValue — Rust capability path via session snapshot', () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
+    vi.useRealTimers();
   });
 
-  describe('loading state', () => {
-    it('starts with capabilitiesLoading=true when getServerCapabilities is provided', async () => {
+  describe('capability mapping', () => {
+    it('maps every server capability true across the snapshot', async () => {
       const bridge = createMockBridge({
-        // Never-resolving deferred so we can observe the initial loading state.
-        getServerCapabilities: vi.fn<() => Promise<RustCapabilitiesResponse>>(
-          () => new Promise(() => {}),
+        getSessionSnapshot: vi.fn().mockResolvedValue(
+          makeCapabilitiesSnapshot({
+            supports_search: true,
+            supports_rss: true,
+            supports_webseed_management: true,
+          }),
         ),
       });
       const controller = createMockController({ isConnected: true, serverId: 'test-server-id' });
@@ -97,41 +112,18 @@ describe('useStandardContextValue — Rust capability path', () => {
         { wrapper: makeWrapper() },
       );
 
-      // Initial render — the fetch effect schedules the Rust call but the
-      // promise hasn't resolved yet, so loading stays true.
-      expect(result.current.capabilitiesLoading).toBe(true);
-      expect(result.current.capabilities).toBeNull();
-      expect(result.current.capabilitiesError).toBeNull();
+      await waitFor(() => {
+        expect(result.current.capabilities.supportsSearch).toBe(true);
+      });
+
+      expect(result.current.capabilities.supportsSearch).toBe(true);
+      expect(result.current.capabilities.supportsRss).toBe(true);
+      expect(result.current.capabilities.supportsWebseedManagement).toBe(true);
     });
 
-    it('keeps capabilitiesLoading=true while not connected (does not error)', async () => {
-      const getServerCapabilities = vi.fn<() => Promise<RustCapabilitiesResponse>>(
-        () => new Promise(() => {}),
-      );
-      const bridge = createMockBridge({ getServerCapabilities });
-      const controller = createMockController({ isConnected: false, serverId: null });
-
-      const { result } = renderHook(
-        () => useStandardContextValue({ controller, bridge }),
-        { wrapper: makeWrapper() },
-      );
-
-      // The effect short-circuits when not connected — no error surfaced.
-      expect(result.current.capabilitiesError).toBeNull();
-      expect(getServerCapabilities).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('successful mapping', () => {
-    it('maps Rust confirmed → true for all flags', async () => {
-      const rustResponse = makeRustCapabilitiesResponse(
-        'confirmed',
-        'confirmed',
-        'confirmed',
-        'confirmed',
-      );
+    it('maps every server capability false across the snapshot', async () => {
       const bridge = createMockBridge({
-        getServerCapabilities: vi.fn().mockResolvedValue(rustResponse),
+        getSessionSnapshot: vi.fn().mockResolvedValue(makeCapabilitiesSnapshot()),
       });
       const controller = createMockController({ isConnected: true, serverId: 'test-server-id' });
 
@@ -141,27 +133,23 @@ describe('useStandardContextValue — Rust capability path', () => {
       );
 
       await waitFor(() => {
-        expect(result.current.capabilities).not.toBeNull();
+        expect(result.current.capabilities.supportsSearch).toBe(false);
       });
 
-      expect(result.current.capabilities?.supportsSearch).toBe(true);
-      expect(result.current.capabilities?.supportsRss).toBe(true);
-      expect(result.current.capabilities?.supportsPauseResume).toBe(true);
-      expect(result.current.capabilities?.supportsWebSeedManagement).toBe(true);
-      expect(result.current.capabilities?.hasUnknownCapabilities).toBe(false);
-      expect(result.current.capabilitiesLoading).toBe(false);
-      expect(result.current.capabilitiesError).toBeNull();
+      expect(result.current.capabilities.supportsSearch).toBe(false);
+      expect(result.current.capabilities.supportsRss).toBe(false);
+      expect(result.current.capabilities.supportsWebseedManagement).toBe(false);
     });
 
-    it('maps Rust unsupported → false and unknown → null', async () => {
-      const rustResponse = makeRustCapabilitiesResponse(
-        'confirmed',
-        'unsupported',
-        'unknown',
-        'unsupported',
-      );
+    it('maps mixed capability values verbatim from the snapshot', async () => {
       const bridge = createMockBridge({
-        getServerCapabilities: vi.fn().mockResolvedValue(rustResponse),
+        getSessionSnapshot: vi.fn().mockResolvedValue(
+          makeCapabilitiesSnapshot({
+            supports_search: true,
+            supports_rss: false,
+            supports_webseed_management: true,
+          }),
+        ),
       });
       const controller = createMockController({ isConnected: true, serverId: 'test-server-id' });
 
@@ -171,22 +159,16 @@ describe('useStandardContextValue — Rust capability path', () => {
       );
 
       await waitFor(() => {
-        expect(result.current.capabilities).not.toBeNull();
+        expect(result.current.capabilities.supportsSearch).toBe(true);
       });
 
-      expect(result.current.capabilities?.supportsSearch).toBe(true);
-      expect(result.current.capabilities?.supportsRss).toBe(false);
-      expect(result.current.capabilities?.supportsPauseResume).toBe(null);
-      expect(result.current.capabilities?.supportsWebSeedManagement).toBe(false);
-      expect(result.current.capabilities?.hasUnknownCapabilities).toBe(true);
+      expect(result.current.capabilities.supportsSearch).toBe(true);
+      expect(result.current.capabilities.supportsRss).toBe(false);
+      expect(result.current.capabilities.supportsWebseedManagement).toBe(true);
     });
-  });
 
-  describe('error handling', () => {
-    it('surfaces capabilitiesError when getServerCapabilities rejects', async () => {
-      const bridge = createMockBridge({
-        getServerCapabilities: vi.fn().mockRejectedValue(new Error('Rust error')),
-      });
+    it('defaults to all-false capabilities when bridge.getSessionSnapshot is absent', () => {
+      const bridge = createMockBridge({ getSessionSnapshot: undefined });
       const controller = createMockController({ isConnected: true, serverId: 'test-server-id' });
 
       const { result } = renderHook(
@@ -194,76 +176,30 @@ describe('useStandardContextValue — Rust capability path', () => {
         { wrapper: makeWrapper() },
       );
 
-      await waitFor(() => {
-        expect(result.current.capabilitiesError).not.toBeNull();
-      });
-
-      // formatUserMessageForContext reformats the message — assert it is set
-      // rather than asserting on the exact string.
-      const error = result.current.capabilitiesError;
-      expect(typeof error).toBe('string');
-      expect(error && error.length).toBeGreaterThan(0);
-      expect(result.current.capabilitiesLoading).toBe(false);
-      // Capabilities stays null on error — consumers branch on null.
-      expect(result.current.capabilities).toBeNull();
-    });
-  });
-
-  describe('null bridge', () => {
-    it('leaves capabilities null and loading false when getServerCapabilities is absent', async () => {
-      const bridge = createMockBridge({ getServerCapabilities: undefined });
-      const controller = createMockController({ isConnected: true, serverId: 'test-server-id' });
-
-      const { result } = renderHook(
-        () => useStandardContextValue({ controller, bridge }),
-        { wrapper: makeWrapper() },
-      );
-
-      await waitFor(() => {
-        expect(result.current.capabilitiesLoading).toBe(false);
-      });
-
-      // No Rust source — capabilities stays null, no error surfaced.
-      expect(result.current.capabilities).toBeNull();
-      expect(result.current.capabilitiesError).toBeNull();
-    });
-  });
-
-  describe('refreshCapabilities', () => {
-    it('re-fetches Rust capabilities when called', async () => {
-      const fetch = vi
-        .fn()
-        .mockResolvedValueOnce(makeRustCapabilitiesResponse('confirmed', 'confirmed', 'confirmed'))
-        .mockResolvedValueOnce(makeRustCapabilitiesResponse('unsupported', 'unknown', 'confirmed'));
-      const bridge = createMockBridge({ getServerCapabilities: fetch });
-      const controller = createMockController({ isConnected: true, serverId: 'test-server-id' });
-
-      const { result } = renderHook(
-        () => useStandardContextValue({ controller, bridge }),
-        { wrapper: makeWrapper() },
-      );
-
-      await waitFor(() => {
-        expect(result.current.capabilities?.supportsSearch).toBe(true);
-      });
-      expect(fetch).toHaveBeenCalledTimes(1);
-
-      // Trigger refresh.
-      result.current.refreshCapabilities();
-
-      await waitFor(() => {
-        expect(result.current.capabilities?.supportsSearch).toBe(false);
-      });
-      expect(fetch).toHaveBeenCalledTimes(2);
+      // Always defined, no loading/error surfaces — consumers can rely on it.
+      expect(result.current.capabilities.supportsSearch).toBe(false);
+      expect(result.current.capabilities.supportsRss).toBe(false);
+      expect(result.current.capabilities.supportsWebseedManagement).toBe(false);
     });
   });
 
   describe('server metadata (getSessionSnapshot)', () => {
-    it('populates serverName and serverUrl from the snapshot', async () => {
+    it('populates serverName, serverUrl, apiVersion and appVersion from the snapshot', async () => {
       const bridge = createMockBridge({
         getSessionSnapshot: vi.fn().mockResolvedValue({
+          session_generation: 1,
+          server_id: 'test-server-id',
           server_name: 'My Qbit',
           server_url: 'http://192.168.1.10:8080',
+          api_version: '5.1.2',
+          app_version: 'v5.0.0',
+          status: 'connected',
+          last_error: null,
+          capabilities: makeServerCapabilities({
+            supports_search: false,
+            supports_rss: false,
+            supports_webseed_management: false,
+          }),
         }),
       });
       const controller = createMockController();
@@ -279,6 +215,103 @@ describe('useStandardContextValue — Rust capability path', () => {
 
       expect(result.current.serverName).toBe('My Qbit');
       expect(result.current.serverUrl).toBe('http://192.168.1.10:8080');
+      expect(result.current.apiVersion).toBe('5.1.2');
+      expect(result.current.appVersion).toBe('v5.0.0');
+    });
+
+    it('retries a transient snapshot failure for the current session generation', async () => {
+      vi.useFakeTimers();
+      const bridge = createMockBridge({
+        getSessionSnapshot: vi.fn()
+          .mockRejectedValueOnce(new Error('temporary IPC failure'))
+          .mockResolvedValueOnce(
+            makeCapabilitiesSnapshot({
+              supports_search: true,
+              supports_rss: true,
+            }),
+          ),
+      });
+      const controller = createMockController();
+
+      const { result } = renderHook(
+        () => useStandardContextValue({ controller, bridge }),
+        { wrapper: makeWrapper() },
+      );
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1_000);
+      });
+      vi.useRealTimers();
+
+      await waitFor(() => {
+        expect(result.current.capabilities.supportsSearch).toBe(true);
+      });
+
+      expect(bridge.getSessionSnapshot).toHaveBeenCalledTimes(2);
+      expect(result.current.capabilities.supportsRss).toBe(true);
+    });
+
+    it('ignores a stale snapshot response after the controller moves to a newer server generation', async () => {
+      let resolveStaleSnapshot: (snapshot: ReturnType<typeof makeCapabilitiesSnapshot>) => void = () => {};
+      const staleSnapshotPromise = new Promise<ReturnType<typeof makeCapabilitiesSnapshot>>((resolve) => {
+        resolveStaleSnapshot = resolve;
+      });
+
+      const bridge = createMockBridge({
+        getSessionSnapshot: vi.fn()
+          .mockReturnValueOnce(staleSnapshotPromise)
+          .mockResolvedValueOnce(
+            makeCapabilitiesSnapshot(
+              { supports_search: true },
+              '5.2.0',
+              {
+                session_generation: 2,
+                server_id: 'new-server-id',
+                server_name: 'New Server',
+              },
+            ),
+          ),
+      });
+
+      let controller = createMockController({
+        serverId: 'old-server-id',
+        sessionGeneration: 1,
+      });
+
+      const { result, rerender } = renderHook(
+        () => useStandardContextValue({ controller, bridge }),
+        { wrapper: makeWrapper() },
+      );
+
+      controller = createMockController({
+        serverId: 'new-server-id',
+        sessionGeneration: 2,
+      });
+      rerender();
+
+      await waitFor(() => {
+        expect(result.current.serverName).toBe('New Server');
+      });
+
+      await act(async () => {
+        resolveStaleSnapshot(
+          makeCapabilitiesSnapshot(
+            { supports_search: false, supports_rss: true },
+            '4.6.6',
+            {
+              session_generation: 1,
+              server_id: 'old-server-id',
+              server_name: 'Old Server',
+            },
+          ),
+        );
+        await Promise.resolve();
+      });
+
+      expect(result.current.serverName).toBe('New Server');
+      expect(result.current.apiVersion).toBe('5.2.0');
+      expect(result.current.capabilities.supportsSearch).toBe(true);
+      expect(result.current.capabilities.supportsRss).toBe(false);
     });
   });
 });

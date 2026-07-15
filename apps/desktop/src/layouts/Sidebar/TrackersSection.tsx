@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Globe } from '@taurent/shared';
 import type { SidebarTrackerEntry } from '@taurent/web-core/screens';
+import { getCapabilityStatus, type AppCapabilities } from '@taurent/web-core/capabilities';
 import { SidebarFilterItem } from '@taurent/web-ui';
 import { SidebarSection } from './SidebarSection';
 import { TrackerContextMenu } from '../../components/ContextMenu';
@@ -13,9 +14,19 @@ interface TrackersSectionProps {
   sidebarActions: ReturnType<typeof useSidebarActions>;
   /** Total torrents matching all filters except the tracker dimension. Used for "All Trackers" row. */
   totalFilteredCount: number;
+  capabilities: AppCapabilities;
 }
 
-export function TrackersSection({ items, activeTracker, onTrackerClick, sidebarActions, totalFilteredCount }: TrackersSectionProps) {
+export function TrackersSection({
+  items,
+  activeTracker,
+  onTrackerClick,
+  sidebarActions,
+  totalFilteredCount,
+  capabilities,
+}: TrackersSectionProps) {
+  const capStatus = getCapabilityStatus(capabilities, 'supportsTrackerEditing');
+
   const [expanded, setExpanded] = useState(true);
 
   const [contextMenu, setContextMenu] = useState<{
@@ -81,6 +92,7 @@ export function TrackersSection({ items, activeTracker, onTrackerClick, sidebarA
             hostname={contextMenu.hostname}
             hashes={hashes}
             onClose={handleCloseContextMenu}
+            canEditTrackers={capStatus.enabled}
             onRemoveTracker={() => {
               void sidebarActions.removeTrackerFromTorrents(contextMenu.trackerUrl, hashes);
             }}

@@ -14,11 +14,32 @@ import type {
 
 export type SessionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
 
+/**
+ * Re-exported from the codegen output at `generated/server-capabilities.ts`.
+ * Keep the inline definition out of this file: the TOML profile at
+ * `crates/qb-core/capabilities/qbittorrent-capabilities.toml` is the single
+ * source of truth, regenerated with `pnpm codegen:capabilities`.
+ */
+import type { ServerCapabilities } from './generated/server-capabilities';
+
+export type { ServerCapabilities };
+export { makeServerCapabilities } from './generated/server-capabilities';
+
 export interface SessionSnapshot {
   session_generation: number;
   server_id: string | null;
   server_name: string | null;
   server_url: string | null;
+  /** qBittorrent webapi version string (e.g. "5.1.0"). `null` when not connected. */
+  api_version: string | null;
+  /** Server's qBittorrent application version string (e.g. "v5.0.0"). `null` when not connected. */
+  app_version: string | null;
+  /**
+   * Server-resolved feature capabilities (Rust-owned). Defaults to
+   * `{ all false }` when the session is not connected — the renderer
+   * never needs to null-check this field after first snapshot.
+   */
+  capabilities: ServerCapabilities;
   status: SessionStatus;
   last_error: string | null;
 }
@@ -292,40 +313,6 @@ export interface RetryState {
   attemptCount: number;
   maxAttempts: number;
   maxAttemptsReached: boolean;
-}
-
-// ---------------------------------------------------------------------------
-// Rust capability contract types
-// These types mirror the Rust-owned ResolvedCapabilities structure returned
-// by the get_server_capabilities Tauri command.
-// ---------------------------------------------------------------------------
-
-/**
- * Tri-state capability result from the Rust capability resolver.
- * - 'confirmed': feature is supported and confirmed by the server
- * - 'unsupported': feature is not available on this server
- * - 'unknown': feature availability could not be determined
- */
-export type CapabilityState = 'confirmed' | 'unsupported' | 'unknown';
-
-/**
- * Resolved capabilities from the Rust backend.
- * Rust is the source of truth for qBittorrent capability interpretation.
- */
-export interface RustResolvedCapabilities {
-  supports_search: CapabilityState;
-  supports_rss: CapabilityState;
-  supports_pause_resume: CapabilityState;
-  supports_webseed_management: CapabilityState;
-}
-
-/**
- * Full capability response from the get_server_capabilities Tauri command.
- */
-export interface RustCapabilitiesResponse {
-  session_generation: number;
-  server_id: string | null;
-  capabilities: RustResolvedCapabilities;
 }
 
 // ---------------------------------------------------------------------------

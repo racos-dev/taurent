@@ -113,7 +113,7 @@ test.describe('mobile home tab in shell', () => {
     // Move to the Search tab via the shell tab bar.
     await page.getByRole('navigation').getByRole('link', { name: 'Search' }).click();
     await expect(page).toHaveURL(/\/search/);
-    await expect(page.getByText('Find torrents')).toBeVisible();
+    await expect(page.getByText('Find torrents', { exact: true })).toBeVisible();
     await expectTabBarVisible(page);
 
     // Move to the RSS tab.

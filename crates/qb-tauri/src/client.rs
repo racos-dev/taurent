@@ -57,6 +57,52 @@ fn describe_backend_error(path: &str, err: &BackendError) -> String {
     }
 }
 
+pub(crate) fn response_text(value: &serde_json::Value) -> Option<String> {
+    match value {
+        serde_json::Value::Null => None,
+        serde_json::Value::String(text) => {
+            let trimmed = text.trim();
+            if trimmed.is_empty() {
+                None
+            } else {
+                Some(trimmed.to_string())
+            }
+        }
+        serde_json::Value::Number(number) => Some(number.to_string()),
+        serde_json::Value::Bool(flag) => Some(flag.to_string()),
+        other => {
+            let rendered = other.to_string();
+            let trimmed = rendered.trim();
+            if trimmed.is_empty() {
+                None
+            } else {
+                Some(trimmed.to_string())
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::response_text;
+
+    #[test]
+    fn response_text_preserves_plain_text_numbers() {
+        assert_eq!(
+            response_text(&serde_json::json!(2.8)),
+            Some("2.8".to_string())
+        );
+    }
+
+    #[test]
+    fn response_text_trims_strings() {
+        assert_eq!(
+            response_text(&serde_json::json!("  v4.6.1.0  ")),
+            Some("v4.6.1.0".to_string())
+        );
+    }
+}
+
 fn log_request_failure(
     method: &str,
     request: &SessionRequestContext,
@@ -279,39 +325,6 @@ pub async fn qb_post_multipart(
     .await
     .map_err(|err| {
         log_request_failure("POST multipart", &request, path, &final_url, &err);
-        describe_backend_error(path, &err)
-    })
-}
-
-/// Probe an endpoint and return the HTTP status code and response data.
-/// Used for capability detection where we need to distinguish:
-/// - 2xx: endpoint exists and responded (supported)
-/// - 404/405: endpoint does not exist or method not allowed (not supported)
-/// - other: network/auth/transient errors (unknown)
-pub async fn qb_probe(
-    state: &State<'_, SessionStateHandle>,
-    path: &str,
-) -> Result<qb_client::ProbeResponse, String> {
-    let request = capture_request_context(state)?;
-
-    let final_url = format!("{}{}", request.base_url.trim_end_matches('/'), path);
-    log::info!(
-        "QB PROBE: server_id={}, generation={}, url={}, path={}",
-        request.server_id.as_deref().unwrap_or("<none>"),
-        request.session_generation,
-        request.base_url,
-        path
-    );
-
-    qb_client::qb_probe(
-        &request.client,
-        &request.base_url,
-        &request.session_cookie,
-        path,
-    )
-    .await
-    .map_err(|err| {
-        log_request_failure("PROBE", &request, path, &final_url, &err);
         describe_backend_error(path, &err)
     })
 }

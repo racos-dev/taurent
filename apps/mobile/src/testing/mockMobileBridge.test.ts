@@ -4,14 +4,10 @@
 //   - `reset()` clears registered maindata sync listeners so pre-reset
 //     listeners do not receive later events, while fresh post-reset
 //     listeners still do.
-//   - `application.getServerCapabilities()` returns the documented
-//     `unknown` tri-state payload shape (mobile already had parity; this
-//     test freezes that contract alongside the desktop parity test).
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   MaindataSyncChangedEvent,
-  RustCapabilitiesResponse,
   WorkspaceView,
   WorkspaceViewRequest,
 } from '@taurent/bridge/types';
@@ -136,23 +132,46 @@ describe('mockMobileBridge', () => {
   });
 
   describe('application.getServerCapabilities()', () => {
-    it('exists and records the call like other application probes', async () => {
-      automation.clearRecordedCalls();
-      const response = await bridge.application.getServerCapabilities();
-      const calls = automation.getRecordedCalls();
-      expect(calls.map((c) => c.name)).toContain('application.getServerCapabilities');
-      expect(response).toBeDefined();
+    it('does not exist on the mock bridge — capabilities now arrive via session snapshot', async () => {
+      // v2 capability migration: there is no `application.getServerCapabilities`
+      // on the mobile bridge. The mock surfaces capabilities via the
+      // `getSessionSnapshot` payload (see `buildSnapshot` in `mockMobileBridge`).
+      expect(
+        (bridge.application as unknown as Record<string, unknown>).getServerCapabilities,
+      ).toBeUndefined();
     });
 
-    it('returns the unknown tri-state capability payload shape', async () => {
-      const response: RustCapabilitiesResponse = await bridge.application.getServerCapabilities();
-      expect(typeof response.session_generation).toBe('number');
-      expect(response.capabilities).toEqual({
-        supports_search: 'unknown',
-        supports_rss: 'unknown',
-        supports_pause_resume: 'unknown',
-        supports_webseed_management: 'confirmed',
+    it('session snapshot reports non-nullable boolean capabilities', async () => {
+      const snapshot = await bridge.getSessionSnapshot();
+      // Capabilities flow from the Rust-resolved `ResolvedCapabilities` struct
+      // and arrive as a fully-populated ServerCapabilities object. The mock
+      // exposes all capability flags as `true` so renderer E2E flows can
+      // exercise every supported action against the mocked bridge.
+      expect(snapshot.capabilities).toEqual({
+        supports_api_key_auth: true,
+        supports_basic_auth: true,
+        supports_categories_manage: true,
+        supports_file_download: true,
+        supports_file_renaming: true,
+        supports_folder_renaming: true,
+        supports_metadata_api: true,
+        supports_pause_resume: true,
+        supports_piece_availability: true,
+        supports_process_info: true,
+        supports_rss: true,
+        supports_rss_clone: true,
+        supports_rss_matching: true,
+        supports_rss_refresh: true,
+        supports_rss_rules: true,
+        supports_search: true,
+        supports_speed_limits_api: true,
+        supports_tags: true,
+        supports_torrent_comments: true,
+        supports_tracker_editing: true,
+        supports_webseed_management: true,
       });
+      expect(snapshot.api_version).toBe('5.1.0');
+      expect(snapshot.app_version).toBe('v5.0.0');
     });
   });
 

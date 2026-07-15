@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AddTorrentScreenBody } from '@taurent/web-ui';
+import { getCapabilityStatus } from '@taurent/web-core/capabilities';
 import { useAddTorrent, useCategories, useTags } from '../hooks';
 import { useAddTorrentScreenController } from '@taurent/web-core';
+import { useQBClient } from '../connection';
 import { closeAuxWindow } from '../windows/auxWindowManager';
 import { pickTorrentFiles } from '../platform';
 import { formatUserMessageForContext } from '@taurent/shared/utils/error';
@@ -21,6 +23,8 @@ export function AddTorrentScreen({ variant = 'main' }: AddTorrentScreenProps) {
   const mode: AddTorrentMode = 'magnet';
 
   const { addByUrl, addByFiles, isPending: isSubmitting } = useAddTorrent();
+  const { capabilities } = useQBClient();
+  const metadataApiStatus = getCapabilityStatus(capabilities, 'supportsMetadataApi');
 
   const { categories } = useCategories();
   const categoryList = categories ? Object.values(categories).map((c) => c.name) : [];
@@ -202,6 +206,7 @@ export function AddTorrentScreen({ variant = 'main' }: AddTorrentScreenProps) {
           onContentLayoutChange={controller.setContentLayout}
           stopCondition={controller.stopCondition}
           onStopConditionChange={controller.setStopCondition}
+          supportsMetadataApi={metadataApiStatus.enabled}
           addToTop={controller.addToTop}
           onAddToTopChange={controller.setAddToTop}
           error={controller.error}

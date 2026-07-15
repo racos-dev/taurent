@@ -35,7 +35,7 @@ export function TagContextMenu({
     ...(hashes.length > 0
       ? (
           [
-            { kind: 'separator', id: 'sep-bulk' } as const,
+            { kind: 'separator' as const, id: 'sep-bulk' } as const,
             ...TorrentBulkMenuItems({
               hashes,
               onResume: onResumeTorrents,

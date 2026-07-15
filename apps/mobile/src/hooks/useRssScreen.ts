@@ -17,7 +17,7 @@ export function useRssScreen() {
 
   const model = useRssScreenModel({
     scope: { serverId, sessionGeneration, isConnected },
-    supported: capabilities?.supportsRss ?? null,
+    capabilities,
     getRssItems,
     getRssRules,
     mutations,

@@ -9,6 +9,7 @@ interface TrackerContextMenuProps {
   hostname: string;
   hashes: string[];
   onClose: () => void;
+  canEditTrackers: boolean;
   onRemoveTracker: () => void;
   onResumeTorrents: (hashes: string[]) => void;
   onPauseTorrents: (hashes: string[]) => void;
@@ -21,6 +22,7 @@ export function TrackerContextMenu({
   hostname,
   hashes,
   onClose,
+  canEditTrackers,
   onRemoveTracker,
   onResumeTorrents,
   onPauseTorrents,
@@ -28,11 +30,11 @@ export function TrackerContextMenu({
 }: TrackerContextMenuProps) {
   const items: TContextMenuItem[] = [
     { kind: 'separator', id: 'sep-header', label: hostname },
-    { kind: 'item', id: 'remove-tracker', label: 'Remove tracker', icon: Trash2, onClick: () => { onClose(); onRemoveTracker(); }, destructive: true },
+    { kind: 'item', id: 'remove-tracker', label: 'Remove tracker', icon: Trash2, disabled: !canEditTrackers, onClick: () => { onClose(); onRemoveTracker(); }, destructive: true },
     ...(hashes.length > 0
       ? (
           [
-            { kind: 'separator', id: 'sep-bulk' } as const,
+            { kind: 'separator' as const, id: 'sep-bulk' } as const,
             ...TorrentBulkMenuItems({
               hashes,
               onResume: onResumeTorrents,

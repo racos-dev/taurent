@@ -10,6 +10,7 @@ import {
   AlertCircle,
 } from '@taurent/shared';
 import { useTorrentWorkspaceSidebarController } from '@/hooks';
+import { useQBClient } from '@/connection/useQBClientHooks';
 import { FILTER_TYPE_TO_STATUS, type TorrentFilterType } from '@taurent/shared';
 import { SidebarFilterItem } from '@taurent/web-ui';
 
@@ -51,6 +52,8 @@ export function Sidebar() {
     totalFilteredForTags,
     totalFilteredForTrackers,
   } = useTorrentWorkspaceSidebarController();
+
+  const { capabilities } = useQBClient();
 
   const sidebarActions = useSidebarActions();
 
@@ -117,6 +120,7 @@ export function Sidebar() {
           onToggle={() => toggleSection('categories')}
           sidebarActions={sidebarActions}
           totalFilteredCount={totalFilteredForCategories}
+          capabilities={capabilities}
         />
 
         <TagsSection
@@ -125,6 +129,7 @@ export function Sidebar() {
           onTagClick={setTagFilter}
           sidebarActions={sidebarActions}
           totalFilteredCount={totalFilteredForTags}
+          capabilities={capabilities}
         />
 
         <TrackersSection
@@ -133,6 +138,7 @@ export function Sidebar() {
           onTrackerClick={setTrackerFilter}
           sidebarActions={sidebarActions}
           totalFilteredCount={totalFilteredForTrackers}
+          capabilities={capabilities}
         />
       </div>
 

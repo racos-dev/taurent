@@ -7,6 +7,7 @@ import {
   ActionChip,
   TorrentActionsBar,
   Button,
+  CapabilityButton,
   DeleteTorrentDialog,
   NumberInputModal,
   FilePriorityDialog,
@@ -112,7 +113,8 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
   addHttpSourcesIsPending = false,
   editHttpSourceIsPending = false,
   removeHttpSourceIsPending = false,
-  supportsWebSeedManagement = false,
+  supportsWebseedManagement = false,
+  supportsFileRenaming = false,
   handlePauseResume,
   handleRecheck,
   handleReannounce,
@@ -137,7 +139,7 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
   const [editingHttpSource, setEditingHttpSource] = React.useState<WebSeed | null>(null);
   const [editHttpSourceUrl, setEditHttpSourceUrl] = React.useState('');
 
-  const canManageHttpSources = supportsWebSeedManagement
+  const canManageHttpSources = supportsWebseedManagement
     && Boolean(handleAddHttpSources && handleEditHttpSource && handleRemoveHttpSource);
 
   const submitHttpSources = React.useCallback(() => {
@@ -250,12 +252,14 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
                   onClick={() => openSpeedLimitModal('upload', currentUploadLimit)}
                   disabled={isActionPending}
                 />
+                {supportsFileRenaming && (
                 <ActionChip
                   icon="file"
                   label="Rename"
                   onClick={() => { openRenameDialog(torrent.name); }}
                   disabled={isActionPending}
                 />
+                )}
                 <ActionChip
                   icon="folder"
                   label="Relocate"
@@ -434,17 +438,18 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
               <div className="flex items-center gap-2">
                 {webSeedCount > 0 ? <Pill>{webSeedCount}</Pill> : null}
                 {canManageHttpSources ? (
-                  <Button
+                  <CapabilityButton
                     type="button"
                     variant={showAddHttpSources ? 'ghost' : 'outline'}
                     size="sm"
+                    enabled={canManageHttpSources}
                     onClick={() => {
                       setShowAddHttpSources((value) => !value);
                       setEditingHttpSource(null);
                     }}
                   >
                     {showAddHttpSources ? 'Cancel' : 'Add'}
-                  </Button>
+                  </CapabilityButton>
                 ) : null}
               </div>
             </div>
@@ -559,7 +564,7 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
         />
       ) : null}
 
-      {showRenameDialog ? (
+      {supportsFileRenaming && showRenameDialog ? (
         <InputDialog
           title="Rename Torrent"
           value={renameValue}

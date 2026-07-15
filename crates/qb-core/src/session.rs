@@ -1,6 +1,8 @@
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
+use crate::capability::ResolvedCapabilities;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum SessionStatus {
@@ -34,7 +36,37 @@ pub struct SessionState {
     pub initialized: bool,
     /// Whether the server supports pause/resume endpoints (qBittorrent < v5).
     /// qBittorrent v5+ removed these endpoints; use stop/start instead.
+    /// Mirrored from the resolved `capabilities.supports_pause_resume` field,
+    /// which is itself resolved via the TOML's `[app_versions]` section
+    /// alongside the rest of the boolean capability set.
     pub supports_pause_resume: bool,
+    /// The server's `webapiVersion` string, or `None` if the session has
+    /// never been connected (or the fetch failed and no version was recorded).
+    ///
+    /// Populated by `SessionManager::set_resolved_capabilities` immediately
+    /// after a successful `connect()` so the renderer can show a version
+    /// label without an extra round-trip.
+    #[serde(default)]
+    pub api_version: Option<String>,
+    /// The server's qBittorrent application version string (e.g. "v4.3.3"),
+    /// or `None` when not connected. Fetched via GET /api/v2/app/version.
+    ///
+    /// Populated by `set_resolved_capabilities` alongside the webapi
+    /// version and the resolved capability set.
+    #[serde(default)]
+    pub app_version: Option<String>,
+    /// Resolved boolean capabilities of the connected server. Always
+    /// populated once a connection has been attempted; the default
+    /// all-false value is what the renderer sees on a fresh process
+    /// before any connect.
+    ///
+    /// Resolved from both the server's `webapiVersion` (for the
+    /// `[versions]` section) and the qBittorrent *app* version (for the
+    /// `[app_versions]` section), which is how `supports_pause_resume`
+    /// becomes part of this set. `supports_pause_resume` is also mirrored
+    /// to the top-level field above for convenience.
+    #[serde(default)]
+    pub capabilities: ResolvedCapabilities,
 }
 
 /// Password-free subset of `ServerIdentity`, safe to serialise for Tauri host.
@@ -66,6 +98,9 @@ impl Default for SessionState {
             session_generation: 0,
             initialized: true,
             supports_pause_resume: false,
+            api_version: None,
+            app_version: None,
+            capabilities: ResolvedCapabilities::default(),
         }
     }
 }
@@ -139,6 +174,37 @@ impl SessionManager {
         self.increment_generation_internal()
     }
 
+    /// Store the resolved webapi version string and capability set on the
+    /// session state.
+    ///
+    /// Called by `qb-tauri` immediately after a successful `connect()` once
+    /// the webapi version has been resolved via
+    /// `qb_core::capability::QbResolver::resolve`. Kept as a separate
+    /// method (rather than a `connect()` parameter) so the
+    /// `connect()` signature stays backward-compatible and so that the
+    /// capability fetch can fail without aborting the connect itself.
+    pub fn set_resolved_capabilities(
+        &mut self,
+        api_version: String,
+        app_version: String,
+        capabilities: ResolvedCapabilities,
+    ) {
+        self.state.api_version = Some(api_version);
+        self.state.app_version = Some(app_version);
+        self.state.capabilities = capabilities;
+    }
+
+    /// Clear the resolved webapi version and capability set.
+    ///
+    /// Called when leaving the `Connected` state (disconnect / teardown) so
+    /// the renderer never sees stale capability flags attached to a
+    /// disconnected session.
+    pub fn clear_resolved_capabilities(&mut self) {
+        self.state.api_version = None;
+        self.state.app_version = None;
+        self.state.capabilities = ResolvedCapabilities::default();
+    }
+
     pub fn set_connecting(&mut self, server: ServerIdentity) -> u64 {
         let server_id = server.id.clone();
         self.server_identity = Some(server.clone());
@@ -160,6 +226,7 @@ impl SessionManager {
         self.state.last_error = None;
         self.session_cookie = None;
         self.http_client = None;
+        self.clear_resolved_capabilities();
         log::info!("Session disconnected (identity preserved for reconnect)");
         self.increment_generation_internal()
     }
@@ -218,6 +285,7 @@ impl SessionManager {
         self.server_identity = None;
         self.session_cookie = None;
         self.http_client = None;
+        self.clear_resolved_capabilities();
         self.increment_generation_internal()
     }
 

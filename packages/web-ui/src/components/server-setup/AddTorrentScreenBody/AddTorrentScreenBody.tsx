@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Magnet, File, Folder, Upload, Settings, ChevronDown, X, Check, AlertCircle, ICON_SIZES } from '@taurent/shared';
 import { BUTTON_CONTROL_SIZE_CLASSES, HEADER_ICON_BUTTON_SIZE_CLASSES, useControlDensity } from '../../../controlSizing';
 import { DialogActions } from '../../dialogs/DialogActions';
@@ -54,6 +54,7 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
       onContentLayoutChange = () => {},
       stopCondition = 'none',
       onStopConditionChange = () => {},
+      supportsMetadataApi = true,
       addToTop = false,
       onAddToTopChange = () => {},
       error,
@@ -69,6 +70,12 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
     const density = useControlDensity();
     const smButtonClasses = BUTTON_CONTROL_SIZE_CLASSES[density].sm;
     const headerIconButtonClasses = HEADER_ICON_BUTTON_SIZE_CLASSES[density];
+
+    useEffect(() => {
+      if (!supportsMetadataApi && stopCondition === 'metadata') {
+        onStopConditionChange('none');
+      }
+    }, [onStopConditionChange, stopCondition, supportsMetadataApi]);
 
     if (isMobile) {
       return (
@@ -493,7 +500,7 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
                       onChange={(value) => onStopConditionChange(value as 'none' | 'metadata' | 'files')}
                       options={[
                         { value: 'none', label: 'None' },
-                        { value: 'metadata', label: 'Metadata received' },
+                        ...(supportsMetadataApi ? [{ value: 'metadata', label: 'Metadata received' }] : []),
                         { value: 'files', label: 'All files downloaded' },
                       ]}
                     />

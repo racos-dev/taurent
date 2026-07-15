@@ -2,31 +2,21 @@ use std::sync::Arc;
 use std::sync::Mutex;
 
 use qb_core::{
+    capability::{QbResolver, ResolvedCapabilities},
     client::{normalize_server_url, qb_probe, qbittorrent_login},
     ServerIdentity, SessionManager, SessionState, SessionStatus,
 };
 use serde::{Deserialize, Serialize};
 use tauri::{Emitter, State};
 
+use crate::client::response_text;
 use crate::server_repo::{
     get_server_meta as repo_get_server_meta, get_server_password as repo_get_server_password,
     select_server_and_persist as repo_select_server_and_persist, ServerRepoStateHandle,
 };
 
-/// Parse the qBittorrent app version string and determine if pause/resume is supported.
-/// qBittorrent v5+ removed /pause and /resume endpoints in favor of /stop and /start.
-/// Version format: "v5.0.1", "v4.4.0", etc. The leading 'v' is optional.
-fn parse_app_version_for_pause_resume(version: &str) -> bool {
-    let v = version.trim_start_matches('v');
-    if let Some(major) = v.split('.').next().and_then(|s| s.parse::<u32>().ok()) {
-        // qBittorrent v5+ removed pause/resume; use stop/start instead
-        return major < 5;
-    }
-    // Unknown version, assume older (pause/resume supported) for safety
-    true
-}
-
 const STARTUP_PROBE_PATH: &str = "/api/v2/app/version";
+const WEBAPI_VERSION_PATH: &str = "/api/v2/app/webapiVersion";
 
 fn summarize_cookie(cookie: &str) -> String {
     let suffix: String = cookie
@@ -82,12 +72,21 @@ fn startup_probe_failure_message(status_code: u16, body_summary: Option<&str>) -
     }
 }
 
-async fn load_startup_pause_resume_capability(
+/// Fetch the qBittorrent *app* version string from the first protected request
+/// after login.
+///
+/// Returns the raw app version (e.g. `"v5.0.1"`) on success. This is a hard
+/// post-login validation: any failure (network error, non-2xx, empty body)
+/// aborts the connect with the supplied error message. The raw string is then
+/// passed to `QbResolver::resolve` so app-version-keyed capabilities (including
+/// `supports_pause_resume`) can be resolved from the TOML's `[app_versions]`
+/// section.
+async fn load_app_version(
     client: &reqwest::Client,
     base_url: &str,
     sid_cookie: &str,
     server_id: &str,
-) -> Result<bool, String> {
+) -> Result<String, String> {
     log::info!(
         "Login succeeded for server_id={}; validating first protected request path={} with cookie={}",
         server_id,
@@ -118,14 +117,93 @@ async fn load_startup_pause_resume_capability(
         return Err(message);
     }
 
-    let version = probe.data.as_str().unwrap_or("");
+    let version = response_text(&probe.data).unwrap_or_default();
     log::info!(
         "Startup protected request succeeded: server_id={}, path={}, version={}",
         server_id,
         STARTUP_PROBE_PATH,
         version
     );
-    Ok(parse_app_version_for_pause_resume(version))
+    Ok(version)
+}
+
+/// Resolve the server's `webapiVersion` and the corresponding
+/// `ResolvedCapabilities` from the embedded TOML profile.
+///
+/// `app_version` is the raw qBittorrent application version string (e.g.
+/// `"v5.0.1"`) returned by the startup probe. It is forwarded to
+/// `QbResolver::resolve` so app-version-keyed capabilities (including
+/// `supports_pause_resume`, declared in the TOML's `[app_versions]` section)
+/// can be resolved alongside webapi-version-keyed ones.
+///
+/// On any webapi-version fetch failure (network error, non-2xx, empty body)
+/// the connect/reconnect flow fails rather than storing a fabricated low
+/// capability profile for the session.
+async fn load_resolved_capabilities(
+    client: &reqwest::Client,
+    base_url: &str,
+    sid_cookie: &str,
+    server_id: &str,
+    app_version: &str,
+) -> Result<(String, ResolvedCapabilities), String> {
+    log::info!(
+        "Resolving webapiVersion for server_id={} from path={}",
+        server_id,
+        WEBAPI_VERSION_PATH
+    );
+
+    match qb_probe(client, base_url, sid_cookie, WEBAPI_VERSION_PATH).await {
+        Ok(probe) if probe.status_code == 200 => {
+            let version = response_text(&probe.data).unwrap_or_default();
+            if version.is_empty() {
+                let message = format!(
+                    "Login succeeded, but capability hydration failed: {} returned an empty webapiVersion",
+                    WEBAPI_VERSION_PATH
+                );
+                log::warn!("{message}: server_id={server_id}");
+                Err(message)
+            } else {
+                log::info!(
+                    "Resolved capabilities for server_id={} from webapiVersion={}",
+                    server_id,
+                    version
+                );
+                let caps = QbResolver::resolve(&version, app_version);
+                Ok((version, caps))
+            }
+        }
+        Ok(probe) => {
+            let body_summary = probe_body_summary(&probe.data);
+            let message = match body_summary.as_deref() {
+                Some(body) => format!(
+                    "Login succeeded, but capability hydration failed: {} returned HTTP {} (body: {:?})",
+                    WEBAPI_VERSION_PATH, probe.status_code, body
+                ),
+                None => format!(
+                    "Login succeeded, but capability hydration failed: {} returned HTTP {}",
+                    WEBAPI_VERSION_PATH, probe.status_code
+                ),
+            };
+            log::warn!(
+                "webapiVersion for server_id={} returned HTTP {}; failing capability hydration",
+                server_id,
+                probe.status_code
+            );
+            Err(message)
+        }
+        Err(error) => {
+            let message = format!(
+                "Login succeeded, but capability hydration failed: {} request failed: {}",
+                WEBAPI_VERSION_PATH, error
+            );
+            log::warn!(
+                "webapiVersion request for server_id={} failed ({}); failing capability hydration",
+                server_id,
+                error
+            );
+            Err(message)
+        }
+    }
 }
 
 pub type SessionStateHandle = Arc<Mutex<SessionManager>>;
@@ -188,15 +266,33 @@ pub async fn session_connect(
     match login_result {
         Ok((client, sid_cookie)) => {
             let normalized_url = normalize_server_url(&server_url, "https://");
-            let supports_pause_resume = match load_startup_pause_resume_capability(
+            let app_version =
+                match load_app_version(&client, &normalized_url, &sid_cookie, &server_id).await {
+                    Ok(app_version) => app_version,
+                    Err(error_message) => {
+                        let mut session = state.lock().unwrap();
+                        let generation = session.set_error(error_message.clone());
+                        emit_session_changed(
+                            &app,
+                            generation,
+                            Some(server_id),
+                            SessionStatus::Error,
+                            Some(error_message),
+                        );
+                        return Ok(generation);
+                    }
+                };
+
+            let (api_version, capabilities) = match load_resolved_capabilities(
                 &client,
                 &normalized_url,
                 &sid_cookie,
                 &server_id,
+                &app_version,
             )
             .await
             {
-                Ok(supports_pause_resume) => supports_pause_resume,
+                Ok(result) => result,
                 Err(error_message) => {
                     let mut session = state.lock().unwrap();
                     let generation = session.set_error(error_message.clone());
@@ -211,8 +307,11 @@ pub async fn session_connect(
                 }
             };
 
+            let supports_pause_resume = capabilities.supports_pause_resume;
+
             let mut session = state.lock().unwrap();
             let generation = session.connect(identity, client, sid_cookie, supports_pause_resume);
+            session.set_resolved_capabilities(api_version, app_version.clone(), capabilities);
             emit_session_changed(
                 &app,
                 generation,
@@ -289,15 +388,33 @@ pub async fn session_connect_by_id(
     match login_result {
         Ok((client, sid_cookie)) => {
             let normalized_url = normalize_server_url(&meta.url, "https://");
-            let supports_pause_resume = match load_startup_pause_resume_capability(
+            let app_version =
+                match load_app_version(&client, &normalized_url, &sid_cookie, &server_id).await {
+                    Ok(app_version) => app_version,
+                    Err(error_message) => {
+                        let mut session = session_state.lock().unwrap();
+                        let generation = session.set_error(error_message.clone());
+                        emit_session_changed(
+                            &app,
+                            generation,
+                            Some(server_id),
+                            SessionStatus::Error,
+                            Some(error_message),
+                        );
+                        return Ok(generation);
+                    }
+                };
+
+            let (api_version, capabilities) = match load_resolved_capabilities(
                 &client,
                 &normalized_url,
                 &sid_cookie,
                 &server_id,
+                &app_version,
             )
             .await
             {
-                Ok(supports_pause_resume) => supports_pause_resume,
+                Ok(result) => result,
                 Err(error_message) => {
                     let mut session = session_state.lock().unwrap();
                     let generation = session.set_error(error_message.clone());
@@ -312,8 +429,11 @@ pub async fn session_connect_by_id(
                 }
             };
 
+            let supports_pause_resume = capabilities.supports_pause_resume;
+
             let mut session = session_state.lock().unwrap();
             let generation = session.connect(identity, client, sid_cookie, supports_pause_resume);
+            session.set_resolved_capabilities(api_version, app_version.clone(), capabilities);
             emit_session_changed(
                 &app,
                 generation,
@@ -381,27 +501,43 @@ pub async fn session_switch_server_by_id(
     // Step 2: Authenticate and probe the candidate server (NO session mutation)
     let login_result = qbittorrent_login(&meta.url, &meta.username, &password).await;
 
-    let (client, sid_cookie, supports_pause_resume) = match login_result {
-        Ok((client, sid_cookie)) => {
-            let normalized_url = normalize_server_url(&meta.url, "https://");
-            match load_startup_pause_resume_capability(
-                &client,
-                &normalized_url,
-                &sid_cookie,
-                &server_id,
-            )
-            .await
-            {
-                Ok(supports_pause_resume) => (client, sid_cookie, supports_pause_resume),
-                Err(error_message) => {
-                    return Err(error_message);
-                }
+    let (client, sid_cookie, supports_pause_resume, api_version, capabilities, app_version) =
+        match login_result {
+            Ok((client, sid_cookie)) => {
+                let normalized_url = normalize_server_url(&meta.url, "https://");
+                let app_version =
+                    match load_app_version(&client, &normalized_url, &sid_cookie, &server_id).await
+                    {
+                        Ok(app_version) => app_version,
+                        Err(error_message) => {
+                            return Err(error_message);
+                        }
+                    };
+
+                let (api_version, capabilities) = load_resolved_capabilities(
+                    &client,
+                    &normalized_url,
+                    &sid_cookie,
+                    &server_id,
+                    &app_version,
+                )
+                .await?;
+
+                let supports_pause_resume = capabilities.supports_pause_resume;
+
+                (
+                    client,
+                    sid_cookie,
+                    supports_pause_resume,
+                    api_version,
+                    capabilities,
+                    app_version,
+                )
             }
-        }
-        Err(error) => {
-            return Err(error.to_string());
-        }
-    };
+            Err(error) => {
+                return Err(error.to_string());
+            }
+        };
 
     // Step 3: Candidate is verified — persist active server FIRST.
     // If this fails, session is untouched (command returns error without session mutation).
@@ -413,7 +549,9 @@ pub async fn session_switch_server_by_id(
     // Step 4: Repo is saved — now commit the session.
     let generation = {
         let mut session = session_state.lock().unwrap();
-        session.connect(identity, client, sid_cookie, supports_pause_resume)
+        let generation = session.connect(identity, client, sid_cookie, supports_pause_resume);
+        session.set_resolved_capabilities(api_version, app_version, capabilities);
+        generation
     };
 
     // Step 5: Emit the standard connected session change event
@@ -484,15 +622,32 @@ pub async fn session_reconnect(
     match login_result {
         Ok((client, sid_cookie)) => {
             let normalized_url = normalize_server_url(&identity.url, "https://");
-            let supports_pause_resume = match load_startup_pause_resume_capability(
+            let app_version =
+                match load_app_version(&client, &normalized_url, &sid_cookie, &identity.id).await {
+                    Ok(app_version) => app_version,
+                    Err(msg) => {
+                        let mut session = session_state.lock().unwrap();
+                        let generation = session.set_error(msg.clone());
+                        emit_session_changed(
+                            &app,
+                            generation,
+                            session.get_state().server.as_ref().map(|s| s.id.clone()),
+                            SessionStatus::Error,
+                            Some(msg.clone()),
+                        );
+                        return Err(msg);
+                    }
+                };
+            let (api_version, capabilities) = match load_resolved_capabilities(
                 &client,
                 &normalized_url,
                 &sid_cookie,
                 &identity.id,
+                &app_version,
             )
             .await
             {
-                Ok(supports_pause_resume) => supports_pause_resume,
+                Ok(result) => result,
                 Err(msg) => {
                     let mut session = session_state.lock().unwrap();
                     let generation = session.set_error(msg.clone());
@@ -506,8 +661,10 @@ pub async fn session_reconnect(
                     return Err(msg);
                 }
             };
+            let supports_pause_resume = capabilities.supports_pause_resume;
             let mut session = session_state.lock().unwrap();
             let generation = session.connect(identity, client, sid_cookie, supports_pause_resume);
+            session.set_resolved_capabilities(api_version, app_version.clone(), capabilities);
             emit_session_changed(
                 &app,
                 generation,
@@ -730,6 +887,17 @@ pub struct SessionSnapshot {
     pub server_url: Option<String>,
     pub status: SessionStatus,
     pub last_error: Option<String>,
+    /// Server's `webapiVersion` string. `None` until a successful connect
+    /// (or the "2.0" base profile after a webapiVersion fetch failure).
+    pub api_version: Option<String>,
+    /// Server's application version string (e.g. "v5.0.0"). `None` until
+    /// a successful connect.
+    pub app_version: Option<String>,
+    /// Resolved boolean capabilities of the connected server. Always
+    /// populated once a connection has been attempted; the default
+    /// all-false value is what the renderer sees on a fresh process
+    /// before any connect.
+    pub capabilities: ResolvedCapabilities,
 }
 
 impl From<&SessionState> for SessionSnapshot {
@@ -741,6 +909,9 @@ impl From<&SessionState> for SessionSnapshot {
             server_url: state.server.as_ref().map(|server| server.url.clone()),
             status: state.status,
             last_error: state.last_error.clone(),
+            api_version: state.api_version.clone(),
+            app_version: state.app_version.clone(),
+            capabilities: state.capabilities.clone(),
         }
     }
 }

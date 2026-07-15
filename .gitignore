@@ -39,6 +39,11 @@ yarn-error.*
 
 app-example
 
+# Generated capability source
+crates/qb-core/src/capability/generated.rs
+packages/bridge/src/generated/server-capabilities.ts
+packages/web-core/src/capabilities/generated/app-capabilities.ts
+
 # generated native folders
 /ios
 /android

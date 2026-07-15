@@ -10,7 +10,7 @@
  * Usage:
  *   const model = useSearchScreenModel({
  *     scope: { serverId, sessionGeneration, isConnected },
- *     isSupported: capabilities?.supportsSearch ?? null,
+ *     capabilities: { supportsSearch, supportsRss, supportsWebseedManagement },
  *     adapters: { startSearch, stopSearch, ... },
  *     onAddResult: async (result) => { ... },
  *   });
@@ -24,12 +24,17 @@ import type {
   NormalizedSearchResult,
   NormalizedSearchPlugin,
 } from './useSearchController';
+import type { AppCapabilities } from '../capabilities';
 import type { SearchSortKey, SearchSortDirection } from './sortSearchResults';
 
 export interface UseSearchScreenModelOptions {
   scope: QueryScope;
-  /** Whether the server supports Search. null = unknown, true = supported, false = not */
-  isSupported: boolean | null;
+  /**
+   * Server capabilities (Rust-resolved, camelCase).
+   * The screen model surfaces `isSupported` / `isUnsupported` derived from
+   * `capabilities.supportsSearch` and the scope's `isConnected` state.
+   */
+  capabilities: AppCapabilities;
   /** Bridge adapters for search operations */
   adapters: SearchAdapters;
   /**
@@ -41,7 +46,9 @@ export interface UseSearchScreenModelOptions {
 }
 
 export interface UseSearchScreenModelResult {
-  // Capability state
+  // Capability state. `isSupported` keeps the legacy `boolean | null` shape
+  // (offline → `null`, supported → `true`, unsupported → `false`) so the
+  // shared `SearchScreenBody` continues to render the correct empty state.
   isSupported: boolean | null;
   isUnsupported: boolean;
   isCapabilityLoading: boolean;
@@ -87,13 +94,13 @@ export interface UseSearchScreenModelResult {
 
 export function useSearchScreenModel({
   scope,
-  isSupported,
+  capabilities,
   adapters,
   onAddResult,
 }: UseSearchScreenModelOptions): UseSearchScreenModelResult {
   const controller = useSearchController({
     scope,
-    isSupported,
+    capabilities,
     adapters,
   });
 
@@ -102,10 +109,21 @@ export function useSearchScreenModel({
     [onAddResult],
   );
 
+  // Reconstruct the legacy tri-state `isSupported: boolean | null` so the
+  // existing `SearchScreenBody` keeps rendering the correct empty state:
+  //   - disconnected (`!scope.isConnected`) → null → "Connect to a server"
+  //   - connected + supportsSearch         → true  → normal search UI
+  //   - connected + !supportsSearch        → false → "Search not available"
+  const isOffline = !scope.isConnected;
+  const isSupported = isOffline ? null : controller.isSupported;
+  const isUnsupported = !isOffline && !controller.isSupported;
+  // No capability-loading state in v2 — capabilities arrive with the session snapshot.
+  const isCapabilityLoading = false;
+
   return {
-    isSupported: controller.isSupported,
-    isUnsupported: controller.isUnsupported,
-    isCapabilityLoading: controller.isCapabilityLoading,
+    isSupported,
+    isUnsupported,
+    isCapabilityLoading,
 
     query: controller.query,
     setQuery: controller.setQuery,

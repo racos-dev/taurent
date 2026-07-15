@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Tag, Plus } from '@taurent/shared';
 import type { SidebarTagItem } from '@taurent/web-core/screens';
+import { getCapabilityStatus, type AppCapabilities } from '@taurent/web-core/capabilities';
+import { CapabilityButton, SidebarFilterItem } from '@taurent/web-ui';
 import { SidebarSection } from './SidebarSection';
-import { SidebarFilterItem } from '@taurent/web-ui';
 import { TagContextMenu } from '../../components/ContextMenu';
 import { openCreateDialogWindow } from '../../windows/dialogs/createDialogWindow';
 import { openConfirmDialogWindow } from '../../windows/dialogs/confirmDialogWindow';
@@ -15,9 +16,28 @@ interface TagsSectionProps {
   sidebarActions: ReturnType<typeof useSidebarActions>;
   /** Total torrents matching all filters except the tag dimension. Used for "All Tags" row. */
   totalFilteredCount: number;
+  capabilities: AppCapabilities;
 }
 
-export function TagsSection({ items, activeTag, onTagClick, sidebarActions, totalFilteredCount }: TagsSectionProps) {
+function buildCapabilityTooltip(status: ReturnType<typeof getCapabilityStatus>): string | undefined {
+  if (status.enabled) return undefined;
+  if (status.isRemoved && status.removedIn) return `Removed in qBittorrent ${status.removedIn}+`;
+  if (status.isUnreleased) return 'Requires a future qBittorrent release.';
+  if (status.requiresVersion) return `Requires qBittorrent ${status.requiresVersion}+`;
+  return undefined;
+}
+
+export function TagsSection({
+  items,
+  activeTag,
+  onTagClick,
+  sidebarActions,
+  totalFilteredCount,
+  capabilities,
+}: TagsSectionProps) {
+  const capStatus = getCapabilityStatus(capabilities, 'supportsTags');
+  const capTooltip = buildCapabilityTooltip(capStatus);
+
   const [expanded, setExpanded] = useState(true);
 
   const [contextMenu, setContextMenu] = useState<{
@@ -43,6 +63,8 @@ export function TagsSection({ items, activeTag, onTagClick, sidebarActions, tota
         title="Tags"
         expanded={expanded}
         onToggle={() => setExpanded((current) => !current)}
+        disabled={!capStatus.enabled}
+        disabledTitle={capTooltip}
       >
         <SidebarFilterItem
           icon={<Tag />}
@@ -73,15 +95,19 @@ export function TagsSection({ items, activeTag, onTagClick, sidebarActions, tota
             />
           ))
         )}
-        <button
-          type="button"
+        <CapabilityButton
+          enabled={capStatus.enabled}
+          requiresVersion={capStatus.requiresVersion}
+          isRemoved={capStatus.isRemoved}
+          removedIn={capStatus.removedIn}
+          isUnreleased={capStatus.isUnreleased}
           onClick={() => void openCreateDialogWindow({ type: 'tag' })}
           className="w-full flex items-center gap-2 px-2 py-1 cursor-pointer transition-colors text-text-secondary hover:bg-surface-interactive"
         >
           <Plus className="w-3 h-3 flex-shrink-0" />
           <span className="min-w-0 truncate text-xs text-left">Add Tag</span>
           <span className="flex-1" aria-hidden="true" />
-        </button>
+        </CapabilityButton>
       </SidebarSection>
 
       {contextMenu && (

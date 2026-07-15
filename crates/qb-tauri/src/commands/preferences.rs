@@ -1,8 +1,6 @@
 //! Canonical shared preferences command group.
 
-use qb_core::capability::{resolve_capabilities, ResolvedCapabilities};
-
-use crate::client::{capture_request_context, qb_get, qb_post, qb_probe};
+use crate::client::{capture_request_context, qb_get, qb_post, response_text};
 use crate::session::{emit_resource_invalidated, SessionStateHandle};
 use qb_core::{
     parse_build_info, parse_preferences, BuildInfoDto, PreferencesDto, PreferencesUpdateDto,
@@ -125,7 +123,7 @@ pub async fn get_version(state: State<'_, SessionStateHandle>) -> Result<Version
     let server_id = request.server_id.clone();
 
     let response = qb_get(&state, "/api/v2/app/version").await?;
-    let version = response.as_str().unwrap_or("").to_string();
+    let version = response_text(&response).unwrap_or_default();
 
     Ok(VersionResponse {
         session_generation: gen,
@@ -143,7 +141,7 @@ pub async fn get_webapi_version(
     let server_id = request.server_id.clone();
 
     let response = qb_get(&state, "/api/v2/app/webapiVersion").await?;
-    let webapi_version = response.as_str().unwrap_or("").to_string();
+    let webapi_version = response_text(&response).unwrap_or_default();
 
     Ok(WebApiVersionResponse {
         session_generation: gen,
@@ -202,93 +200,5 @@ pub async fn shutdown_server(
         session_generation: gen,
         server_id,
         success: true,
-    })
-}
-
-// ============================================================================
-// Capability discovery
-// ============================================================================
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub struct CapabilitiesResponse {
-    pub session_generation: u64,
-    pub server_id: Option<String>,
-    pub capabilities: ResolvedCapabilities,
-}
-
-/// Probe a path and return (status_code, data).
-async fn probe_path(
-    state: &State<'_, SessionStateHandle>,
-    path: &str,
-) -> Result<(u16, serde_json::Value), String> {
-    let result = qb_probe(state, path).await?;
-    Ok((result.status_code, result.data))
-}
-
-/// Resolve server capabilities using version strings from the API and probe results.
-/// - App version from /api/v2/app/version
-/// - API version from /api/v2/app/webapiVersion
-/// - Probes /api/v2/search/plugins (search) and /api/v2/rss/items (RSS)
-/// - Probes /api/v2/torrents/addWebSeeds without required params to detect
-///   web seed mutation endpoint routing without changing server state.
-/// Preserves tri-state semantics: probe failure + unknown version → Unknown (not Unsupported).
-#[tauri::command]
-pub async fn get_server_capabilities(
-    state: State<'_, SessionStateHandle>,
-) -> Result<CapabilitiesResponse, String> {
-    let request = capture_request_context(&state)?;
-    let gen = request.session_generation;
-    let server_id = request.server_id.clone();
-
-    // Fetch version info from the API — gracefully degrade to None on transient failure
-    let app_version = match qb_get(&state, "/api/v2/app/version").await {
-        Ok(resp) => resp.as_str().map(String::from),
-        Err(_) => None,
-    };
-
-    let api_version = match qb_get(&state, "/api/v2/app/webapiVersion").await {
-        Ok(resp) => resp.as_str().map(String::from),
-        Err(_) => None,
-    };
-
-    // Probe search endpoint — None = probe failed (network error), Some(true/false) = probe succeeded
-    let search_result = probe_path(&state, "/api/v2/search/plugins").await;
-    let search_probe_ok: Option<bool> = search_result
-        .as_ref()
-        .map(|(s, _)| (200..300).contains(s))
-        .ok();
-
-    // Probe RSS endpoint
-    let rss_result = probe_path(&state, "/api/v2/rss/items").await;
-    let rss_probe_ok: Option<bool> = rss_result
-        .as_ref()
-        .map(|(s, _)| (200..300).contains(s))
-        .ok();
-
-    let webseed_result = probe_path(&state, "/api/v2/torrents/addWebSeeds").await;
-    let webseed_management_probe_ok: Option<bool> =
-        webseed_result
-            .as_ref()
-            .ok()
-            .and_then(|(status, _)| match *status {
-                401 | 403 => None,
-                404 | 501 => Some(false),
-                500..=599 => None,
-                _ => Some(true),
-            });
-
-    let capabilities = resolve_capabilities(
-        api_version.as_deref(),
-        app_version.as_deref(),
-        search_probe_ok,
-        rss_probe_ok,
-        webseed_management_probe_ok,
-    );
-
-    Ok(CapabilitiesResponse {
-        session_generation: gen,
-        server_id,
-        capabilities,
     })
 }

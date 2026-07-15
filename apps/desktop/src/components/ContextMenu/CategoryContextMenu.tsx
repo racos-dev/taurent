@@ -9,6 +9,7 @@ interface CategoryContextMenuProps {
   categoryName: string;
   hashes: string[];
   onClose: () => void;
+  canManageCategories: boolean;
   onEdit: () => void;
   onDelete: () => void;
   onRemoveUnused: () => void;
@@ -23,6 +24,7 @@ export function CategoryContextMenu({
   categoryName,
   hashes,
   onClose,
+  canManageCategories,
   onEdit,
   onDelete,
   onRemoveUnused,
@@ -34,13 +36,13 @@ export function CategoryContextMenu({
 
   const items: TContextMenuItem[] = [
     { kind: 'separator', id: 'sep-header', label: categoryName || 'Uncategorized' },
-    { kind: 'item', id: 'edit-category', label: 'Edit category...', icon: Pencil, disabled: isUncategorized, onClick: () => { onClose(); onEdit(); } },
-    { kind: 'item', id: 'remove-category', label: 'Remove category', icon: Trash2, disabled: isUncategorized, onClick: () => { onClose(); onDelete(); }, destructive: true },
-    { kind: 'item', id: 'remove-unused-categories', label: 'Remove unused categories', icon: Eraser, onClick: () => { onClose(); onRemoveUnused(); } },
+    { kind: 'item', id: 'edit-category', label: 'Edit category...', icon: Pencil, disabled: isUncategorized || !canManageCategories, onClick: () => { onClose(); onEdit(); } },
+    { kind: 'item', id: 'remove-category', label: 'Remove category', icon: Trash2, disabled: isUncategorized || !canManageCategories, onClick: () => { onClose(); onDelete(); }, destructive: true },
+    { kind: 'item', id: 'remove-unused-categories', label: 'Remove unused categories', icon: Eraser, disabled: !canManageCategories, onClick: () => { onClose(); onRemoveUnused(); } },
     ...(hashes.length > 0
       ? (
           [
-            { kind: 'separator', id: 'sep-bulk' } as const,
+            { kind: 'separator' as const, id: 'sep-bulk' } as const,
             ...TorrentBulkMenuItems({
               hashes,
               onResume: onResumeTorrents,

@@ -28,6 +28,7 @@ import type {
   WorkspaceView,
   WorkspaceViewRequest,
 } from '@taurent/bridge/types';
+import { makeServerCapabilities } from '@taurent/bridge';
 import { MOBILE_CAPABILITIES } from '@taurent/bridge/contracts/capabilities';
 import type { ResourceInvalidatedEvent, SessionChangedEvent } from '@taurent/bridge/events';
 import { createMaindataState } from './fixtures/torrent';
@@ -352,6 +353,34 @@ function buildSnapshot(
     server_id: server?.id ?? null,
     server_name: server?.name ?? null,
     server_url: server?.url ?? null,
+    // Mock reports a connected qBittorrent at 5.x with all capabilities
+    // available. Tests that need to gate a specific feature can override
+    // the snapshot via `setAppState` or direct mutation.
+    api_version: status === 'connected' ? '5.1.0' : null,
+    app_version: status === 'connected' ? 'v5.0.0' : null,
+    capabilities: makeServerCapabilities({
+      supports_api_key_auth: true,
+      supports_basic_auth: true,
+      supports_categories_manage: true,
+      supports_file_download: true,
+      supports_file_renaming: true,
+      supports_folder_renaming: true,
+      supports_metadata_api: true,
+      supports_pause_resume: true,
+      supports_piece_availability: true,
+      supports_process_info: true,
+      supports_rss: true,
+      supports_rss_clone: true,
+      supports_rss_matching: true,
+      supports_rss_refresh: true,
+      supports_rss_rules: true,
+      supports_search: true,
+      supports_speed_limits_api: true,
+      supports_tags: true,
+      supports_torrent_comments: true,
+      supports_tracker_editing: true,
+      supports_webseed_management: true,
+    }),
     status,
     last_error: lastError,
   };
@@ -1521,20 +1550,6 @@ function createMockMobileBridge(transport?: Transport): MobileBridge {
           resource: 'preferences',
         });
         return Promise.resolve(OK());
-      },
-
-      getServerCapabilities() {
-        recordCall('application.getServerCapabilities', []);
-        return Promise.resolve({
-          session_generation: GEN,
-          server_id: _activeServerId,
-          capabilities: {
-            supports_search: 'unknown' as const,
-            supports_rss: 'unknown' as const,
-            supports_pause_resume: 'unknown' as const,
-            supports_webseed_management: 'confirmed' as const,
-          },
-        });
       },
     },
 

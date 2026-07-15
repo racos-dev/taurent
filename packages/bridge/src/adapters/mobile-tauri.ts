@@ -41,7 +41,6 @@ import type {
   RSSRulesResponse,
   RssRuleInput,
   TorrentWebseedsResponse,
-  RustCapabilitiesResponse,
   MaindataSnapshotResponse,
   MaindataSyncHealth,
   WorkspaceView,
@@ -399,11 +398,6 @@ export function createMobileTauriBridge(transport?: Transport): MobileBridge {
 
   async function bridgeSetPreferences(prefs: Partial<Preferences>): Promise<OperationResponse> {
     return t.invoke<OperationResponse>('set_preferences', { prefs });
-  }
-
-  // Application commands
-  async function getServerCapabilities(): Promise<RustCapabilitiesResponse> {
-    return t.invoke<RustCapabilitiesResponse>('get_server_capabilities');
   }
 
   // Server management commands
@@ -805,10 +799,6 @@ export function createMobileTauriBridge(transport?: Transport): MobileBridge {
     },
 
     application: {
-      async getServerCapabilities(): Promise<RustCapabilitiesResponse> {
-        return getServerCapabilities();
-      },
-
       async getDefaultSavePath(): Promise<{ session_generation: number; server_id: string | null; path: string }> {
         return getDefaultSavePath();
       },

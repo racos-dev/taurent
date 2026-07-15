@@ -102,9 +102,10 @@ packages/web-core/src/
 │   ├── useSearchScreenModel.ts     # Search screen model composition
 │   └── createSearchAdapters.ts     # Search adapter factory (constructs adapters from bridge surface)
 ├── capabilities/
-│   ├── index.ts                    # Capabilities barrel
+│   ├── index.ts                    # Capabilities barrel re-exporting from generated/app-capabilities
 │   ├── codemap.md                  # Capability gating design notes
-│   └── mapRustCapabilities.ts      # Maps Rust-resolved capability states (CapabilityState) to AppCapabilities flags
+│   └── generated/
+│       └── app-capabilities.ts     # Auto-generated AppCapabilities interface (21 camelCase bool fields), DEFAULT_APP_CAPABILITIES, toAppCapabilities() mapper, makeAppCapabilities() factory
 ```
 
 ## Design Patterns
@@ -115,7 +116,7 @@ packages/web-core/src/
 - **Screen controllers/models**: `src/screens/` contains feature controllers/models that compose hooks, mutations, and derived state into screen-ready view models. Controllers are headless; screen bodies (in web-ui) handle presentation.
 - **Hot/cold context split**: `MaindataSyncProvider` isolates backend-owned maindata sync from stable session context. `useMaindataState`/`useMaindataSelector` are hot consumers. `MaindataStateScope` injection reads from accumulated maindata, not renderer-side polling.
 - **Backend-owned sync**: The Rust sync manager (`qb-core::sync`) handles all polling, backoff, overlap guard, and RID tracking. The renderer receives lightweight `maindata-sync-changed` events and full snapshots on demand — it does not own the polling loop.
-- **Capability-gated features**: RSS and search remain capability-aware; features are only enabled when the server exposes support via Rust's `getServerCapabilities` Tauri command (which probes and resolves capability state in `qb-core::capability::resolve_capabilities`).
+- **Capability-gated features**: RSS and search remain capability-aware; features are only enabled when the server exposes support via Rust's `ServerCapabilities` payload (produced by `qb-core::capability::QbResolver::resolve` from the embedded TOML profile). Every `SessionSnapshot` carries the resolved capability set; web-core maps it to camelCase via `toAppCapabilities()` and exposes it on `QBClientContextValue.capabilities`.
 - **No Tauri imports**: Platform boundaries enforced — web-core never imports `@tauri-apps/*` directly. Uses bridge interfaces (types only).
 
 ## Flow

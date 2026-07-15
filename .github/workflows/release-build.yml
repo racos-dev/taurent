@@ -85,13 +85,16 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate capabilities
+        run: pnpm codegen:capabilities
+
       - name: Check app versions
         env:
           RELEASE_TAG: ${{ steps.release.outputs.release_tag }}
         run: node scripts/ci/check-versions.mjs
 
       - name: Script tests
-        run: node --test scripts/version-app.test.mjs scripts/ci/check-versions.test.mjs scripts/release/prepare-release-assets.test.mjs
+        run: pnpm test:scripts
 
       - name: Lint
         run: pnpm lint
@@ -124,6 +127,24 @@ jobs:
         uses: actions/checkout@v7
         with:
           ref: ${{ steps.release.outputs.release_tag }}
+
+      - name: Enable pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate capabilities
+        run: pnpm codegen:capabilities
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@1.90.0
@@ -224,6 +245,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Generate capabilities
+        run: pnpm codegen:capabilities
 
       - name: Resolve build metadata
         id: build_metadata
@@ -339,6 +363,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Generate capabilities
+        run: pnpm codegen:capabilities
 
       - name: Resolve build metadata
         id: build_metadata

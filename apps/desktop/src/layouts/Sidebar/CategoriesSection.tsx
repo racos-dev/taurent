@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Folder, Plus } from '@taurent/shared';
 import type { SidebarCategoryItem } from '@taurent/web-core/screens';
+import { getCapabilityStatus, type AppCapabilities } from '@taurent/web-core/capabilities';
+import { CapabilityButton, SidebarFilterItem } from '@taurent/web-ui';
 import { SidebarSection } from './SidebarSection';
-import { SidebarFilterItem } from '@taurent/web-ui';
 import { CategoryContextMenu } from '../../components/ContextMenu';
 import { openEditCategoryDialogWindow } from '../../windows/dialogs/editCategoryDialogWindow';
 import { openCreateDialogWindow } from '../../windows/dialogs/createDialogWindow';
@@ -20,9 +21,21 @@ interface CategoriesSectionProps {
   sidebarActions: ReturnType<typeof useSidebarActions>;
   /** Total torrents matching all filters except the category dimension. Used for "All Categories" row. */
   totalFilteredCount: number;
+  capabilities: AppCapabilities;
 }
 
-export function CategoriesSection({ items, activeCategory, onCategoryClick, expanded, onToggle, sidebarActions, totalFilteredCount }: CategoriesSectionProps) {
+export function CategoriesSection({
+  items,
+  activeCategory,
+  onCategoryClick,
+  expanded,
+  onToggle,
+  sidebarActions,
+  totalFilteredCount,
+  capabilities,
+}: CategoriesSectionProps) {
+  const capStatus = getCapabilityStatus(capabilities, 'supportsCategoriesManage');
+
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
@@ -45,7 +58,11 @@ export function CategoriesSection({ items, activeCategory, onCategoryClick, expa
 
   return (
     <>
-      <SidebarSection title="Categories" expanded={expanded} onToggle={onToggle}>
+      <SidebarSection
+        title="Categories"
+        expanded={expanded}
+        onToggle={onToggle}
+      >
         <SidebarFilterItem
           icon={<Folder />}
           label="All Categories"
@@ -78,15 +95,19 @@ export function CategoriesSection({ items, activeCategory, onCategoryClick, expa
         ) : (
           <div className="px-3 py-2 text-sm text-text-muted">No categories</div>
         )}
-        <button
-          type="button"
+        <CapabilityButton
+          enabled={capStatus.enabled}
+          requiresVersion={capStatus.requiresVersion}
+          isRemoved={capStatus.isRemoved}
+          removedIn={capStatus.removedIn}
+          isUnreleased={capStatus.isUnreleased}
           onClick={() => void openCreateDialogWindow({ type: 'category' })}
           className="w-full flex items-center gap-2 px-2 py-1 cursor-pointer transition-colors text-text-secondary hover:bg-surface-interactive"
         >
           <Plus className="w-3 h-3 flex-shrink-0" />
           <span className="min-w-0 truncate text-xs text-left">Add Category</span>
           <span className="flex-1" aria-hidden="true" />
-        </button>
+        </CapabilityButton>
       </SidebarSection>
 
       {contextMenu && (
@@ -96,6 +117,7 @@ export function CategoriesSection({ items, activeCategory, onCategoryClick, expa
           categoryName={contextMenu.categoryName}
           hashes={sidebarActions.getHashesByCategory(contextMenu.categoryName)}
           onClose={handleCloseContextMenu}
+          canManageCategories={capStatus.enabled}
           onEdit={() => {
             void openEditCategoryDialogWindow({
               name: contextMenu.categoryName,

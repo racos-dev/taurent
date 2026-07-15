@@ -44,7 +44,6 @@ import type {
   RSSItemsResponse,
   RSSRulesResponse,
   RssRuleInput,
-  RustCapabilitiesResponse,
   MaindataSnapshotResponse,
   MaindataSyncHealth,
   WorkspaceView,
@@ -425,10 +424,6 @@ export function createDesktopBridge(transport?: Transport): DesktopBridge {
 
   async function cmdSetPreferences(prefs: Partial<Preferences>): Promise<OperationResponse> {
     return t.invoke<OperationResponse>('set_preferences', { prefs });
-  }
-
-  async function cmdGetServerCapabilities(): Promise<RustCapabilitiesResponse> {
-    return t.invoke<RustCapabilitiesResponse>('get_server_capabilities');
   }
 
   async function cmdGetDefaultSavePath(): Promise<DefaultSavePathResponse> {
@@ -901,10 +896,6 @@ export function createDesktopBridge(transport?: Transport): DesktopBridge {
 
       async shutdown(): Promise<OperationResponse> {
         return cmdShutdownServer();
-      },
-
-      async getServerCapabilities(): Promise<RustCapabilitiesResponse> {
-        return cmdGetServerCapabilities();
       },
     },
 
