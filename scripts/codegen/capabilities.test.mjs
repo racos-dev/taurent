@@ -365,7 +365,7 @@ test('buildAddedInMap returns correct app versions for known capabilities', () =
   assert.equal(map.supports_search, 'v4.1.4');
   assert.equal(map.supports_api_key_auth, 'v5.2.0');
   assert.equal(map.supports_basic_auth, 'v5.2.0');
-  assert.equal(map.supports_piece_availability, 'v5.2.1');
+  assert.equal(map.supports_piece_availability, 'v5.2.0');
 
   // Capability declared under [app_versions] — uses the section key.
   assert.equal(map.supports_pause_resume, 'v4.1.0');
