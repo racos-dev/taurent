@@ -22,6 +22,8 @@ jobs:
         include:
           - language: javascript-typescript
             build-mode: none
+          - language: rust
+            build-mode: none
     steps:
       - uses: actions/checkout@v7
 
