@@ -192,6 +192,11 @@ export interface AddServerInput {
   username: string;
   password: string;
   remember_password?: boolean;
+  /**
+   * Optional qBittorrent API key. When provided, the backend authenticates with
+   * the `Authorization: Bearer qbt_<key>` header instead of username/password.
+   */
+  api_key?: string;
 }
 
 export interface UpdateServerInput {
@@ -200,17 +205,22 @@ export interface UpdateServerInput {
   url?: string;
   username?: string;
   password?: string;
+  /**
+   * Optional qBittorrent API key. Omit to leave unchanged, pass a string to set
+   * API-key auth, or pass null to clear a previously stored API key.
+   */
+  api_key?: string | null;
   remember_password?: boolean;
 }
 
 export interface ServerCredentialsInput {
   username: string;
   password: string;
-}
-
-export interface TestConnectionResult {
-  success: boolean;
-  error?: string;
+  /**
+   * Optional qBittorrent API key. Mirrors the Rust `ServerCredentialsInput::api_key`
+   * field so callers can forward a stored API key through the same DTO.
+   */
+  api_key?: string;
 }
 
 // Torrent list params

@@ -1,8 +1,8 @@
 //! Shared Rust server repository using tauri-plugin-store.
 //!
-//! Passwords are stored in OS-backed secure storage.
-//! macOS uses the data-protection Keychain; other desktop platforms keep using
-//! tauri-plugin-secure-storage.
+//! Credentials (password, API key, username) are stored in OS-backed secure
+//! storage. macOS uses the data-protection Keychain; other desktop platforms
+//! keep using tauri-plugin-secure-storage.
 //! The tauri store holds only non-secret server metadata (id, name, url, username).
 //!
 //! Credential status handling:
@@ -15,9 +15,9 @@
 use std::collections::HashMap;
 use std::sync::Mutex;
 
-use qb_core::client::{normalize_server_url, qbittorrent_login};
+use qb_core::client::normalize_server_url;
 use qb_core::{
-    AddServerInput, CredentialStatus, SavedServerSummary, TestConnectionResult, UpdateServerInput,
+    AddServerInput, AuthCredentials, CredentialStatus, SavedServerSummary, UpdateServerInput,
 };
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Runtime};
@@ -25,25 +25,27 @@ use tauri::{AppHandle, Runtime};
 use tauri_plugin_secure_storage::SecureStorageExt;
 use tauri_plugin_store::StoreExt;
 
-/// Prefix for keychain keys storing per-server passwords.
+/// Prefix for keychain keys storing per-server credentials.
+/// Note: the prefix name is preserved from the password-only era for
+/// backwards-compatible keychain entries.
 const PASSWORD_KEY_PREFIX: &str = "server_password_";
 #[cfg(target_os = "macos")]
 const KEYCHAIN_SERVICE: &str = "Taurent";
 
 /// Repository state holding the loaded servers map.
-/// Transient (in-memory only) passwords are NOT serialized to disk.
+/// Transient (in-memory only) credentials are NOT serialized to disk.
 #[derive(Clone, Default)]
 pub struct ServerRepositoryState {
     store_file: String,
     servers: HashMap<String, ServerRecordMeta>,
     active_server_id: Option<String>,
-    /// Transient in-memory passwords for the current process/session.
-    /// Key = server_id, Value = password (may be empty string).
+    /// Transient in-memory credentials for the current process/session.
+    /// Key = server_id, Value = `AuthCredentials` (username, password, optional api_key).
     /// Not serialized (kept only in memory).
-    transient_passwords: HashMap<String, String>,
+    transient_credentials: HashMap<String, AuthCredentials>,
 }
 
-/// Server metadata stored in tauri-plugin-store (no password).
+/// Server metadata stored in tauri-plugin-store (no credentials).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServerRecordMeta {
     pub id: String,
@@ -90,7 +92,7 @@ pub fn init_repository(app: &AppHandle, store_file: &str) -> Result<ServerReposi
         store_file: store_file.to_string(),
         servers,
         active_server_id,
-        transient_passwords: HashMap::new(),
+        transient_credentials: HashMap::new(),
     })
 }
 
@@ -127,10 +129,10 @@ pub fn save_repository<R: Runtime>(
     Ok(())
 }
 
-// === Password storage (macOS) ===
+// === Credential storage (macOS) ===
 
 #[cfg(target_os = "macos")]
-fn protected_password_options(key: &str) -> security_framework::passwords::PasswordOptions {
+fn protected_credentials_options(key: &str) -> security_framework::passwords::PasswordOptions {
     let mut options =
         security_framework::passwords::PasswordOptions::new_generic_password(KEYCHAIN_SERVICE, key);
     options.use_protected_keychain();
@@ -139,27 +141,36 @@ fn protected_password_options(key: &str) -> security_framework::passwords::Passw
 }
 
 #[cfg(target_os = "macos")]
-fn legacy_password_options(key: &str) -> security_framework::passwords::PasswordOptions {
+fn legacy_credentials_options(key: &str) -> security_framework::passwords::PasswordOptions {
     let mut options =
         security_framework::passwords::PasswordOptions::new_generic_password(KEYCHAIN_SERVICE, key);
     options.set_access_synchronized(Some(false));
     options
 }
 
-/// Store password on macOS using standard (legacy) keychain first.
+/// Serialize credentials to a storable UTF-8 string. We always serialize
+/// `AuthCredentials` to JSON before handing it to the keychain so that the
+/// API key field is preserved.
+fn serialize_credentials(creds: &AuthCredentials) -> String {
+    serde_json::to_string(creds).unwrap_or_default()
+}
+
+/// Store credentials on macOS using standard (legacy) keychain first.
 /// Best-effort: returns Ok(()) on success, warning string on partial failure.
 #[cfg(target_os = "macos")]
-fn store_password<R: Runtime>(
+fn store_credentials<R: Runtime>(
     _app: &AppHandle<R>,
     server_id: &str,
-    password: &str,
+    creds: &AuthCredentials,
 ) -> Result<(), String> {
     let key = format!("{}{}", PASSWORD_KEY_PREFIX, server_id);
+    let serialized = serialize_credentials(creds);
+    let bytes = serialized.as_bytes();
 
     // Try standard/legacy keychain first (no use_protected_keychain)
     let legacy_err = match security_framework::passwords::set_generic_password_options(
-        password.as_bytes(),
-        legacy_password_options(&key),
+        bytes,
+        legacy_credentials_options(&key),
     ) {
         Ok(()) => return Ok(()),
         Err(e) => Some(format!("legacy: {}", e)),
@@ -167,8 +178,8 @@ fn store_password<R: Runtime>(
 
     // Fall back to protected keychain if legacy failed
     let protected_err = match security_framework::passwords::set_generic_password_options(
-        password.as_bytes(),
-        protected_password_options(&key),
+        bytes,
+        protected_credentials_options(&key),
     ) {
         Ok(()) => return Ok(()),
         Err(e) => Some(format!("protected: {}", e)),
@@ -181,82 +192,91 @@ fn store_password<R: Runtime>(
     ))
 }
 
-/// Get password on macOS: checks standard first, then protected.
+/// Get credentials on macOS: checks standard first, then protected.
 /// On success with protected-only find, best-effort migrates to standard.
+/// Supports dual-read: if the stored value is bare password (legacy), it is
+/// wrapped into `AuthCredentials` with empty username.
 #[cfg(target_os = "macos")]
-fn get_password<R: Runtime>(app: &AppHandle<R>, server_id: &str) -> Option<String> {
+fn get_credentials<R: Runtime>(app: &AppHandle<R>, server_id: &str) -> Option<AuthCredentials> {
     let key = format!("{}{}", PASSWORD_KEY_PREFIX, server_id);
     let _ = app;
 
     // Try standard keychain first
-    if let Ok(data) = security_framework::passwords::generic_password(legacy_password_options(&key))
+    if let Ok(data) =
+        security_framework::passwords::generic_password(legacy_credentials_options(&key))
     {
-        if let Ok(s) = String::from_utf8(data) {
-            return Some(s);
+        if let Some(creds) = parse_stored_credentials(&data) {
+            return Some(creds);
         }
     }
 
     // Fall back to protected keychain
     if let Ok(data) =
-        security_framework::passwords::generic_password(protected_password_options(&key))
+        security_framework::passwords::generic_password(protected_credentials_options(&key))
     {
-        if let Ok(s) = String::from_utf8(data.clone()) {
-            // Best-effort migration: try to store in standard keychain
-            // Ignore errors — we still return the password we found
-            let _ = security_framework::passwords::set_generic_password_options(
-                data.as_slice(),
-                legacy_password_options(&key),
-            );
-            return Some(s);
+        if let Some(creds) = parse_stored_credentials(&data) {
+            // Best-effort migration: try to re-store the JSON form in standard
+            // keychain so future reads hit the fast path.
+            if !creds.username.is_empty() || creds.api_key.is_some() {
+                if let Ok(serialized) = serde_json::to_string(&creds) {
+                    let _ = security_framework::passwords::set_generic_password_options(
+                        serialized.as_bytes(),
+                        legacy_credentials_options(&key),
+                    );
+                }
+            }
+            return Some(creds);
         }
     }
 
     None
 }
 
-/// Delete password on macOS: best-effort delete from both standard and protected.
+/// Delete credentials on macOS: best-effort delete from both standard and protected.
 /// Never fails — missing items are treated as success.
 #[cfg(target_os = "macos")]
-fn delete_password<R: Runtime>(_app: &AppHandle<R>, server_id: &str) -> Result<(), String> {
+fn delete_credentials<R: Runtime>(_app: &AppHandle<R>, server_id: &str) -> Result<(), String> {
     let key = format!("{}{}", PASSWORD_KEY_PREFIX, server_id);
 
     let _ = security_framework::passwords::delete_generic_password_options(
-        legacy_password_options(&key),
+        legacy_credentials_options(&key),
     );
     let _ = security_framework::passwords::delete_generic_password_options(
-        protected_password_options(&key),
+        protected_credentials_options(&key),
     );
 
     Ok(())
 }
 
 #[cfg(not(target_os = "macos"))]
-fn store_password<R: Runtime>(
+fn store_credentials<R: Runtime>(
     app: &AppHandle<R>,
     server_id: &str,
-    password: &str,
+    creds: &AuthCredentials,
 ) -> Result<(), String> {
     let key = format!("{}{}", PASSWORD_KEY_PREFIX, server_id);
+    let serialized = serialize_credentials(creds);
     let result = app.secure_storage().set_item(
         app.clone(),
         tauri_plugin_secure_storage::OptionsRequest {
             prefixed_key: Some(key),
-            data: Some(password.to_string()),
+            data: Some(serialized),
             sync: Some(false),
             keychain_access: None,
         },
     );
     match result {
         Ok(Some(_)) => Ok(()),
-        Ok(None) => Err("Failed to store password".to_string()),
+        Ok(None) => Err("Failed to store credentials".to_string()),
         Err(e) => Err(format!("Keychain error: {}", e)),
     }
 }
 
 #[cfg(not(target_os = "macos"))]
-fn get_password<R: Runtime>(app: &AppHandle<R>, server_id: &str) -> Option<String> {
+fn get_credentials<R: Runtime>(app: &AppHandle<R>, server_id: &str) -> Option<AuthCredentials> {
     let key = format!("{}{}", PASSWORD_KEY_PREFIX, server_id);
-    app.secure_storage()
+    let raw = app
+        .secure_storage()
         .get_item(
             app.clone(),
             tauri_plugin_secure_storage::OptionsRequest {
@@ -267,11 +287,30 @@ fn get_password<R: Runtime>(app: &AppHandle<R>, server_id: &str) -> Option<Strin
             },
         )
         .ok()?
-        .data
+        .data?;
+    parse_stored_credentials(raw.as_bytes())
+}
+
+/// Parse stored credential bytes. New entries are JSON-serialized
+/// `AuthCredentials`; legacy entries are bare password strings.
+fn parse_stored_credentials(bytes: &[u8]) -> Option<AuthCredentials> {
+    let text = std::str::from_utf8(bytes).ok()?;
+    if let Ok(creds) = serde_json::from_str::<AuthCredentials>(text) {
+        return Some(creds);
+    }
+    // Legacy migration: bare password string. Wrap with empty username.
+    if text.is_empty() {
+        return None;
+    }
+    Some(AuthCredentials {
+        api_key: None,
+        username: String::new(),
+        password: text.to_string(),
+    })
 }
 
 #[cfg(not(target_os = "macos"))]
-fn delete_password<R: Runtime>(app: &AppHandle<R>, server_id: &str) -> Result<(), String> {
+fn delete_credentials<R: Runtime>(app: &AppHandle<R>, server_id: &str) -> Result<(), String> {
     let key = format!("{}{}", PASSWORD_KEY_PREFIX, server_id);
     let result = app.secure_storage().remove_item(
         app.clone(),
@@ -293,6 +332,19 @@ fn delete_password<R: Runtime>(app: &AppHandle<R>, server_id: &str) -> Result<()
 
 // === Repository Operations ===
 
+fn normalize_stored_server_url(url: &str) -> String {
+    let trimmed = url.trim();
+    if trimmed.contains("://") {
+        normalize_server_url(trimmed, "https://")
+    } else {
+        let without_trailing_slash = trimmed.trim_end_matches('/');
+        without_trailing_slash
+            .strip_suffix("/api/v2")
+            .unwrap_or(without_trailing_slash)
+            .to_string()
+    }
+}
+
 /// Returns the credential status for a server given the current repo state.
 /// This checks both keychain (secure storage) and the transient map.
 fn compute_credential_status<R: Runtime>(
@@ -301,11 +353,11 @@ fn compute_credential_status<R: Runtime>(
     server_id: &str,
 ) -> (CredentialStatus, Option<String>) {
     // Check keychain first
-    if get_password(app, server_id).is_some() {
+    if get_credentials(app, server_id).is_some() {
         return (CredentialStatus::Stored, None);
     }
     // Check transient map
-    if repo.transient_passwords.contains_key(server_id) {
+    if repo.transient_credentials.contains_key(server_id) {
         return (CredentialStatus::SessionOnly, None);
     }
     (CredentialStatus::Missing, None)
@@ -361,19 +413,24 @@ pub fn get_server_meta(repo: &ServerRepositoryState, server_id: &str) -> Option<
     repo.servers.get(server_id).cloned()
 }
 
-/// Get a server's password: checks keychain first, then transient in-memory map.
-/// Returns None if no password is available.
-pub fn get_server_password<R: Runtime>(
+/// Get a server's credentials: checks keychain first, then transient in-memory map.
+/// Returns `None` if no credentials are available.
+///
+/// The returned `AuthCredentials` may have an empty `username` if the entry
+/// was migrated from a legacy password-only storage entry. Callers that need
+/// a non-empty username should merge in the username from their context
+/// (e.g. `ServerRecordMeta.username`).
+pub fn get_server_credentials<R: Runtime>(
     app: &AppHandle<R>,
     repo: &ServerRepositoryState,
     server_id: &str,
-) -> Option<String> {
+) -> Option<AuthCredentials> {
     // Try keychain first
-    if let Some(pw) = get_password(app, server_id) {
-        return Some(pw);
+    if let Some(creds) = get_credentials(app, server_id) {
+        return Some(creds);
     }
-    // Fall back to transient map (may be empty string)
-    repo.transient_passwords.get(server_id).cloned()
+    // Fall back to transient map
+    repo.transient_credentials.get(server_id).cloned()
 }
 
 /// Add a new server.
@@ -389,23 +446,30 @@ pub fn add_server<R: Runtime>(
     );
 
     // Normalize URL before storing to ensure consistent format
-    let normalized_url = normalize_server_url(&input.url, "https://");
+    let normalized_url = normalize_stored_server_url(&input.url);
+
+    let creds = AuthCredentials {
+        api_key: input
+            .api_key
+            .map(|key| key.trim().to_string())
+            .filter(|key| !key.is_empty()),
+        username: input.username.clone(),
+        password: input.password.clone(),
+    };
 
     let (credential_status, credential_warning) = if input.remember_password {
         // Try to persist in keychain; on failure fall back to transient map
-        match store_password(app, &id, &input.password) {
+        match store_credentials(app, &id, &creds) {
             Ok(()) => (CredentialStatus::Stored, None),
             Err(warning) => {
                 // Best-effort: keep in transient map for this session
-                repo.transient_passwords
-                    .insert(id.clone(), input.password.clone());
+                repo.transient_credentials.insert(id.clone(), creds);
                 (CredentialStatus::SessionOnly, Some(warning))
             }
         }
     } else {
         // Skip keychain entirely; keep only in transient map for session
-        repo.transient_passwords
-            .insert(id.clone(), input.password.clone());
+        repo.transient_credentials.insert(id.clone(), creds);
         (CredentialStatus::NotRequested, None)
     };
 
@@ -444,47 +508,78 @@ pub fn update_server<R: Runtime>(
         .clone();
 
     // Compute credential status before any mutation (avoids borrow conflict)
-    let (credential_status, credential_warning) = if input.password.is_none() {
-        compute_credential_status(app, repo, &server_id)
-    } else {
-        (CredentialStatus::Unknown, None)
-    };
+    let (credential_status, credential_warning) =
+        if input.password.is_none() && input.api_key.is_none() {
+            compute_credential_status(app, repo, &server_id)
+        } else {
+            (CredentialStatus::Unknown, None)
+        };
 
     // Now do metadata updates
     let final_credential_status;
     let final_credential_warning;
 
+    let username_provided = input.username.is_some();
+    // Load existing credentials BEFORE taking any mutable borrow on `repo`.
+    let existing_creds = get_server_credentials(app, repo, &server_id);
+    let had_existing_creds = existing_creds.is_some();
     {
         let meta_mut = repo.servers.get_mut(&server_id).unwrap();
         if let Some(name) = input.name {
             meta_mut.name = name;
         }
         if let Some(url) = input.url {
-            meta_mut.url = normalize_server_url(&url, "https://");
+            meta_mut.url = normalize_stored_server_url(&url);
         }
         if let Some(username) = input.username {
             meta_mut.username = username;
         }
 
-        if let Some(password) = input.password {
+        // Build the new credentials from the existing entry (if any).
+        let mut new_creds = existing_creds.unwrap_or_else(|| AuthCredentials {
+            api_key: None,
+            username: meta_mut.username.clone(),
+            password: String::new(),
+        });
+        let mut creds_changed = false;
+
+        if let Some(password) = input.password.clone() {
+            new_creds.password = password;
+            creds_changed = true;
+        }
+        if let Some(api_key) = input.api_key.clone() {
+            new_creds.api_key = api_key
+                .map(|key| key.trim().to_string())
+                .filter(|key| !key.is_empty());
+            creds_changed = true;
+        }
+        // Always reflect the latest username if provided.
+        if username_provided {
+            new_creds.username = meta_mut.username.clone();
+            if had_existing_creds {
+                creds_changed = true;
+            }
+        }
+
+        if creds_changed {
             match input.remember_password {
-                Some(true) | None => match store_password(app, &meta_mut.id, &password) {
+                Some(true) | None => match store_credentials(app, &server_id, &new_creds) {
                     Ok(()) => {
-                        repo.transient_passwords.remove(&meta_mut.id);
+                        repo.transient_credentials.remove(&server_id);
                         final_credential_status = CredentialStatus::Stored;
                         final_credential_warning = None;
                     }
                     Err(warning) => {
-                        repo.transient_passwords
-                            .insert(meta_mut.id.clone(), password);
+                        repo.transient_credentials
+                            .insert(server_id.clone(), new_creds);
                         final_credential_status = CredentialStatus::SessionOnly;
                         final_credential_warning = Some(warning);
                     }
                 },
                 Some(false) => {
-                    let _ = delete_password(app, &meta_mut.id);
-                    repo.transient_passwords
-                        .insert(meta_mut.id.clone(), password);
+                    let _ = delete_credentials(app, &server_id);
+                    repo.transient_credentials
+                        .insert(server_id.clone(), new_creds);
                     final_credential_status = CredentialStatus::SessionOnly;
                     final_credential_warning = None;
                 }
@@ -493,7 +588,7 @@ pub fn update_server<R: Runtime>(
             final_credential_status = credential_status;
             final_credential_warning = credential_warning;
         }
-    } // release mutable borrow on meta_mut here
+    }
 
     // Re-get meta for final summary (it's already updated in the repo)
     let meta_final = repo.servers.get(&server_id).unwrap();
@@ -508,8 +603,8 @@ pub fn update_server<R: Runtime>(
     })
 }
 
-/// Remove a server and its keychain password.
-/// Password deletion is best-effort; server metadata removal failures are surfaced.
+/// Remove a server and its keychain credentials.
+/// Credential deletion is best-effort; server metadata removal failures are surfaced.
 pub fn remove_server<R: Runtime>(
     app: &AppHandle<R>,
     repo: &mut ServerRepositoryState,
@@ -520,16 +615,16 @@ pub fn remove_server<R: Runtime>(
     }
 
     // Best-effort: try to delete from keychain, but don't fail the operation
-    if let Err(warning) = delete_password(app, server_id) {
+    if let Err(warning) = delete_credentials(app, server_id) {
         log::warn!(
-            "Failed to delete password for server '{}': {}",
+            "Failed to delete credentials for server '{}': {}",
             server_id,
             warning
         );
     }
 
     // Remove from transient map as well
-    repo.transient_passwords.remove(server_id);
+    repo.transient_credentials.remove(server_id);
 
     // Clear active if it was this server
     if repo.active_server_id.as_ref() == Some(&server_id.to_string()) {
@@ -539,22 +634,43 @@ pub fn remove_server<R: Runtime>(
     Ok(())
 }
 
-/// Select a server as active and persist the change to disk.
-pub fn select_server_and_persist<R: Runtime>(
+fn apply_authenticated_server_metadata(
+    repo: &mut ServerRepositoryState,
+    server_id: &str,
+    authenticated_url: &str,
+    make_active: bool,
+) -> Result<(String, Option<String>), String> {
+    let meta = repo
+        .servers
+        .get_mut(server_id)
+        .ok_or_else(|| format!("Server with id '{}' not found", server_id))?;
+    let original_url = std::mem::replace(
+        &mut meta.url,
+        normalize_stored_server_url(authenticated_url),
+    );
+    let original_active = repo.active_server_id.clone();
+    if make_active {
+        repo.active_server_id = Some(server_id.to_string());
+    }
+    Ok((original_url, original_active))
+}
+
+/// Persist the effective URL proven by a successful authenticated request and,
+/// for atomic switches, select the server in the same repository transaction.
+/// On persistence failure both in-memory metadata changes are rolled back.
+pub fn persist_authenticated_server<R: Runtime>(
     app: &AppHandle<R>,
     repo: &mut ServerRepositoryState,
     server_id: &str,
+    authenticated_url: &str,
+    make_active: bool,
 ) -> Result<(), String> {
-    if !repo.servers.contains_key(server_id) {
-        return Err(format!("Server with id '{}' not found", server_id));
-    }
-
-    let new_active = Some(server_id.to_string());
-    let original_active = repo.active_server_id.clone();
-    repo.active_server_id = new_active;
+    let (original_url, original_active) =
+        apply_authenticated_server_metadata(repo, server_id, authenticated_url, make_active)?;
     if let Err(persist_err) = save_repository(app, repo) {
-        // Rollback: restore original active_server_id so both in-memory and
-        // persisted state remain unchanged on persistence failure.
+        if let Some(meta) = repo.servers.get_mut(server_id) {
+            meta.url = original_url;
+        }
         repo.active_server_id = original_active;
         return Err(persist_err);
     }
@@ -571,49 +687,63 @@ pub fn select_server(repo: &mut ServerRepositoryState, server_id: &str) -> Resul
     Ok(())
 }
 
-/// Test connection using raw credentials (for add/test flows).
-pub async fn test_connection_raw(
-    server_url: &str,
-    username: &str,
-    password: &str,
-) -> TestConnectionResult {
-    match qbittorrent_login(server_url, username, password).await {
-        Ok(_) => TestConnectionResult {
-            success: true,
-            error: None,
-        },
-        Err(e) => TestConnectionResult {
-            success: false,
-            error: Some(e.to_string()),
-        },
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn test_repository() -> ServerRepositoryState {
+        ServerRepositoryState {
+            store_file: "test-servers.json".to_string(),
+            servers: HashMap::from([
+                (
+                    "candidate".to_string(),
+                    ServerRecordMeta {
+                        id: "candidate".to_string(),
+                        name: "Candidate".to_string(),
+                        url: "localhost:8080".to_string(),
+                        username: "admin".to_string(),
+                    },
+                ),
+                (
+                    "current".to_string(),
+                    ServerRecordMeta {
+                        id: "current".to_string(),
+                        name: "Current".to_string(),
+                        url: "https://example.test".to_string(),
+                        username: "admin".to_string(),
+                    },
+                ),
+            ]),
+            active_server_id: Some("current".to_string()),
+            transient_credentials: HashMap::new(),
+        }
     }
-}
 
-/// Test connection using a saved server ID (loads credentials from keychain then transient map).
-pub async fn test_saved_server<R: Runtime>(
-    app: &AppHandle<R>,
-    repo: &ServerRepositoryState,
-    server_id: &str,
-) -> TestConnectionResult {
-    let meta = match repo.servers.get(server_id) {
-        Some(m) => m,
-        None => {
-            return TestConnectionResult {
-                success: false,
-                error: Some(format!("Server '{}' not found", server_id)),
-            }
-        }
-    };
+    #[test]
+    fn authenticated_switch_updates_effective_url_and_active_server_together() {
+        let mut repo = test_repository();
 
-    let password = match get_server_password(app, repo, server_id) {
-        Some(p) => p,
-        None => {
-            return TestConnectionResult {
-                success: false,
-                error: Some(format!("Password not found for server '{}'", server_id)),
-            }
-        }
-    };
+        apply_authenticated_server_metadata(&mut repo, "candidate", "http://localhost:8080/", true)
+            .unwrap();
 
-    test_connection_raw(&meta.url, &meta.username, &password).await
+        assert_eq!(
+            repo.servers.get("candidate").unwrap().url,
+            "http://localhost:8080"
+        );
+        assert_eq!(repo.active_server_id.as_deref(), Some("candidate"));
+    }
+
+    #[test]
+    fn authenticated_reconnect_updates_url_without_changing_active_server() {
+        let mut repo = test_repository();
+
+        apply_authenticated_server_metadata(&mut repo, "candidate", "http://localhost:8080", false)
+            .unwrap();
+
+        assert_eq!(
+            repo.servers.get("candidate").unwrap().url,
+            "http://localhost:8080"
+        );
+        assert_eq!(repo.active_server_id.as_deref(), Some("current"));
+    }
 }

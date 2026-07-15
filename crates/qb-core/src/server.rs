@@ -61,6 +61,21 @@ pub struct PathMapping {
 /// This is passed from renderer -> Rust for add/test flows only.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServerCredentialsInput {
+    #[serde(default)]
+    pub api_key: Option<String>,
+    pub username: String,
+    pub password: String,
+}
+
+/// Bundle of credentials stored in the keychain (and/or transient map).
+///
+/// API keys are optional; when present, qBittorrent is contacted via the
+/// `Authorization: Bearer qbt_<key>` header instead of the
+/// username/password login endpoint.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct AuthCredentials {
+    #[serde(default)]
+    pub api_key: Option<String>,
     pub username: String,
     pub password: String,
 }
@@ -118,6 +133,9 @@ pub struct AddServerInput {
     pub url: String,
     pub username: String,
     pub password: String,
+    /// Optional API key for qBittorrent bearer-token auth.
+    #[serde(default)]
+    pub api_key: Option<String>,
     /// Whether to persist the password in secure storage.
     /// Defaults to true when omitted.
     #[serde(default = "default_remember_password")]
@@ -136,6 +154,12 @@ pub struct UpdateServerInput {
     pub url: Option<String>,
     pub username: Option<String>,
     pub password: Option<String>,
+    /// Optional API key for qBittorrent bearer-token auth.
+    /// - None: do not change current setting
+    /// - Some(Some(key)): set/clear the API key
+    /// - Some(None): explicitly clear any stored API key
+    #[serde(default)]
+    pub api_key: Option<Option<String>>,
     /// Whether to persist the password in secure storage.
     /// - None: do not change current setting
     /// - Some(true): store password securely; if storage fails, keep in transient map
@@ -146,13 +170,6 @@ pub struct UpdateServerInput {
 
 fn default_remember_password_option() -> Option<bool> {
     None
-}
-
-/// Response when testing a server connection.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TestConnectionResult {
-    pub success: bool,
-    pub error: Option<String>,
 }
 
 /// Input for normalizing a server URL.
@@ -168,15 +185,6 @@ pub struct NormalizeServerUrlInput {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NormalizeServerUrlOutput {
     pub normalized: String,
-}
-
-/// Result of probing a server URL to determine its scheme and reachability.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ProbeServerSchemeResult {
-    pub success: bool,
-    pub normalized_url: Option<String>,
-    pub error: Option<String>,
 }
 
 /// Result of validating a server URL format and structure.

@@ -22,7 +22,6 @@ import type {
   SessionSnapshot,
   SessionStatus,
   SyncMainData,
-  TestConnectionResult,
   UpdateServerInput,
   MaindataSnapshotResponse,
   MaindataSyncHealth,
@@ -199,8 +198,6 @@ function createInitialAppState(appScenario: AppScenario) {
         connectBehavior: 'success' as const,
         connectError: 'Unable to connect',
         connectDelayMs: 0,
-        savedServerTestResult: { success: true } as TestConnectionResult,
-        serverTestResult: { success: true } as TestConnectionResult,
         healthCheckResult: true,
       };
     case 'no-saved-servers-failure':
@@ -212,8 +209,6 @@ function createInitialAppState(appScenario: AppScenario) {
         connectBehavior: 'success' as const,
         connectError: 'Unable to connect',
         connectDelayMs: 0,
-        savedServerTestResult: { success: false, error: 'Unable to reach server' } as TestConnectionResult,
-        serverTestResult: { success: false, error: 'Unable to reach server' } as TestConnectionResult,
         healthCheckResult: true,
       };
     case 'saved-server-disconnected':
@@ -225,8 +220,6 @@ function createInitialAppState(appScenario: AppScenario) {
         connectBehavior: 'success' as const,
         connectError: 'Unable to connect',
         connectDelayMs: 0,
-        savedServerTestResult: { success: true } as TestConnectionResult,
-        serverTestResult: { success: true } as TestConnectionResult,
         healthCheckResult: true,
       };
     case 'saved-server-unavailable':
@@ -238,8 +231,6 @@ function createInitialAppState(appScenario: AppScenario) {
         connectBehavior: 'failure' as const,
         connectError: 'Saved server is unavailable',
         connectDelayMs: 0,
-        savedServerTestResult: { success: false, error: 'Saved server is unavailable' } as TestConnectionResult,
-        serverTestResult: { success: false, error: 'Unable to reach server' } as TestConnectionResult,
         healthCheckResult: false,
       };
     case 'saved-server-credential-missing':
@@ -251,8 +242,6 @@ function createInitialAppState(appScenario: AppScenario) {
         connectBehavior: 'success' as const,
         connectError: 'Saved password missing',
         connectDelayMs: 0,
-        savedServerTestResult: { success: true } as TestConnectionResult,
-        serverTestResult: { success: true } as TestConnectionResult,
         healthCheckResult: true,
       };
     case 'saved-server-credential-unavailable':
@@ -264,8 +253,6 @@ function createInitialAppState(appScenario: AppScenario) {
         connectBehavior: 'success' as const,
         connectError: 'Stored password unavailable on this device',
         connectDelayMs: 0,
-        savedServerTestResult: { success: true } as TestConnectionResult,
-        serverTestResult: { success: true } as TestConnectionResult,
         healthCheckResult: true,
       };
     case 'connected':
@@ -278,8 +265,6 @@ function createInitialAppState(appScenario: AppScenario) {
         connectBehavior: 'success' as const,
         connectError: 'Unable to connect',
         connectDelayMs: 0,
-        savedServerTestResult: { success: true } as TestConnectionResult,
-        serverTestResult: { success: true } as TestConnectionResult,
         healthCheckResult: true,
       };
   }
@@ -354,8 +339,6 @@ let _sessionSnapshot: SessionSnapshot = buildSnapshot('connected', DEFAULT_SERVE
 let _connectBehavior: 'success' | 'failure' = 'success';
 let _connectError = 'Unable to connect';
 let _connectDelayMs = 0;
-let _savedServerTestResult: TestConnectionResult = { success: true };
-let _serverTestResult: TestConnectionResult = { success: true };
 let _healthCheckResult = true;
 let _recordedCalls: RecordedCall[] = [];
 let _nextMutationFailure: MutationFailureConfig | null = null;
@@ -377,8 +360,6 @@ function setAppState(appScenario: AppScenario) {
   _connectBehavior = next.connectBehavior;
   _connectError = next.connectError;
   _connectDelayMs = next.connectDelayMs;
-  _savedServerTestResult = { ...next.savedServerTestResult };
-  _serverTestResult = { ...next.serverTestResult };
   _healthCheckResult = next.healthCheckResult;
 }
 
@@ -1605,8 +1586,6 @@ function createMockBridge(): DesktopBridge {
         if (passwordProvided && hadCredentialError) {
           _connectBehavior = 'success';
           _connectError = 'Unable to connect';
-          _savedServerTestResult = { success: true };
-          _serverTestResult = { success: true };
           _healthCheckResult = true;
         }
         if (_sessionSnapshot.server_id === input.id && _sessionSnapshot.status === 'connected') {
@@ -1648,42 +1627,12 @@ function createMockBridge(): DesktopBridge {
         emitSession('connected', server, null);
         return Promise.resolve(GEN);
       },
-      testServerConnection(serverUrl: string, credentials: { username: string; password: string }) {
-        recordCall('servers.testServerConnection', [serverUrl, credentials]);
-        return Promise.resolve({ ..._serverTestResult });
-      },
-      testSavedServerConnection(serverId: string) {
-        recordCall('servers.testSavedServerConnection', [serverId]);
-        const credentialError = getSavedCredentialError(_servers.find((server) => server.id === serverId));
-        if (credentialError) {
-          return Promise.resolve({ success: false, error: credentialError });
-        }
-        return Promise.resolve({ ..._savedServerTestResult });
-      },
-
       normalizeServerUrl(input: { url: string; defaultScheme?: string }) {
         recordCall('servers.normalizeServerUrl', [input]);
         const scheme = input.defaultScheme ?? 'http';
         const stripped = input.url.replace(/\/+$/, '').replace(/\/api\/v2\/?$/, '');
         const normalized = /^[a-z]+:\/\//.test(stripped) ? stripped : `${scheme}://${stripped}`;
         return Promise.resolve({ normalized });
-      },
-
-      probeServerScheme(url: string, username: string, password: string) {
-        recordCall('servers.probeServerScheme', [url, username, password]);
-        const normalized = url.replace(/\/+$/, '').replace(/\/api\/v2\/?$/, '');
-        if (!_serverTestResult.success) {
-          return Promise.resolve({
-            success: false,
-            normalizedUrl: null,
-            error: _serverTestResult.error ?? 'Connection failed',
-          });
-        }
-        return Promise.resolve({
-          success: true,
-          normalizedUrl: /^[a-z]+:\/\//.test(normalized) ? normalized : `http://${normalized}`,
-          error: null,
-        });
       },
     },
 

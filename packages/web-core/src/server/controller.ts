@@ -9,7 +9,6 @@ import type {
   SavedServerSummary,
   AddServerInput,
   UpdateServerInput,
-  TestConnectionResult,
 } from '@taurent/bridge/types';
 import type { BridgeCapabilities } from '@taurent/bridge/contracts/capabilities';
 import type { UnlistenFn } from '@taurent/bridge/transport';
@@ -24,11 +23,6 @@ export interface ServerBridgeInterface {
   updateServer(input: UpdateServerInput): Promise<SavedServerSummary>;
   removeServer(serverId: string): Promise<void>;
   selectServer(serverId: string): Promise<void>;
-  testServerConnection(
-    serverUrl: string,
-    credentials: { username: string; password: string },
-  ): Promise<TestConnectionResult>;
-  testSavedServerConnection(serverId: string): Promise<TestConnectionResult>;
   /** Atomic saved-server switch: commits the new session only on success. On failure the
    *  previous session remains intact. Returns the new session generation on success. */
   sessionSwitchServerById(serverId: string): Promise<number>;
@@ -42,16 +36,28 @@ export interface ServerManagerState {
 }
 
 export interface ServerManagerController extends ServerManagerState {
-  addServer: (name: string, url: string, username: string, password: string, rememberPassword?: boolean) => Promise<Server>;
+  addServer: (
+    name: string,
+    url: string,
+    username: string,
+    password: string,
+    rememberPassword?: boolean,
+    apiKey?: string,
+  ) => Promise<Server>;
   removeServer: (serverId: string) => Promise<void>;
   selectServer: (serverId: string) => Promise<void>;
   updateServer: (
     serverId: string,
-    updates: { name?: string; url?: string; username?: string; password?: string; rememberPassword?: boolean },
+    updates: {
+      name?: string;
+      url?: string;
+      username?: string;
+      password?: string;
+      rememberPassword?: boolean;
+      apiKey?: string | null;
+    },
   ) => Promise<void>;
   updateServerCredentials?: (serverId: string, url: string, username: string, password: string) => Promise<void>;
-  testServerConnection: (url: string, username: string, password: string) => Promise<TestConnectionResult>;
-  testSavedServerConnection: (serverId: string) => Promise<TestConnectionResult>;
   refreshServers: () => Promise<void>;
   switchServer: (serverId: string) => Promise<void>;
 }
@@ -164,50 +170,36 @@ export function useServerManagerController({
     };
   }, [createSessionEventListener, loadServers]);
 
-  const testServerConnection = useCallback(
-    async (url: string, username: string, password: string): Promise<TestConnectionResult> => {
-      try {
-        const result = await bridge.testServerConnection(url, { username, password });
-        return result;
-      } catch (error) {
-        return {
-          success: false,
-          error: formatUserMessageForContext(error, 'connection'),
-        };
-      }
-    },
-    [bridge],
-  );
-
-  const testSavedServerConnection = useCallback(
-    async (serverId: string): Promise<TestConnectionResult> => {
-      try {
-        const result = await bridge.testSavedServerConnection(serverId);
-        return result;
-      } catch (error) {
-        return {
-          success: false,
-          error: formatUserMessageForContext(error, 'connection'),
-        };
-      }
-    },
-    [bridge],
-  );
-
   const addServer = useCallback(
-    async (name: string, url: string, username: string, password: string, rememberPassword = true): Promise<Server> => {
+    async (
+      name: string,
+      url: string,
+      username: string,
+      password: string,
+      rememberPassword = true,
+      apiKey?: string,
+    ): Promise<Server> => {
       setState((prev) => ({ ...prev, loading: true, error: null }));
 
       try {
-        const summary = await bridge.addServer({ name, url, username, password, remember_password: rememberPassword });
+        const summary = await bridge.addServer({
+          name,
+          url,
+          username,
+          password,
+          remember_password: rememberPassword,
+          api_key: apiKey,
+        });
 
         const newServer = toServer(summary);
 
         setState((prev) => ({
           ...prev,
           servers: [...prev.servers, newServer],
-          // Keep the first add flow stable until the caller persists selection.
-          currentServer: prev.currentServer ?? newServer,
+          // Adding only persists the candidate. Do not make it current until an
+          // authenticated switch succeeds; otherwise session bootstrap can redirect
+          // away from the add form while its connection attempt is still failing.
+          currentServer: prev.currentServer,
           loading: false,
           error: null,
         }));
@@ -258,7 +250,14 @@ export function useServerManagerController({
   const updateServer = useCallback(
     async (
       serverId: string,
-      updates: { name?: string; url?: string; username?: string; password?: string; rememberPassword?: boolean },
+      updates: {
+        name?: string;
+        url?: string;
+        username?: string;
+        password?: string;
+        rememberPassword?: boolean;
+        apiKey?: string | null;
+      },
     ) => {
       setState((prev) => ({ ...prev, loading: true, error: null }));
 
@@ -269,6 +268,7 @@ export function useServerManagerController({
           url: updates.url,
           username: updates.username,
           password: updates.password,
+          api_key: updates.apiKey,
           remember_password: updates.rememberPassword,
         });
 
@@ -369,8 +369,6 @@ export function useServerManagerController({
       removeServer,
       selectServer: switchServer,
       updateServer,
-      testServerConnection,
-      testSavedServerConnection,
       refreshServers,
       switchServer,
     };
@@ -389,8 +387,6 @@ export function useServerManagerController({
     addServer,
     removeServer,
     updateServer,
-    testServerConnection,
-    testSavedServerConnection,
     refreshServers,
     switchServer,
     updateServerCredentials,

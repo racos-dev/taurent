@@ -14,6 +14,7 @@ fn test_server() -> ServerIdentity {
         url: "http://localhost:8080".into(),
         username: "admin".into(),
         password: "secret".into(),
+        api_key: None,
     }
 }
 
@@ -45,6 +46,7 @@ fn connect_commits_new_identity_and_discards_previous() {
         url: "http://remote:9090".into(),
         username: "user".into(),
         password: "pass".into(),
+        api_key: None,
     };
     let client2 = reqwest::Client::new();
     let cookie2 = "SID=candidate".to_string();
@@ -216,6 +218,7 @@ fn switch_server_resets_to_connecting() {
         url: "http://remote:9090".into(),
         username: "user".into(),
         password: "pass".into(),
+        api_key: None,
     };
 
     mgr.set_connecting(old_server);
@@ -431,6 +434,69 @@ fn login_client_constructed_with_shorter_timeout_than_request_client() {
     // Both clients build without error — confirming the pattern.
     // The timeouts are visibly different at construction time.
     assert_ne!(short_timeout, long_timeout);
+}
+
+#[test]
+fn cookie_less_login_accepts_qbittorrent_no_content_response() {
+    use crate::client::is_successful_cookie_less_login;
+    use reqwest::StatusCode;
+
+    assert!(is_successful_cookie_less_login(StatusCode::NO_CONTENT, ""));
+    assert!(is_successful_cookie_less_login(
+        StatusCode::NO_CONTENT,
+        "  "
+    ));
+}
+
+#[test]
+fn cookie_less_login_preserves_legacy_ok_response_and_rejects_unexpected_bodies() {
+    use crate::client::is_successful_cookie_less_login;
+    use reqwest::StatusCode;
+
+    assert!(is_successful_cookie_less_login(StatusCode::OK, "Ok."));
+    assert!(!is_successful_cookie_less_login(StatusCode::OK, ""));
+    assert!(!is_successful_cookie_less_login(
+        StatusCode::NO_CONTENT,
+        "Fails."
+    ));
+}
+
+#[test]
+fn response_cookie_extraction_accepts_port_scoped_qbittorrent_cookie_name() {
+    use crate::client::extract_response_cookies;
+    use reqwest::header::{HeaderMap, HeaderValue, SET_COOKIE};
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        SET_COOKIE,
+        HeaderValue::from_static("QBT_SID_8080=session-token; HttpOnly; SameSite=Lax; path=/"),
+    );
+
+    assert_eq!(
+        extract_response_cookies(&headers).as_deref(),
+        Some("QBT_SID_8080=session-token")
+    );
+}
+
+#[test]
+fn response_cookie_extraction_preserves_custom_and_proxy_cookie_pairs() {
+    use crate::client::extract_response_cookies;
+    use reqwest::header::{HeaderMap, HeaderValue, SET_COOKIE};
+
+    let mut headers = HeaderMap::new();
+    headers.append(
+        SET_COOKIE,
+        HeaderValue::from_static("proxy_session=proxy-token; Secure; path=/"),
+    );
+    headers.append(
+        SET_COOKIE,
+        HeaderValue::from_static("custom_qbt_session=qbt-token; HttpOnly; path=/"),
+    );
+
+    assert_eq!(
+        extract_response_cookies(&headers).as_deref(),
+        Some("proxy_session=proxy-token; custom_qbt_session=qbt-token")
+    );
 }
 
 // =============================================================================
@@ -690,7 +756,7 @@ fn is_network_error_message_returns_false_for_benign_messages() {
 }
 
 // =============================================================================
-// ProbeServerSchemeResult / NormalizeServerUrl types (serde round-trip)
+// NormalizeServerUrl types (serde round-trip)
 // =============================================================================
 
 #[test]
@@ -714,36 +780,6 @@ fn normalize_server_url_input_default_scheme() {
     assert_eq!(input.url, "localhost:8080");
     // default_https_scheme returns "https://"
     assert_eq!(input.default_scheme, "https://");
-}
-
-#[test]
-fn probe_server_scheme_result_success() {
-    use crate::server::ProbeServerSchemeResult;
-    let result = ProbeServerSchemeResult {
-        success: true,
-        normalized_url: Some("https://localhost:8080".into()),
-        error: None,
-    };
-    let json = serde_json::to_string(&result).unwrap();
-    let round: ProbeServerSchemeResult = serde_json::from_str(&json).unwrap();
-    assert!(round.success);
-    assert_eq!(round.normalized_url, Some("https://localhost:8080".into()));
-    assert!(round.error.is_none());
-}
-
-#[test]
-fn probe_server_scheme_result_failure() {
-    use crate::server::ProbeServerSchemeResult;
-    let result = ProbeServerSchemeResult {
-        success: false,
-        normalized_url: None,
-        error: Some("connection refused".into()),
-    };
-    let json = serde_json::to_string(&result).unwrap();
-    let round: ProbeServerSchemeResult = serde_json::from_str(&json).unwrap();
-    assert!(!round.success);
-    assert!(round.normalized_url.is_none());
-    assert_eq!(round.error, Some("connection refused".into()));
 }
 
 #[test]
@@ -794,6 +830,7 @@ fn atomic_switch_connect_does_not_clobber_previous_session_until_repo_persisted(
         url: "http://remote:9090".into(),
         username: "user".into(),
         password: "pass".into(),
+        api_key: None,
     };
     let client2 = reqwest::Client::new();
     let cookie2 = "SID=candidate".to_string();

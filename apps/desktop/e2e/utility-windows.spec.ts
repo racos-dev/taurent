@@ -183,7 +183,7 @@ test.describe('desktop utility windows', () => {
     }).toEqual({ listed: true, active: true });
   });
 
-  test('adds a saved server after a successful connection test', async ({ page }) => {
+  test('adds a saved server by filling the form and submitting directly', async ({ page }) => {
     await gotoSettingsServers(page, 'connected');
     await openAddServerForm(page);
 
@@ -194,60 +194,18 @@ test.describe('desktop utility windows', () => {
       password: 'secret',
     });
 
-    await addServerForm(page).getByRole('button', { name: 'Test Connection', exact: true }).click();
-    await expect(page.getByText('Connection successful!')).toBeVisible();
-
-    let call = await readLatestRecordedCall(page, 'servers.probeServerScheme');
-    expect(call?.args).toEqual([
-      'http://office.example:8080',
-      'operator',
-      'secret',
-    ]);
-
+    // No test-connection step — submit directly
     await addServerForm(page).getByRole('button', { name: 'Add Server', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Add New Server' })).toHaveCount(0);
     await expect(page.getByText('Office Server', { exact: true })).toBeVisible();
 
-    call = await readLatestRecordedCall(page, 'servers.addServer');
+    const call = await readLatestRecordedCall(page, 'servers.addServer');
     expect(call?.args[0]).toEqual(expect.objectContaining({
       name: 'Office Server',
       url: 'http://office.example:8080',
       username: 'operator',
       password: 'secret',
     }));
-  });
-
-  test('shows connection failure for a new server', async ({ page }) => {
-    await gotoSettingsServers(page, 'no-saved-servers-failure');
-
-    await openAddServerForm(page);
-    await fillAddServerForm(page, {
-      name: 'Broken Server',
-      url: 'http://offline.example:8080',
-      username: 'operator',
-      password: 'bad-secret',
-    });
-
-    await addServerForm(page).getByRole('button', { name: 'Test Connection', exact: true }).click();
-    await expect(page.getByText('Unable to reach server')).toBeVisible();
-    await expect(addServerForm(page).getByRole('button', { name: 'Add Server', exact: true })).toBeDisabled();
-
-    const call = await readLatestRecordedCall(page, 'servers.probeServerScheme');
-    expect(call?.args).toEqual([
-      'http://offline.example:8080',
-      'operator',
-      'bad-secret',
-    ]);
-  });
-
-  test('shows connection failure for a saved server', async ({ page }) => {
-    await gotoSettingsServers(page, 'saved-server-unavailable');
-
-    await serverCard(page, 'Mock Server').getByTitle('Test connection').click();
-    await expect(page.getByText('Could not connect to the server. Try again.')).toBeVisible();
-
-    const call = await readLatestRecordedCall(page, 'servers.testSavedServerConnection');
-    expect(call?.args).toEqual(['mock-server-id']);
   });
 
   test('shows inline credential health for saved servers with unavailable credentials', async ({ page }) => {
@@ -306,8 +264,7 @@ test.describe('desktop utility windows', () => {
       username: 'backup-user',
       password: 'backup-secret',
     });
-    await addServerForm(page).getByRole('button', { name: 'Test Connection', exact: true }).click();
-    await expect(page.getByText('Connection successful!')).toBeVisible();
+    // No test-connection step — submit directly
     await addServerForm(page).getByRole('button', { name: 'Add Server', exact: true }).click();
 
     // Attempt to switch to Backup Server — the atomic switch should fail visibly
@@ -345,8 +302,7 @@ test.describe('desktop utility windows', () => {
       password: 'backup-secret',
     });
 
-    await addServerForm(page).getByRole('button', { name: 'Test Connection', exact: true }).click();
-    await expect(page.getByText('Connection successful!')).toBeVisible();
+    // No test-connection step — submit directly
     await addServerForm(page).getByRole('button', { name: 'Add Server', exact: true }).click();
 
     const backupCard = serverCard(page, 'Backup Server');
@@ -371,8 +327,7 @@ test.describe('desktop utility windows', () => {
       password: 'temp-secret',
     });
 
-    await addServerForm(page).getByRole('button', { name: 'Test Connection', exact: true }).click();
-    await expect(page.getByText('Connection successful!')).toBeVisible();
+    // No test-connection step — submit directly
     await addServerForm(page).getByRole('button', { name: 'Add Server', exact: true }).click();
 
     const tempCard = serverCard(page, 'Temporary Server');

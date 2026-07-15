@@ -1,2 +1,2 @@
-export { AddServerFormBody } from './AddServerFormBody';
-export type { AddServerFormBodyProps, AddServerFormBodyVariant } from './types';
+export { AddServerForm } from './AddServerForm';
+export type { AddServerFormProps } from './AddServerForm';

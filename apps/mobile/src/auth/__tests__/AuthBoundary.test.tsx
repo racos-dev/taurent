@@ -28,8 +28,6 @@ describe('AuthBoundary', () => {
       addServer: vi.fn(),
       removeServer: vi.fn(),
       updateServer: vi.fn(),
-      testServerConnection: vi.fn(),
-      testSavedServerConnection: vi.fn(),
       refreshServers: vi.fn(),
       switchServer: vi.fn(),
     });
@@ -69,8 +67,6 @@ describe('AuthBoundary', () => {
       addServer: vi.fn(),
       removeServer: vi.fn(),
       updateServer: vi.fn(),
-      testServerConnection: vi.fn(),
-      testSavedServerConnection: vi.fn(),
       refreshServers: vi.fn(),
       switchServer: vi.fn(),
     });

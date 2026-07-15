@@ -5,8 +5,3 @@ export {
   type ServerBridgeInterface,
   type ServerManagerController,
 } from './controller';
-export {
-  useTestServerConnection,
-  type UseTestServerConnectionOptions,
-  type UseTestServerConnectionResult,
-} from './useTestServerConnection';

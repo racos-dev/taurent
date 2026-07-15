@@ -8,16 +8,31 @@ use qb_core::{
 };
 use serde::{Deserialize, Serialize};
 use tauri::{Emitter, State};
+use url::Url;
 
 use crate::client::response_text;
 use crate::server_repo::{
-    get_server_meta as repo_get_server_meta, get_server_password as repo_get_server_password,
-    select_server_and_persist as repo_select_server_and_persist, ServerRepoStateHandle,
+    get_server_credentials as repo_get_server_credentials, get_server_meta as repo_get_server_meta,
+    persist_authenticated_server as repo_persist_authenticated_server, ServerRepoStateHandle,
 };
 
 const STARTUP_PROBE_PATH: &str = "/api/v2/app/version";
 const WEBAPI_VERSION_PATH: &str = "/api/v2/app/webapiVersion";
 
+/// Parse a stored server URL into a `Url` for login.
+///
+/// The stored URL may be scheme-less (e.g. `localhost:8080`); the login
+/// function expects a `Url` and prefers to make the scheme decision itself
+/// when the URL lacks one. To preserve scheme-less URL semantics, we parse
+/// with `https://` only when no scheme is present. The login function will
+/// fall back to HTTP for genuinely scheme-less URLs that fail TLS.
+fn parse_login_url(raw: &str) -> Result<(Url, bool), String> {
+    let scheme_was_missing = !raw.contains("://");
+    let normalized = normalize_server_url(raw, "https://");
+    Url::parse(&normalized)
+        .map(|url| (url, scheme_was_missing))
+        .map_err(|err| format!("Invalid server URL '{}': {}", raw, err))
+}
 fn summarize_cookie(cookie: &str) -> String {
     let suffix: String = cookie
         .chars()
@@ -239,13 +254,15 @@ pub async fn session_connect(
     server_url: String,
     server_username: String,
     server_password: String,
+    api_key: Option<String>,
 ) -> Result<u64, String> {
-    let identity = ServerIdentity {
+    let mut identity = ServerIdentity {
         id: server_id.clone(),
         name: server_name,
         url: server_url.clone(),
         username: server_username.clone(),
         password: server_password.clone(),
+        api_key: api_key.clone(),
     };
 
     let generation = {
@@ -261,13 +278,23 @@ pub async fn session_connect(
         None,
     );
 
-    let login_result = qbittorrent_login(&server_url, &server_username, &server_password).await;
+    let (parsed_url, allow_http_fallback) = parse_login_url(&server_url)?;
+    let login_result = qbittorrent_login(
+        &parsed_url,
+        allow_http_fallback,
+        api_key.as_deref(),
+        &server_username,
+        &server_password,
+    )
+    .await;
 
     match login_result {
-        Ok((client, sid_cookie)) => {
-            let normalized_url = normalize_server_url(&server_url, "https://");
+        Ok((client, sid_cookie, authenticated_base_url)) => {
+            identity.url = authenticated_base_url.clone();
             let app_version =
-                match load_app_version(&client, &normalized_url, &sid_cookie, &server_id).await {
+                match load_app_version(&client, &authenticated_base_url, &sid_cookie, &server_id)
+                    .await
+                {
                     Ok(app_version) => app_version,
                     Err(error_message) => {
                         let mut session = state.lock().unwrap();
@@ -285,7 +312,7 @@ pub async fn session_connect(
 
             let (api_version, capabilities) = match load_resolved_capabilities(
                 &client,
-                &normalized_url,
+                &authenticated_base_url,
                 &sid_cookie,
                 &server_id,
                 &app_version,
@@ -350,24 +377,35 @@ pub async fn session_connect_by_id(
     app: tauri::AppHandle,
     server_id: String,
 ) -> Result<u64, String> {
-    // Load server metadata and password from repo
+    // Load server metadata and credentials from repo
     let meta = {
         let repo = server_repo_state.lock().unwrap();
         repo_get_server_meta(&repo, &server_id)
             .ok_or_else(|| format!("Server '{}' not found in repository", server_id))?
     };
-    let password = {
+    let creds = {
         let repo = server_repo_state.lock().unwrap();
-        repo_get_server_password(&app, &repo, &server_id)
-            .ok_or_else(|| format!("Password is required for server '{}' but is not available. Please update server credentials.", server_id))?
+        repo_get_server_credentials(&app, &repo, &server_id).ok_or_else(|| {
+            format!(
+                "Credentials are required for server '{}' but are not available. Please update server credentials.",
+                server_id
+            )
+        })?
+    };
+    // Merge username from metadata if credentials came from a legacy bare-password entry.
+    let username = if creds.username.is_empty() {
+        meta.username.clone()
+    } else {
+        creds.username.clone()
     };
 
-    let identity = ServerIdentity {
+    let mut identity = ServerIdentity {
         id: meta.id.clone(),
         name: meta.name.clone(),
         url: meta.url.clone(),
-        username: meta.username.clone(),
-        password: password.clone(),
+        username: username.clone(),
+        password: creds.password.clone(),
+        api_key: creds.api_key.clone(),
     };
 
     let generation = {
@@ -383,13 +421,23 @@ pub async fn session_connect_by_id(
         None,
     );
 
-    let login_result = qbittorrent_login(&meta.url, &meta.username, &password.clone()).await;
+    let (parsed_url, allow_http_fallback) = parse_login_url(&meta.url)?;
+    let login_result = qbittorrent_login(
+        &parsed_url,
+        allow_http_fallback,
+        creds.api_key.as_deref(),
+        &username,
+        &creds.password,
+    )
+    .await;
 
     match login_result {
-        Ok((client, sid_cookie)) => {
-            let normalized_url = normalize_server_url(&meta.url, "https://");
+        Ok((client, sid_cookie, authenticated_base_url)) => {
+            identity.url = authenticated_base_url.clone();
             let app_version =
-                match load_app_version(&client, &normalized_url, &sid_cookie, &server_id).await {
+                match load_app_version(&client, &authenticated_base_url, &sid_cookie, &server_id)
+                    .await
+                {
                     Ok(app_version) => app_version,
                     Err(error_message) => {
                         let mut session = session_state.lock().unwrap();
@@ -407,7 +455,7 @@ pub async fn session_connect_by_id(
 
             let (api_version, capabilities) = match load_resolved_capabilities(
                 &client,
-                &normalized_url,
+                &authenticated_base_url,
                 &sid_cookie,
                 &server_id,
                 &app_version,
@@ -430,6 +478,28 @@ pub async fn session_connect_by_id(
             };
 
             let supports_pause_resume = capabilities.supports_pause_resume;
+
+            if let Err(error_message) = {
+                let mut repo = server_repo_state.lock().unwrap();
+                repo_persist_authenticated_server(
+                    &app,
+                    &mut repo,
+                    &server_id,
+                    &authenticated_base_url,
+                    false,
+                )
+            } {
+                let mut session = session_state.lock().unwrap();
+                let generation = session.set_error(error_message.clone());
+                emit_session_changed(
+                    &app,
+                    generation,
+                    Some(server_id),
+                    SessionStatus::Error,
+                    Some(error_message.clone()),
+                );
+                return Err(error_message);
+            }
 
             let mut session = session_state.lock().unwrap();
             let generation = session.connect(identity, client, sid_cookie, supports_pause_resume);
@@ -474,49 +544,68 @@ pub async fn session_switch_server_by_id(
     app: tauri::AppHandle,
     server_id: String,
 ) -> Result<u64, String> {
-    // Step 1: Load candidate server metadata and password from repo (without touching session)
+    // Step 1: Load candidate server metadata and credentials from repo (without touching session)
     let meta = {
         let repo = server_repo_state.lock().unwrap();
         repo_get_server_meta(&repo, &server_id)
             .ok_or_else(|| format!("Server '{}' not found in repository", server_id))?
     };
-    let password = {
+    let creds = {
         let repo = server_repo_state.lock().unwrap();
-        repo_get_server_password(&app, &repo, &server_id).ok_or_else(|| {
+        repo_get_server_credentials(&app, &repo, &server_id).ok_or_else(|| {
             format!(
-                "Password is required for server '{}' but is not available. Please update server credentials.",
+                "Credentials are required for server '{}' but are not available. Please update server credentials.",
                 server_id
             )
         })?
     };
+    let username = if creds.username.is_empty() {
+        meta.username.clone()
+    } else {
+        creds.username.clone()
+    };
 
-    let identity = ServerIdentity {
+    let mut identity = ServerIdentity {
         id: meta.id.clone(),
         name: meta.name.clone(),
         url: meta.url.clone(),
-        username: meta.username.clone(),
-        password: password.clone(),
+        username: username.clone(),
+        password: creds.password.clone(),
+        api_key: creds.api_key.clone(),
     };
 
     // Step 2: Authenticate and probe the candidate server (NO session mutation)
-    let login_result = qbittorrent_login(&meta.url, &meta.username, &password).await;
+    let (parsed_url, allow_http_fallback) = parse_login_url(&meta.url)?;
+    let login_result = qbittorrent_login(
+        &parsed_url,
+        allow_http_fallback,
+        creds.api_key.as_deref(),
+        &username,
+        &creds.password,
+    )
+    .await;
 
     let (client, sid_cookie, supports_pause_resume, api_version, capabilities, app_version) =
         match login_result {
-            Ok((client, sid_cookie)) => {
-                let normalized_url = normalize_server_url(&meta.url, "https://");
-                let app_version =
-                    match load_app_version(&client, &normalized_url, &sid_cookie, &server_id).await
-                    {
-                        Ok(app_version) => app_version,
-                        Err(error_message) => {
-                            return Err(error_message);
-                        }
-                    };
+            Ok((client, sid_cookie, authenticated_base_url)) => {
+                identity.url = authenticated_base_url.clone();
+                let app_version = match load_app_version(
+                    &client,
+                    &authenticated_base_url,
+                    &sid_cookie,
+                    &server_id,
+                )
+                .await
+                {
+                    Ok(app_version) => app_version,
+                    Err(error_message) => {
+                        return Err(error_message);
+                    }
+                };
 
                 let (api_version, capabilities) = load_resolved_capabilities(
                     &client,
-                    &normalized_url,
+                    &authenticated_base_url,
                     &sid_cookie,
                     &server_id,
                     &app_version,
@@ -539,11 +628,11 @@ pub async fn session_switch_server_by_id(
             }
         };
 
-    // Step 3: Candidate is verified — persist active server FIRST.
-    // If this fails, session is untouched (command returns error without session mutation).
+    // Step 3: Candidate is verified — persist its proven effective URL and active
+    // selection together. If this fails, session and repository state are untouched.
     {
         let mut repo = server_repo_state.lock().unwrap();
-        repo_select_server_and_persist(&app, &mut repo, &server_id)?;
+        repo_persist_authenticated_server(&app, &mut repo, &server_id, &identity.url, true)?;
     }
 
     // Step 4: Repo is saved — now commit the session.
@@ -616,14 +705,22 @@ pub async fn session_reconnect(
     // Mutex is released here — safe to .await
 
     // Step 2: perform network login (same as session_connect_by_id)
-    let login_result =
-        qbittorrent_login(&identity.url, &identity.username, &identity.password).await;
+    let (parsed_url, allow_http_fallback) = parse_login_url(&identity.url)?;
+    let login_result = qbittorrent_login(
+        &parsed_url,
+        allow_http_fallback,
+        identity.api_key.as_deref(),
+        &identity.username,
+        &identity.password,
+    )
+    .await;
 
     match login_result {
-        Ok((client, sid_cookie)) => {
-            let normalized_url = normalize_server_url(&identity.url, "https://");
+        Ok((client, sid_cookie, authenticated_base_url)) => {
             let app_version =
-                match load_app_version(&client, &normalized_url, &sid_cookie, &identity.id).await {
+                match load_app_version(&client, &authenticated_base_url, &sid_cookie, &identity.id)
+                    .await
+                {
                     Ok(app_version) => app_version,
                     Err(msg) => {
                         let mut session = session_state.lock().unwrap();
@@ -640,7 +737,7 @@ pub async fn session_reconnect(
                 };
             let (api_version, capabilities) = match load_resolved_capabilities(
                 &client,
-                &normalized_url,
+                &authenticated_base_url,
                 &sid_cookie,
                 &identity.id,
                 &app_version,
@@ -772,6 +869,7 @@ pub fn session_switch_server(
     server_url: String,
     server_username: String,
     server_password: String,
+    api_key: Option<String>,
 ) -> Result<u64, String> {
     let mut session = state.lock().unwrap();
     let identity = ServerIdentity {
@@ -780,6 +878,7 @@ pub fn session_switch_server(
         url: server_url,
         username: server_username,
         password: server_password,
+        api_key,
     };
     let generation = session.switch_server(identity);
     emit_session_changed(
@@ -854,6 +953,7 @@ pub fn session_set_connecting(
     server_url: String,
     server_username: String,
     server_password: String,
+    api_key: Option<String>,
 ) -> Result<u64, String> {
     let mut session = state.lock().unwrap();
     let generation = session.set_connecting(ServerIdentity {
@@ -862,6 +962,7 @@ pub fn session_set_connecting(
         url: server_url,
         username: server_username,
         password: server_password,
+        api_key,
     });
 
     emit_session_changed(
