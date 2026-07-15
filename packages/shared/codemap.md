@@ -13,7 +13,6 @@ packages/shared/src/
 │   ├── qbittorrent.ts          # API-first types (Torrent, Preferences, TransferInfo, etc.)
 │   ├── server.ts               # Server type
 │   ├── auth.ts                 # Auth types
-│   └── globals.ts              # Global Window type augmentations (__TAURENT_WINDOW_LABEL__)
 ├── schemas/
 │   ├── qbittorrent.ts          # Zod schemas for API responses
 │   └── addTorrent.ts           # Add-torrent form validation

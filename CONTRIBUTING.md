@@ -50,7 +50,6 @@ Desktop-specific:
 ```bash
 pnpm desktop:test
 pnpm desktop:renderer:e2e
-pnpm desktop:tauri:e2e
 ```
 
 Mobile-specific:

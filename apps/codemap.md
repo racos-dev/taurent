@@ -49,7 +49,7 @@ Both apps are thin shells that compose shared providers from `@taurent/web-core`
 
 ## Testing
 
-- Desktop: Vitest unit tests (`pnpm desktop:test`), Vitest browser mode (`pnpm desktop:test:browser`), Playwright renderer E2E (`pnpm desktop:renderer:e2e`), native Tauri E2E (`pnpm desktop:tauri:e2e`).
+- Desktop: Vitest unit tests (`pnpm desktop:test`), Vitest browser mode (`pnpm desktop:test:browser`), and Playwright renderer E2E (`pnpm desktop:renderer:e2e`).
 - Mobile: Vitest unit tests (`pnpm mobile:test`), Playwright renderer E2E (`pnpm mobile:renderer:e2e`).
 - Workspace-wide: `pnpm lint`, `pnpm typecheck`, `pnpm test:unit`.
 

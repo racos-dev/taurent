@@ -1,12 +1,8 @@
 use std::collections::HashSet;
-use std::fs::OpenOptions;
-use std::io::Write;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
-use std::time::{SystemTime, UNIX_EPOCH};
 
-use tauri::webview::PageLoadEvent;
 use tauri::{AppHandle, Emitter, Listener, Manager};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_store::StoreExt;
@@ -250,31 +246,6 @@ fn notify_tray_resume(app_handle: &AppHandle) {
             serde_json::json!({ "inTray": false }),
         );
     }
-}
-
-fn append_e2e_native_diagnostic(message: &str) {
-    let Ok(path) = std::env::var("TAURENT_TAURI_E2E_NATIVE_LOG") else {
-        return;
-    };
-    if path.trim().is_empty() {
-        return;
-    }
-
-    let timestamp_ms = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|duration| duration.as_millis())
-        .unwrap_or_default();
-
-    if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(path) {
-        let _ = writeln!(file, "{timestamp_ms}\t{message}");
-    }
-}
-
-fn sanitize_e2e_diagnostic_field(value: &str) -> String {
-    value
-        .replace('\r', "\\r")
-        .replace('\n', "\\n")
-        .replace('\t', "\\t")
 }
 
 // ─── Tray state ──────────────────────────────────────────────────────────────
@@ -652,8 +623,6 @@ use qb_tauri::sync::{create_sync_manager_registry, setup_sync_lifecycle};
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let builder = add_shared_plugins(add_desktop_plugins(tauri::Builder::default()));
-    #[cfg(feature = "webdriver")]
-    let builder = builder.plugin(tauri_plugin_webdriver::init());
     let builder = builder.plugin(tauri_plugin_autostart::init(
         tauri_plugin_autostart::MacosLauncher::LaunchAgent,
         None,
@@ -805,21 +774,7 @@ pub fn run() {
             get_download_completion_notifications_enabled,
             set_download_completion_notifications_enabled,
         ])
-        .on_page_load(|webview, payload| {
-            let event = match payload.event() {
-                PageLoadEvent::Started => "started",
-                PageLoadEvent::Finished => "finished",
-            };
-            append_e2e_native_diagnostic(&format!(
-                "page-load\t{}\t{}\t{}",
-                sanitize_e2e_diagnostic_field(webview.label()),
-                event,
-                sanitize_e2e_diagnostic_field(payload.url().as_str()),
-            ));
-        })
         .setup(|app: &mut tauri::App| {
-            append_e2e_native_diagnostic("setup\tstarted");
-
             let server_repo = init_and_manage_repository(app.handle(), DESKTOP_SERVER_STORE_FILE)
                 .expect("Failed to initialize server repository");
             app.manage(server_repo);
@@ -860,22 +815,8 @@ pub fn run() {
                 }
             });
 
-            // Keep native logs on the plugin's default stdout target and forward
-            // only webview-origin logs to the renderer. Adding another stdout
-            // target duplicates every native line in `pnpm desktop:dev`.
-            //
-            // In the native Tauri E2E runner (`TAURENT_TAURI_E2E_NATIVE_LOG`),
-            // we clear the default stdout target and re-add it via the builder
-            // so the level filter below also lifts to `Info`. This lets the
-            // runner capture the `log::info!` sync diagnostic lines emitted
-            // from `crates/qb-tauri/src/sync/manager.rs` and
-            // `crates/qb-tauri/src/sync/registry.rs`.
-            //
-            // Note: `clear_targets()` also drops the default `LogDir` target
-            // (the plugin's per-app log file under the OS data dir). We rely on
-            // the runner's stdout tee into `native-page-load.log` instead, so
-            // e2e runs do not write logs into the isolated E2E profile dir.
-            let is_native_e2e = std::env::var("TAURENT_TAURI_E2E_NATIVE_LOG").is_ok();
+            // Keep native logs on the plugin's default targets and forward only
+            // webview-origin logs to the renderer.
             let webview_log_target = tauri_plugin_log::Target::new(
                 tauri_plugin_log::TargetKind::Webview,
             )
@@ -884,24 +825,14 @@ pub fn run() {
                     .target()
                     .starts_with(tauri_plugin_log::WEBVIEW_TARGET)
             });
-            let level = if is_native_e2e {
-                log::LevelFilter::Info
-            } else if cfg!(debug_assertions) {
+            let level = if cfg!(debug_assertions) {
                 log::LevelFilter::Debug
             } else {
                 log::LevelFilter::Warn
             };
-            let mut log_builder = tauri_plugin_log::Builder::default().level(level);
-            if is_native_e2e {
-                log_builder = log_builder
-                    .clear_targets()
-                    .target(tauri_plugin_log::Target::new(
-                        tauri_plugin_log::TargetKind::Stdout,
-                    ))
-                    .target(webview_log_target);
-            } else {
-                log_builder = log_builder.target(webview_log_target);
-            }
+            let log_builder = tauri_plugin_log::Builder::default()
+                .level(level)
+                .target(webview_log_target);
             app.handle().plugin(log_builder.build())?;
 
             // The main window uses `create: false` in tauri.conf.json so we can
@@ -1025,8 +956,6 @@ pub fn run() {
                     }
                 }
             }
-
-            append_e2e_native_diagnostic("setup\tfinished");
 
             Ok(())
         })

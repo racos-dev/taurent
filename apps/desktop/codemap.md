@@ -122,9 +122,8 @@ apps/desktop/src/
 - **Unit**: Vitest with jsdom — `pnpm desktop:test` or `pnpm --filter taurent test`.
 - **Browser mode**: Vitest browser with Chromium — `pnpm desktop:test:browser`.
 - **Renderer E2E**: Playwright with mocked bridge/tauri transport aliases — `pnpm desktop:renderer:e2e`. Runs with `fullyParallel: false`.
-- **Native Tauri E2E**: `pnpm desktop:tauri:e2e` via `scripts/e2e/runner.ts` (1227 lines, orchestrates fake qBittorrent, Vite, Tauri, WebDriverIO; runs fake backend contract assertions and sync lifecycle exercises).
 - **Bundle analysis**: `pnpm desktop:analyze`, `pnpm desktop:perf:baseline/compare/check`.
-- **`scripts/`** — dev launcher (`dev/`), E2E runner infrastructure (`e2e/`), perf analysis (`perf/`), fake backend for E2E (`testing/fake-qbittorrent.ts`, 966 lines).
+- **`scripts/`** — dev launcher (`dev/`), icon generation, and perf analysis (`perf/`).
 - **`src/testing/`** — DesktopBridge mock with scenario/delta/fault injection, no-op Tauri core/logging/transport/event/webview/window/DPI/notification mocks, deterministic torrent fixture factories. Aliased via `VITE_AUTOMATION=1` in `vite.config.ts` and `playwright.config.ts`. Playwright E2E helpers (`e2e/helpers/desktop.ts`) provide torrent row locators and mocked webview polling.
 
 ## Invariants

@@ -48,7 +48,7 @@ This package deliberately contains no platform-specific side-effects (no `@tauri
 - **Entry barrel**: `packages/shared/src/index.ts`
 - **Stores**: `torrentStore.ts`, `uiStore.ts`
 - **Utilities**: `formatters.ts`, `validation.ts`, `error.ts`, `torrentStatus.ts`, `torrentFilter.ts`, `sortTorrents.ts`, `deriveTrackerEntries.ts`, `maindata.ts`, `formBuilders.ts`, `cn.ts`, `logger.ts`, `server-url.ts`, `perfAudit.ts`
-- **Types**: `qbittorrent.ts`, `server.ts`, `auth.ts`, `globals.ts`
+- **Types**: `qbittorrent.ts`, `server.ts`, `auth.ts`
 - **Schemas**: `qbittorrent.ts`, `addTorrent.ts`
 - **Theme**: `tokens.ts`, `registry.ts`, `resolver.ts`, `helpers.ts`, `types.ts`, `accent.ts`, `background.ts`, `backgroundRuntime.ts`, `motion.ts`
 - **Server domain**: `server/` (types, validation, ID generation)

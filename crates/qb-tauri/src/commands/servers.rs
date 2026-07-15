@@ -644,24 +644,15 @@ mod tests {
 
 const PATH_MAPPINGS_KEY: &str = "path_mappings";
 
-fn resolve_server_store_path() -> String {
-    if let Ok(e2e_dir) = std::env::var("E2E_STORE_DIR") {
-        let base = std::path::Path::new(&e2e_dir);
-        base.join(DESKTOP_SERVER_STORE_FILE)
-            .to_string_lossy()
-            .into_owned()
-    } else {
-        DESKTOP_SERVER_STORE_FILE.to_string()
-    }
-}
-
 fn load_path_mappings_by_server(
     app: &AppHandle,
 ) -> Result<HashMap<String, Vec<PathMapping>>, String> {
-    let store_path = resolve_server_store_path();
-    let store = app
-        .store(&store_path)
-        .map_err(|error| format!("Failed to open store '{}': {}", store_path, error))?;
+    let store = app.store(DESKTOP_SERVER_STORE_FILE).map_err(|error| {
+        format!(
+            "Failed to open store '{}': {}",
+            DESKTOP_SERVER_STORE_FILE, error
+        )
+    })?;
 
     Ok(store
         .get(PATH_MAPPINGS_KEY)
@@ -768,10 +759,12 @@ pub fn set_path_mappings(
     repo_get_server_meta(&repo, &server_id)
         .ok_or_else(|| format!("Server '{}' not found", server_id))?;
 
-    let store_path = resolve_server_store_path();
-    let store = app
-        .store(&store_path)
-        .map_err(|error| format!("Failed to open store '{}': {}", store_path, error))?;
+    let store = app.store(DESKTOP_SERVER_STORE_FILE).map_err(|error| {
+        format!(
+            "Failed to open store '{}': {}",
+            DESKTOP_SERVER_STORE_FILE, error
+        )
+    })?;
 
     let mut path_mappings = load_path_mappings_by_server(&app)?;
     path_mappings.insert(server_id, mappings);

@@ -29,18 +29,6 @@ registerOperationFailedNotifier((callback) => {
   return () => { unlisten?.(); };
 });
 
-// ── Window label for investigation perf counters ──────────────────────────────
-// Set before first render so all code sees a consistent label from the first cycle.
-// Guard against non-Tauri environments (browser automation, vite dev server preview).
-try {
-  const { getCurrentWindow } = await import('@tauri-apps/api/window');
-  window.__TAURENT_WINDOW_LABEL__ = getCurrentWindow().label;
-} catch {
-  // getCurrentWindow is unavailable outside Tauri runtime — this is expected in
-  // browser automation, plain vite preview, and unit test environments.
-  window.__TAURENT_WINDOW_LABEL__ = 'main';
-}
-
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

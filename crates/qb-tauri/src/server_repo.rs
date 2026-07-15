@@ -56,24 +56,10 @@ pub struct ServerRecordMeta {
 pub type ServerRepoStateHandle = Mutex<ServerRepositoryState>;
 
 /// Initialize the server repository from the given store file.
-/// Initialize the server repository from the given store file.
-/// When the `E2E_STORE_DIR` environment variable is set, the store is placed
-/// inside that directory — enabling test isolation from the real app install.
 pub fn init_repository(app: &AppHandle, store_file: &str) -> Result<ServerRepositoryState, String> {
-    // Respect E2E store directory for test isolation.
-    // The test script passes this so the Rust backend uses the same temp
-    // profile directory that WebView2 uses, keeping server state out of the
-    // real app's data dir.
-    let store_path = if let Ok(e2e_dir) = std::env::var("E2E_STORE_DIR") {
-        let base = std::path::Path::new(&e2e_dir);
-        base.join(store_file).to_string_lossy().into_owned()
-    } else {
-        store_file.to_string()
-    };
-
     let store = app
-        .store(&store_path)
-        .map_err(|e| format!("Failed to open store '{}': {}", store_path, e))?;
+        .store(store_file)
+        .map_err(|e| format!("Failed to open store '{}': {}", store_file, e))?;
 
     // Load servers map (metadata only, no passwords)
     let servers: HashMap<String, ServerRecordMeta> = store

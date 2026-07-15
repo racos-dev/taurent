@@ -30,10 +30,6 @@ These types are authoritative for serialisation/deserialisation boundaries and f
   - `AuthState` — canonical UI/auth store shape (isAuthenticated, user, loading, error).
   - `AuthContextType` — extends `AuthState` with imperative async operations (`login`, `logout`, `refreshAuth`).
 
-- `globals.ts` — Global type augmentations (16 lines):
-  - Declares `Window.__TAURENT_WINDOW_LABEL__?: string` on the global `Window` interface.
-  - Set by desktop entry points (`apps/desktop/src/main.tsx`, `apps/desktop/src/settings-main.tsx`) before the first render; read in automation helpers (`apps/desktop/scripts/e2e/helpers.ts`).
-  - Side-effect `import './types/globals'` in `src/index.ts` ensures the declaration is available project-wide without explicit imports.
 
 ## Design
 

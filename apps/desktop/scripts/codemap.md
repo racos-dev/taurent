@@ -2,11 +2,11 @@
 
 ## Responsibility
 
-Top-level container for desktop support scripts: dev launch, native E2E runner, perf / bundle analysis, and fake backend / testing infrastructure used by those runners.
+Top-level container for desktop support scripts: dev launch, icon generation, and perf / bundle analysis.
 
 ## Design
 
-Organized as subdirectories: `dev/`, `e2e/`, `perf/`, and `testing/`. Each subdirectory is a self-contained set of standalone CLI entrypoints invoked via pnpm scripts; there is no shared runtime library at this level.
+Organized as self-contained CLI entrypoints and subdirectories invoked via pnpm scripts; there is no shared runtime library at this level.
 
 ## Flow
 
@@ -14,4 +14,4 @@ Scripts are imperative: they spawn child processes, manage ports and processes, 
 
 ## Integration
 
-`dev/` bridges `pnpm desktop:dev` to `tauri dev`. `e2e/` orchestrates the fake qBittorrent, Vite, Tauri, and WebDriverIO together. `perf/` reads dist assets and writes analysis artifacts. `testing/` hosts the fake backend consumed by the E2E runner.
+`dev/` bridges `pnpm desktop:dev` to `tauri dev`. `perf/` reads dist assets and writes analysis artifacts. Icon scripts generate and validate desktop assets.
