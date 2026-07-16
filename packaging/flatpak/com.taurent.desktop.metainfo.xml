@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.taurent.desktop</id>
+  <name>Taurent</name>
+  <summary>qBittorrent desktop client</summary>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <description>
+    <p>Taurent is a desktop client for managing qBittorrent servers.</p>
+  </description>
+  <launchable type="desktop-id">com.taurent.desktop.desktop</launchable>
+  <url type="homepage">https://github.com/racos-dev/taurent</url>
+  <developer id="racos-dev">
+    <name>racos.dev</name>
+  </developer>
+  <content_rating type="oars-1.1" />
+</component>

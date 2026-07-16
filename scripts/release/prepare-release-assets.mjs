@@ -16,7 +16,8 @@ const REQUIRED_SUFFIXES = new Set([
   'linux-x64.AppImage',
   'linux-x64.AppImage.sig',
   'linux-x64.deb',
-  'linux-x64.rpm',
+  'linux-fedora-x64.rpm',
+  'linux-x64.flatpak',
   'android-universal-unsigned.apk',
 ]);
 
@@ -103,9 +104,16 @@ function classifyAsset(sourceDir, file, releaseTag) {
       return `Taurent-${releaseTag}-linux-x64.deb`;
     }
 
-    if (lowerName.endsWith('.rpm')) {
-      return `Taurent-${releaseTag}-linux-x64.rpm`;
-    }
+    // The Ubuntu build can emit an RPM, but Fedora users are better served by
+    // the Fedora-native RPM artifact below. Keep the Ubuntu RPM unpublished.
+  }
+
+  if (artifact === 'taurent-linux-fedora-rpm' && lowerName.endsWith('.rpm')) {
+    return `Taurent-${releaseTag}-linux-fedora-x64.rpm`;
+  }
+
+  if (artifact === 'taurent-linux-flatpak' && lowerName.endsWith('.flatpak')) {
+    return `Taurent-${releaseTag}-linux-x64.flatpak`;
   }
 
   if (artifact.startsWith('taurent-android') && lowerName.endsWith('.apk')) {

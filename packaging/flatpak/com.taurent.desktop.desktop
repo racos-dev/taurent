@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Taurent
+Comment=qBittorrent desktop client
+Exec=taurent %U
+Icon=com.taurent.desktop
+Terminal=false
+Categories=Network;FileTransfer;P2P;
+MimeType=application/x-bittorrent;x-scheme-handler/magnet;
+StartupNotify=true
