@@ -209,7 +209,7 @@ jobs:
           - name: Linux
             artifact: taurent-linux
             runner: ubuntu-22.04
-            tauriArgs: ''
+            tauriArgs: --bundles appimage,deb
             rustTargets: x86_64-unknown-linux-gnu
 
     steps:
@@ -298,6 +298,142 @@ jobs:
         with:
           name: ${{ matrix.artifact }}
           path: artifacts/release/desktop/*
+          if-no-files-found: error
+          retention-days: 1
+
+  fedora-rpm-build:
+    environment: release
+    name: Fedora RPM Build
+    needs: [release-preflight, rust-quality]
+    runs-on: ubuntu-latest
+    container: fedora:44
+    steps:
+      - name: Install runner tools
+        run: dnf install -y git tar gzip xz findutils which
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.release-preflight.outputs.release_tag }}
+
+      - name: Enable pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@1.90.0
+
+      - name: Install Fedora deps
+        run: |
+          dnf check-update || test $? -eq 100
+          dnf install -y webkit2gtk4.1-devel openssl-devel curl wget file libappindicator-gtk3-devel librsvg2-devel libxdo-devel gcc gcc-c++ make patchelf rpm-build
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply release tag version
+        run: node scripts/version-app.mjs "${{ needs.release-preflight.outputs.app_version }}"
+
+      - name: Generate capabilities
+        run: pnpm codegen:capabilities
+
+      - name: Resolve build metadata
+        id: build_metadata
+        shell: bash
+        run: echo "git_sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Build Fedora RPM
+        env:
+          VITE_APP_VERSION: ${{ needs.release-preflight.outputs.app_version }}
+          VITE_RELEASE_TAG: ${{ needs.release-preflight.outputs.release_tag }}
+          VITE_GIT_SHA: ${{ steps.build_metadata.outputs.git_sha }}
+        run: pnpm --filter taurent tauri build --bundles rpm
+
+      - name: Collect Fedora RPM
+        shell: bash
+        run: |
+          mkdir -p artifacts/release/fedora-rpm
+          find target -type f ! -path '*/build/*' -name '*.rpm' -print -exec cp {} artifacts/release/fedora-rpm/ \;
+          test -n "$(find artifacts/release/fedora-rpm -type f -print -quit)"
+
+      - name: Upload Fedora RPM artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: taurent-linux-fedora-rpm
+          path: artifacts/release/fedora-rpm/*.rpm
+          if-no-files-found: error
+          retention-days: 1
+
+  flatpak-build:
+    environment: release
+    name: Flatpak Bundle Build
+    needs: [release-preflight, rust-quality]
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.release-preflight.outputs.release_tag }}
+
+      - name: Enable pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@1.90.0
+
+      - name: Install Linux and Flatpak deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf build-essential curl wget file flatpak flatpak-builder
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply release tag version
+        run: node scripts/version-app.mjs "${{ needs.release-preflight.outputs.app_version }}"
+
+      - name: Generate capabilities
+        run: pnpm codegen:capabilities
+
+      - name: Resolve build metadata
+        id: build_metadata
+        shell: bash
+        run: echo "git_sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Build desktop binary
+        env:
+          VITE_APP_VERSION: ${{ needs.release-preflight.outputs.app_version }}
+          VITE_RELEASE_TAG: ${{ needs.release-preflight.outputs.release_tag }}
+          VITE_GIT_SHA: ${{ steps.build_metadata.outputs.git_sha }}
+        run: pnpm --filter taurent tauri build --no-bundle
+
+      - name: Build Flatpak bundle
+        env:
+          RELEASE_TAG: ${{ needs.release-preflight.outputs.release_tag }}
+        run: node scripts/release/build-flatpak-bundle.mjs
+
+      - name: Upload Flatpak artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: taurent-linux-flatpak
+          path: artifacts/release/flatpak/*.flatpak
           if-no-files-found: error
           retention-days: 1
 
@@ -418,7 +554,7 @@ jobs:
 
   publish-release:
     name: Publish GitHub Release
-    needs: [release-preflight, desktop-build, android-build]
+    needs: [release-preflight, desktop-build, fedora-rpm-build, flatpak-build, android-build]
     runs-on: ubuntu-latest
     permissions:
       contents: write

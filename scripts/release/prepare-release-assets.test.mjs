@@ -37,6 +37,8 @@ const completeAssetSet = [
   'taurent-linux/Taurent_1.0.0_amd64.AppImage.tar.gz.sig',
   'taurent-linux/Taurent_1.0.0_amd64.deb',
   'taurent-linux/Taurent-1.0.0-1.x86_64.rpm',
+  'taurent-linux-fedora-rpm/Taurent-1.0.0-1.x86_64.rpm',
+  'taurent-linux-flatpak/Taurent-v0.9.0-beta.3-linux-x64.flatpak',
   'taurent-android-unsigned-release-apk/app-universal-release-unsigned.apk',
 ];
 
@@ -50,12 +52,13 @@ test('copies only public assets with tag-prefixed names', () => {
   assert.deepEqual(result.copied, [
     'latest.json',
     'Taurent-v0.9.0-beta.3-android-universal-unsigned.apk',
+    'Taurent-v0.9.0-beta.3-linux-fedora-x64.rpm',
     'Taurent-v0.9.0-beta.3-linux-x64.AppImage',
     'Taurent-v0.9.0-beta.3-linux-x64.AppImage.sig',
     'Taurent-v0.9.0-beta.3-linux-x64.AppImage.tar.gz',
     'Taurent-v0.9.0-beta.3-linux-x64.AppImage.tar.gz.sig',
     'Taurent-v0.9.0-beta.3-linux-x64.deb',
-    'Taurent-v0.9.0-beta.3-linux-x64.rpm',
+    'Taurent-v0.9.0-beta.3-linux-x64.flatpak',
     'Taurent-v0.9.0-beta.3-macos-arm64.app.tar.gz',
     'Taurent-v0.9.0-beta.3-macos-arm64.app.tar.gz.sig',
     'Taurent-v0.9.0-beta.3-macos-arm64.dmg',
@@ -82,6 +85,7 @@ test('copies only public assets with tag-prefixed names', () => {
   );
   assert.ok(result.skipped.includes('taurent-windows/taurent.exe'));
   assert.ok(result.skipped.includes('taurent-windows/Taurent_1.0.0_x64_en-US.msi'));
+  assert.ok(result.skipped.includes('taurent-linux/Taurent-1.0.0-1.x86_64.rpm'));
 });
 
 test('fails when split Android APKs would map to the universal APK name', () => {
@@ -97,7 +101,7 @@ test('fails when split Android APKs would map to the universal APK name', () => 
 });
 
 test('fails when a required public asset is missing', () => {
-  const fixture = createFixture(completeAssetSet.filter((file) => !file.endsWith('.rpm')));
+  const fixture = createFixture(completeAssetSet.filter((file) => !file.startsWith('taurent-linux-fedora-rpm/')));
 
   assert.throws(
     () => prepareReleaseAssets({ ...fixture, releaseTag: 'v0.9.0-beta.3' }),
