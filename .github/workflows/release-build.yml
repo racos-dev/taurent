@@ -309,7 +309,7 @@ jobs:
     container: fedora:44
     steps:
       - name: Install runner tools
-        run: dnf install -y git tar gzip xz findutils which
+        run: dnf install -y git tar gzip xz findutils which libatomic
 
       - name: Checkout
         uses: actions/checkout@v7
