@@ -355,6 +355,8 @@ jobs:
           VITE_APP_VERSION: ${{ needs.release-preflight.outputs.app_version }}
           VITE_RELEASE_TAG: ${{ needs.release-preflight.outputs.release_tag }}
           VITE_GIT_SHA: ${{ steps.build_metadata.outputs.git_sha }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: pnpm --filter taurent tauri build --bundles rpm
 
       - name: Collect Fedora RPM
