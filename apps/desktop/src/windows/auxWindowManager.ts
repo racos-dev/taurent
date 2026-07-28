@@ -287,12 +287,11 @@ export async function openAuxWindow(
         void win.hide();
         window.setTimeout(() => void win.hide(), 0);
         window.setTimeout(() => void win.hide(), 100);
-      } else {
-        // Show the window immediately on creation so the user gets visual feedback
-        // on the first click, before the aux window's own useWindowState RAF fires.
-        // backgroundColor is already set to the theme color so there is no color flash.
-        void win.show();
       }
+      // Keep first-open windows hidden here. Their renderer layout calls show()
+      // after React has committed either the requested screen or its stable
+      // Suspense fallback. Showing at tauri://created races page bootstrap and
+      // exposes an empty webview before any DOM is ready.
       resolve(win);
     });
     win.once('tauri://error', () => {

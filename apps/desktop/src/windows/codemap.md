@@ -11,7 +11,7 @@ This folder owns the auxiliary-window subsystem for the desktop renderer:
 
 ## Architecture
 
-- **Generic window manager**: `openAuxWindow()` deduplicates concurrent opens, reuses existing windows, centers new ones, and delivers payloads through window-scoped events.
+- **Generic window manager**: `openAuxWindow()` deduplicates concurrent opens, reuses existing windows, centers new ones, and delivers payloads through window-scoped events. Cold windows remain hidden until their renderer layout commits content; warm windows are shown immediately.
 - **Window lifecycle**: `createWindowLifecycle()` wraps `openAuxWindow` with prebake/idle-close scheduling (`idleTtlMs=0` disables it).
 - **Singleton utility windows**: settings/statistics windows are opened by label and reused when possible via lifecycle helpers.
 - **Dialog-host model**: small dialogs (confirm, numeric, text, select, etc.) share a single `dialog-host` window via `openDialogHostWindow()`. Each dialog registers its config and screen in `registry.ts` (`DESKTOP_DIALOGS`).

@@ -1,5 +1,6 @@
 import React from 'react';
-import { RetryButton, SettingToggle, StatusPanel } from '@taurent/web-ui';
+import { RetryButton, SettingToggle } from '@taurent/web-ui';
+import { SkeletonBlock } from '@taurent/web-ui/components/shared/SkeletonBlock/SkeletonBlock';
 
 interface WindowBehaviorSettingsProps {
   closeToTray: boolean;
@@ -24,10 +25,12 @@ export const WindowBehaviorSettings = React.memo<WindowBehaviorSettingsProps>(({
 }) => {
   if (isLoading) {
     return (
-      <StatusPanel
-        title="Loading app settings"
-        description="Reading saved desktop preferences."
-      />
+      <div className="space-y-3 rounded-sm border border-border bg-surface p-4" role="status" aria-label="Loading app settings">
+        <SkeletonBlock height="2rem" background="bg-surface-interactive" />
+        <SkeletonBlock height="2rem" background="bg-surface-interactive" />
+        <SkeletonBlock height="2rem" background="bg-surface-interactive" />
+        <SkeletonBlock height="2rem" background="bg-surface-interactive" />
+      </div>
     );
   }
 

@@ -4,12 +4,6 @@ import { RouterProvider, createBrowserRouter, Outlet } from 'react-router-dom';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { QBClientProvider } from './connection';
 import { ServerManagerProvider } from './connection/ServerManager';
-import { AppShell } from './layouts/AppShell/AppShell';
-import { LoginScreen } from './screens/LoginScreen';
-import { HomeScreen } from './screens/HomeScreen';
-import { AddServerScreen } from './screens/AddServerScreen';
-import { FiltersScreen } from './screens/FiltersScreen';
-import { DialogHostScreen } from './screens/DialogHostScreen';
 import { useKeyboardShortcuts } from './hooks/shell/useKeyboardShortcuts';
 import { useTorrentFileOpen } from './hooks/shell/useTorrentFileOpen';
 import { useMagnetLinkOpen } from './hooks/shell/useMagnetLinkOpen';
@@ -30,24 +24,23 @@ import { toast } from '@taurent/web-ui/components/shared/Toast/toast';
 import { ExternalLinkProvider } from '@taurent/web-ui';
 import { useOperationNotifications } from '@taurent/web-core/hooks/useOperationNotifications';
 import { notifyNative } from '@taurent/bridge/desktop/notification';
+import { LazyContentFallback, type LazyContentKind } from './components/LazyContentFallback';
 
 // Lazy-load auxiliary windows and heavier non-initial routes
+const AppShell = lazy(() => import('./layouts/AppShell/AppShell').then(m => ({ default: m.AppShell })));
+const LoginScreen = lazy(() => import('./screens/LoginScreen').then(m => ({ default: m.LoginScreen })));
+const HomeScreen = lazy(() => import('./screens/HomeScreen').then(m => ({ default: m.HomeScreen })));
+const AddServerScreen = lazy(() => import('./screens/AddServerScreen').then(m => ({ default: m.AddServerScreen })));
+const FiltersScreen = lazy(() => import('./screens/FiltersScreen').then(m => ({ default: m.FiltersScreen })));
 const AddTorrentScreen = lazy(() => import('./screens/AddTorrentScreen').then(m => ({ default: m.AddTorrentScreen })));
 const SearchScreen = lazy(() => import('./screens/SearchScreen').then(m => ({ default: m.SearchScreen })));
 const RSSScreen = lazy(() => import('./screens/RSSScreen').then(m => ({ default: m.RSSScreen })));
+const DialogHostScreen = lazy(() => import('./screens/DialogHostScreen').then(m => ({ default: m.DialogHostScreen })));
 const SettingsLayout = lazy(() => import('./windows/layout/SettingsLayout').then(m => ({ default: m.SettingsLayout })));
 const StatisticsLayout = lazy(() => import('./windows/layout/StatisticsLayout').then(m => ({ default: m.StatisticsLayout })));
 
-function SuspenseFallback({ label }: { label: string }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#888' }}>
-      <span>Loading {label}…</span>
-    </div>
-  );
-}
-
-function LazyContent({ label, children }: { label: string; children: React.ReactNode }) {
-  return <Suspense fallback={<SuspenseFallback label={label} />}>{children}</Suspense>;
+function LazyContent({ kind, children }: { kind: LazyContentKind; children: React.ReactNode }) {
+  return <Suspense fallback={<LazyContentFallback kind={kind} />}>{children}</Suspense>;
 }
 
 function ProtectedLayout() {
@@ -68,7 +61,7 @@ const router = createBrowserRouter([
     path: '/settings-window',
     element: (
       <AuxWindowLayout label="settings" closeOnSessionLoss={false}>
-        <LazyContent label="settings">
+        <LazyContent kind="settings">
           <SettingsLayout />
         </LazyContent>
       </AuxWindowLayout>
@@ -78,7 +71,7 @@ const router = createBrowserRouter([
     path: '/statistics-window',
     element: (
       <DialogWindowLayout label="statistics">
-        <LazyContent label="statistics">
+        <LazyContent kind="statistics">
           <StatisticsLayout />
         </LazyContent>
       </DialogWindowLayout>
@@ -88,7 +81,7 @@ const router = createBrowserRouter([
     path: '/add-torrent-window',
     element: (
       <DialogWindowLayout label="add-torrent">
-        <LazyContent label="add-torrent">
+        <LazyContent kind="add-torrent">
           <AddTorrentScreen variant="aux" />
         </LazyContent>
       </DialogWindowLayout>
@@ -98,7 +91,7 @@ const router = createBrowserRouter([
     path: '/dialog-host-window',
     element: (
       <DialogWindowLayout label="dialog-host">
-        <LazyContent label="dialog-host">
+        <LazyContent kind="dialog">
           <DialogHostScreen />
         </LazyContent>
       </DialogWindowLayout>
@@ -112,20 +105,35 @@ const router = createBrowserRouter([
     children: [
       {
         path: '/login',
-        element: <LoginScreen />,
+        element: <LazyContent kind="auth"><LoginScreen /></LazyContent>,
       },
       {
         path: '/add-server',
-        element: <AddServerScreen />,
+        element: <LazyContent kind="auth"><AddServerScreen /></LazyContent>,
       },
       {
-        element: <ProtectedLayout />,
+        element: <LazyContent kind="app-shell"><ProtectedLayout /></LazyContent>,
         children: [
-          { index: true, element: <HomeScreen /> },
-          { path: 'add-torrent', element: <Suspense fallback={<SuspenseFallback label="add-torrent" />}><AddTorrentScreen variant="main" /></Suspense> },
-          { path: 'filters', element: <FiltersScreen /> },
-          { path: 'search', element: <Suspense fallback={<SuspenseFallback label="search" />}><SearchScreen /></Suspense> },
-          { path: 'rss', element: <Suspense fallback={<SuspenseFallback label="rss" />}><RSSScreen /></Suspense> },
+          {
+            index: true,
+            element: <LazyContent kind="torrent-list"><HomeScreen /></LazyContent>,
+          },
+          {
+            path: 'add-torrent',
+            element: <LazyContent kind="add-torrent"><AddTorrentScreen variant="main" /></LazyContent>,
+          },
+          {
+            path: 'filters',
+            element: <LazyContent kind="filters"><FiltersScreen /></LazyContent>,
+          },
+          {
+            path: 'search',
+            element: <LazyContent kind="search"><SearchScreen /></LazyContent>,
+          },
+          {
+            path: 'rss',
+            element: <LazyContent kind="rss"><RSSScreen /></LazyContent>,
+          },
         ],
       },
     ],

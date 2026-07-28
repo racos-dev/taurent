@@ -7,7 +7,8 @@ import {
 } from '@taurent/web-core/query';
 import { useRemoteSettingsDraft } from '@taurent/web-core/screens';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { RemoteSettingsPanel, RetryButton, Spinner } from '@taurent/web-ui';
+import { RemoteSettingsPanel, RetryButton } from '@taurent/web-ui';
+import { SkeletonBlock } from '@taurent/web-ui/components/shared/SkeletonBlock/SkeletonBlock';
 import { useQBClient } from '../connection';
 import { usePreferences, useSetPreferences, useToggleSpeedLimitsMode } from '../hooks/settings/useSettings';
 import { useDesktopWindowSettings } from '../hooks/settings/useDesktopWindowSettings';
@@ -268,31 +269,6 @@ export function SettingsScreen() {
     })();
   }, [handleSaveAllRemote]);
 
-  // ─── Window rehydrate ──────────────────────────────────────────────────
-  const handleSettingsWindowRehydrate = useCallback(() => {
-    setPreferencesMutation.reset();
-    void loadLocalSettings();
-
-    if (serverId) {
-      const scope = { serverId, sessionGeneration, isConnected };
-      invalidatePreferences(queryClient, scope);
-    }
-  }, [serverId, isConnected, loadLocalSettings, queryClient, sessionGeneration, setPreferencesMutation]);
-
-  useEffect(() => {
-    window.addEventListener('focus', handleSettingsWindowRehydrate);
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        handleSettingsWindowRehydrate();
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      window.removeEventListener('focus', handleSettingsWindowRehydrate);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [handleSettingsWindowRehydrate]);
-
   // ─── Close request handling ─────────────────────────────────────────────
   // Refs for values needed inside the stable listener — always read the latest.
   const isAnyRemoteDirtyRef = useRef(isAnyRemoteDirty);
@@ -340,21 +316,22 @@ export function SettingsScreen() {
 
   // ─── Derived state ─────────────────────────────────────────────────────
   const hasActiveServer = Boolean(serverId);
-  const remoteConnectionError = !isHydrated
-    ? 'Session not initialized'
-    : !isConnected && !isConnecting
+  let remoteConnectionError: string | null = null;
+  if (isHydrated) {
+    remoteConnectionError = !isConnected && !isConnecting
       ? 'Not connected to a server. Open the main app to connect.'
       : qbClientError;
+  }
   const isRemotePreferencesLoading = isConnecting || isRemotePreferencesQueryLoading;
-  // Sections stay mounted as long as a server is selected — transient connection
-  // states and even persistent errors are surfaced via the banner above the
-  // sections, never by unmounting them (which collapses the layout and causes
-  // scroll jumps). Sections fall back to {} data while loading/errored.
+  // Sections stay mounted as long as a server is selected. Initial loads and
+  // errors use stable skeleton cards instead of editable controls with empty data.
   const showRemoteSections = hasActiveServer;
   // Banner appears only for actionable states (no server, persistent errors).
-  // Loading is NOT a banner state — per-section spinners handle that so no extra
+  // Loading is NOT a banner state — per-section skeletons handle that so no extra
   // height is inserted/removed, keeping scroll position stable during server switch.
-  const showStatusBanner = !hasActiveServer || Boolean(remoteConnectionError) || Boolean(remotePreferencesError) || (isRemotePreferencesLoading && !preferences);
+  const showStatusBanner = isHydrated && (
+    !hasActiveServer || Boolean(remoteConnectionError) || Boolean(remotePreferencesError)
+  );
 
   const navigationGroups = useMemo<SettingsNavGroup[]>(() => {
     const remoteItems = REMOTE_SECTION_NAV.map((r) => ({
@@ -445,11 +422,6 @@ export function SettingsScreen() {
                         Connect to a server to configure remote qBittorrent settings.
                       </p>
                     </div>
-                  ) : isRemotePreferencesLoading ? (
-                    <div className="flex items-center justify-center gap-2 py-2">
-                      <Spinner variant="ring" size="md" />
-                      <span className="text-sm text-text-secondary">Loading remote preferences…</span>
-                    </div>
                   ) : remoteConnectionError ? (
                     <div>
                       <p className="text-sm font-medium text-error">Connection failed</p>
@@ -468,14 +440,13 @@ export function SettingsScreen() {
 
               {/* ── Remote sections ──
                   Kept in the DOM whenever a server exists so a server switch refreshes
-                  values in-place without a layout collapse. During loading the whole
-                  block fades to 50% opacity (single smooth transition) instead of
-                  N per-section overlays pulsing simultaneously.
-                  pointer-events-none during loading prevents edits to stale data. ── */}
+                  values in-place without a layout collapse. Initial loads use stable
+                  skeleton cards; background refreshes preserve the last values and
+                  temporarily disable editing. ── */}
               {showRemoteSections && (
                 <div className={
                   `space-y-6 ${
-                    isRemotePreferencesLoading
+                    isRemotePreferencesLoading || !preferences
                       ? 'pointer-events-none opacity-50 transition-opacity duration-200'
                       : 'opacity-100 transition-opacity duration-200'
                   }`
@@ -489,15 +460,18 @@ export function SettingsScreen() {
                         className="scroll-mt-8"
                       >
                         <SectionHeading icon={nav.icon} label={nav.label} />
-                        <RemoteSettingsPanel
-                          key={nav.key}
-                          section={nav.key}
-                          preferences={(preferences ?? {}) as Record<string, unknown>}
-                          stagedValues={remoteDraft.stagedValues[nav.key]}
-                          baselineValues={remoteDraft.baselineValues[nav.key]}
-                          onStagedChange={(key, value) => handleRemoteStagedChange(nav.key, key, value)}
-                          dirtyKeys={remoteDraft.dirtyKeys[nav.key]}
-                        />
+                        {preferences ? (
+                          <RemoteSettingsPanel
+                            section={nav.key}
+                            preferences={preferences as unknown as Record<string, unknown>}
+                            stagedValues={remoteDraft.stagedValues[nav.key]}
+                            baselineValues={remoteDraft.baselineValues[nav.key]}
+                            onStagedChange={(key, value) => handleRemoteStagedChange(nav.key, key, value)}
+                            dirtyKeys={remoteDraft.dirtyKeys[nav.key]}
+                          />
+                        ) : (
+                          <RemoteSettingsSkeleton />
+                        )}
                       </section>
                     );
                   })}
@@ -561,6 +535,16 @@ function SectionHeading({ icon: Icon, label }: { icon: import('react').Component
     <div className="mb-4 flex items-center gap-2">
       <Icon className="size-4 text-text-muted" />
       <h2 className="text-sm font-semibold text-text-primary">{label}</h2>
+    </div>
+  );
+}
+
+function RemoteSettingsSkeleton() {
+  return (
+    <div className="space-y-3 rounded-sm border border-border bg-surface p-4" aria-hidden="true">
+      <SkeletonBlock height="2rem" background="bg-surface-interactive" />
+      <SkeletonBlock height="2rem" background="bg-surface-interactive" />
+      <SkeletonBlock height="2rem" background="bg-surface-interactive" />
     </div>
   );
 }

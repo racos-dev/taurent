@@ -6,6 +6,7 @@ Reusable UI components for the desktop application. Provides torrent table, deta
 
 ## Key Files
 
+- **LazyContentFallback.tsx** — Stable, route-shaped skeleton surfaces shown while lazy desktop screens load, preventing blank auxiliary windows and large layout shifts.
 - **TorrentTable/** — Main torrent list table with virtualization, sorting, column management, and header context menu (`HeaderContextMenu.tsx`) using `useContextMenu` / `ContextMenuPanel` from `@taurent/web-ui`.
 - **TorrentDetail/** — Desktop torrent detail overrides (files section with native file context menus)
 - **DetailPanel/** — Properties panel showing selected torrent details (general, trackers, peers, files). Uses shared `useTorrentDetailController` from `@taurent/web-core/screens` and opens window-based dialogs for rename/relocate/speed-limit/delete.
