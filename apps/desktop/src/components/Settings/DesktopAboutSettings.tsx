@@ -2,7 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { BridgeAdapter } from '@taurent/bridge/adapters/desktop';
 import type { AppUpdateInfo, AppUpdateProgress } from '@taurent/bridge/contracts';
-import { Button, ProgressBar } from '@taurent/web-ui';
+import { Button, ExternalLink, ProgressBar } from '@taurent/web-ui';
 import { appBuildMetadata } from '../../buildMetadata';
 
 type UpdateSettingsState =
@@ -98,14 +98,12 @@ export const DesktopAboutSettings = React.memo(() => {
         <p className="mt-2 text-xs text-text-muted">
           Built by racos.dev
         </p>
-        <a
+        <ExternalLink
           href="https://github.com/racos-dev/taurent"
-          target="_blank"
-          rel="noopener noreferrer"
           className="mt-2 text-xs font-medium text-primary hover:underline"
         >
           View on GitHub
-        </a>
+        </ExternalLink>
       </div>
       <div className="mt-4 border-t border-border pt-3">
         <div className="flex flex-col gap-3">
@@ -124,14 +122,12 @@ export const DesktopAboutSettings = React.memo(() => {
           <div className="flex flex-wrap justify-center gap-2">
             {updateState.status === 'available' ? (
               <>
-                <a
+                <ExternalLink
                   href={RELEASE_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="inline-flex h-9 items-center rounded-sm px-3 text-xs font-medium text-primary hover:underline"
                 >
                   View release
-                </a>
+                </ExternalLink>
                 <Button variant="primary" size="sm" onClick={() => void handleInstall(updateState.update)}>
                   Update
                 </Button>

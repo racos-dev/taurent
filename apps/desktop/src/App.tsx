@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useRef } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider, createBrowserRouter, Outlet } from 'react-router-dom';
+import { openUrl } from '@tauri-apps/plugin-opener';
 import { QBClientProvider } from './connection';
 import { ServerManagerProvider } from './connection/ServerManager';
 import { AppShell } from './layouts/AppShell/AppShell';
@@ -26,6 +27,7 @@ import { useFocusSearch } from './contexts/useSearchFocusHooks';
 import { mark } from '@taurent/shared/utils/perfAudit';
 import { Toaster } from '@taurent/web-ui/components/shared/Toast/Toaster';
 import { toast } from '@taurent/web-ui/components/shared/Toast/toast';
+import { ExternalLinkProvider } from '@taurent/web-ui';
 import { useOperationNotifications } from '@taurent/web-core/hooks/useOperationNotifications';
 import { notifyNative } from '@taurent/bridge/desktop/notification';
 
@@ -162,16 +164,18 @@ function AppContent() {
   }, []);
 
   return (
-    <SearchFocusProvider>
-      <ThemeProvider defaultTheme="catppuccin">
-        <ServerManagerProvider>
-          <QBClientProvider>
-            <AppNotifications />
-            <RouterProvider router={router} />
-          </QBClientProvider>
-        </ServerManagerProvider>
-      </ThemeProvider>
-    </SearchFocusProvider>
+    <ExternalLinkProvider onNavigate={url => void openUrl(url)}>
+      <SearchFocusProvider>
+        <ThemeProvider defaultTheme="catppuccin">
+          <ServerManagerProvider>
+            <QBClientProvider>
+              <AppNotifications />
+              <RouterProvider router={router} />
+            </QBClientProvider>
+          </ServerManagerProvider>
+        </ThemeProvider>
+      </SearchFocusProvider>
+    </ExternalLinkProvider>
   );
 }
 

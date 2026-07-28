@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { BridgeAdapter } from '@taurent/bridge/adapters/desktop';
 import type { AppUpdateInfo, AppUpdateProgress } from '@taurent/bridge/contracts';
-import { Button, ProgressBar } from '@taurent/web-ui';
+import { Button, ProgressBar, useExternalLinkHandler } from '@taurent/web-ui';
 
 const RELEASE_URL = 'https://github.com/racos-dev/taurent/releases/latest';
 
@@ -69,9 +69,15 @@ export function AppUpdateBanner() {
     }
   }, []);
 
+  const onNavigate = useExternalLinkHandler();
+
   const handleRelease = useCallback(() => {
-    window.open(RELEASE_URL, '_blank', 'noopener,noreferrer');
-  }, []);
+    if (onNavigate) {
+      onNavigate(RELEASE_URL);
+    } else {
+      window.open(RELEASE_URL, '_blank', 'noopener,noreferrer');
+    }
+  }, [onNavigate]);
 
   const copy = useMemo(() => {
     if (state.status === 'hidden') return null;
