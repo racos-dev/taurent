@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { cn, formatBytes, Icon } from '@taurent/shared';
+import { ExternalLink } from '../../components/shared/ExternalLink';
 import { StateSurface } from '../../components/shared/StateSurface';
 import { SkeletonBlock } from '../../components/shared/SkeletonBlock';
 import { ConfirmDialog } from '../../components/dialogs/ConfirmDialog';
@@ -126,16 +127,13 @@ const SearchResultRow = React.memo<SearchResultRowProps>(({ result, onAdd }) => 
         <span>Leechers: {result.nbLeechers}</span>
       </div>
       {result.siteUrl ? (
-        <a
+        <ExternalLink
           href={result.siteUrl}
-          target="_blank"
-          rel="noopener noreferrer"
           className="mt-1 flex items-center gap-1 text-xs text-primary hover:underline"
-          onClick={(e) => { e.stopPropagation(); }}
         >
           <Icon name="external-link" className="h-3 w-3" />
           {result.siteUrl}
-        </a>
+        </ExternalLink>
       ) : null}
     </div>
   </div>
@@ -202,15 +200,13 @@ const PluginCard = React.memo<PluginCardProps>(({ plugin, isEnabled, onToggle, o
         ) : null}
       </div>
       {plugin.url ? (
-        <a
+        <ExternalLink
           href={plugin.url}
-          target="_blank"
-          rel="noopener noreferrer"
           className="mt-1 flex items-center gap-1 text-xs text-primary hover:underline"
         >
           <Icon name="external-link" className="h-3 w-3" />
           {plugin.url}
-        </a>
+        </ExternalLink>
       ) : null}
     </div>
     <div className="flex items-center gap-2">

@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { cn, Icon, Edit2, Trash2 } from '@taurent/shared';
 import { TabBar } from '@taurent/web-ui';
+import { ExternalLink } from '../../components/shared/ExternalLink';
 import { StateSurface } from '../../components/shared/StateSurface';
 import { InfoRow } from '../../components/shared/InfoRow';
 import { SkeletonBlock } from '../../components/shared/SkeletonBlock';
@@ -116,15 +117,13 @@ const RSSItemRow = React.memo<RSSItemRowProps>(({ item, onEditFeedUrl, onRemoveI
           )}
       </div>
       {item.url && (
-        <a
+        <ExternalLink
           href={item.url}
-          target="_blank"
-          rel="noopener noreferrer"
           className="mt-1 flex items-center gap-1 text-xs text-primary hover:underline"
         >
           <Icon name="external-link" className="h-3 w-3" />
           {item.url}
-        </a>
+        </ExternalLink>
       )}
     </div>
     {!item.isFolder && (

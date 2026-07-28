@@ -224,6 +224,8 @@ export { StateSurface } from './components/shared/StateSurface';
 export type { StateSurfaceProps, StateSurfaceTone } from './components/shared/StateSurface';
 export { SkeletonBlock } from './components/shared/SkeletonBlock';
 export type { SkeletonBlockProps, SkeletonBlockRadius } from './components/shared/SkeletonBlock';
+export { ExternalLink, ExternalLinkProvider, useExternalLinkHandler } from './components/shared/ExternalLink';
+export type { ExternalLinkProps, ExternalLinkProviderProps } from './components/shared/ExternalLink';
 export { Spinner } from './components/shared/Spinner';
 export type { SpinnerProps, SpinnerSize, SpinnerVariant } from './components/shared/Spinner';
 export { RetryButton } from './components/shared/RetryButton';
