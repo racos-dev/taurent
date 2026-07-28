@@ -76,9 +76,10 @@ function renderSubMenuChild(item: TContextMenuItem, onClose: () => void): React.
       shortcut={item.shortcut}
       disabled={item.disabled}
       destructive={item.destructive}
+      closeOnSelect={item.closeOnSelect}
       onClick={() => {
         item.onClick();
-        onClose();
+        if (item.closeOnSelect !== false) onClose();
       }}
     />
   );
@@ -162,9 +163,10 @@ export function ContextMenu({ x, y, items, onClose, className, width = 'w-48' }:
                         shortcut={child.shortcut}
                         disabled={child.disabled}
                         destructive={child.destructive}
+                        closeOnSelect={child.closeOnSelect}
                         onClick={() => {
                           child.onClick();
-                          onClose();
+                          if (child.closeOnSelect !== false) onClose();
                         }}
                         ref={ref as React.Ref<HTMLButtonElement>}
                       />
@@ -203,9 +205,10 @@ export function ContextMenu({ x, y, items, onClose, className, width = 'w-48' }:
               shortcut={item.shortcut}
               disabled={item.disabled}
               destructive={item.destructive}
+              closeOnSelect={item.closeOnSelect}
               onClick={() => {
                 item.onClick();
-                onClose();
+                if (item.closeOnSelect !== false) onClose();
               }}
               ref={ref as React.Ref<HTMLButtonElement>}
             />

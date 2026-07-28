@@ -18,6 +18,8 @@ export interface ContextMenuItemType {
   shortcut?: string;
   disabled?: boolean;
   destructive?: boolean;
+  /** Keep the menu open after selection. Useful for toggle-style items. */
+  closeOnSelect?: boolean;
   onClick: () => void;
 }
 
