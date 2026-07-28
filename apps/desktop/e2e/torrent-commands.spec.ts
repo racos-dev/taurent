@@ -302,6 +302,13 @@ test.describe('desktop torrent commands', () => {
   });
 
   test('opens the category create flow and assigns or resets category from the main window', async ({ page }) => {
+    const duplicateKeyWarnings: string[] = [];
+    page.on('console', (message) => {
+      if (message.type() === 'error' && message.text().includes('same key')) {
+        duplicateKeyWarnings.push(message.text());
+      }
+    });
+
     await loadMainWindow(page);
     const firstRow = getFirstVisibleTorrentRow(page);
     const expectedHash = await readRequiredTorrentRowHash(firstRow);
@@ -315,10 +322,16 @@ test.describe('desktop torrent commands', () => {
     await clearAutomationState(page);
     await openContextMenuForRow(firstRow, page);
     await hoverMenuItem(page, 'Category');
-    await clickSubMenuItem(page, 'videos');
+    await clickSubMenuItem(page, 'new');
 
     let call = await expectRecordedCall(page, 'torrents.setCategory');
-    expect(call.args).toEqual([[expectedHash], 'videos']);
+    expect(call.args).toEqual([[expectedHash], 'new']);
+    expect(duplicateKeyWarnings).toEqual([]);
+    await expect(mainMenu(page)).toBeVisible();
+    await expect(subMenu(page)).toBeVisible();
+
+    await page.mouse.click(4, 4);
+    await expect(mainMenu(page)).toBeHidden();
 
     await clearAutomationState(page);
     await openContextMenuForRow(firstRow, page);
@@ -327,6 +340,8 @@ test.describe('desktop torrent commands', () => {
 
     call = await expectRecordedCall(page, 'torrents.setCategory');
     expect(call.args).toEqual([[expectedHash], '']);
+    await expect(mainMenu(page)).toBeVisible();
+    await expect(subMenu(page)).toBeVisible();
   });
 
   test('opens the tag create flow from the main window', async ({ page }) => {
@@ -338,6 +353,35 @@ test.describe('desktop torrent commands', () => {
     await clickSubMenuItem(page, 'Add...');
 
     await waitForMockWebview(page, { dialog: 'create', type: 'tag' });
+  });
+
+  test('toggles torrent tags without dismissing the context menu', async ({ page }) => {
+    await loadMainWindow(page);
+    const row = getFirstVisibleTorrentRow(page);
+    const expectedHash = await readRequiredTorrentRowHash(row);
+
+    await openContextMenuForRow(row, page);
+    await hoverMenuItem(page, 'Tags');
+    await clickSubMenuItem(page, 'tag-a');
+
+    await expect
+      .poll(async () => {
+        const calls = await readRecordedCalls(page);
+        return calls.find((entry) =>
+          entry.name === 'tags.addTorrentTags' || entry.name === 'tags.removeTorrentTags'
+        ) ?? null;
+      })
+      .not.toBeNull();
+    const calls = await readRecordedCalls(page);
+    const tagMutation = calls.find((entry) =>
+      entry.name === 'tags.addTorrentTags' || entry.name === 'tags.removeTorrentTags'
+    );
+    expect(tagMutation?.args).toEqual([[expectedHash], ['tag-a']]);
+    await expect(mainMenu(page)).toBeVisible();
+    await expect(subMenu(page)).toBeVisible();
+
+    await page.mouse.click(4, 4);
+    await expect(mainMenu(page)).toBeHidden();
   });
 
   test('opens the per-torrent limit dialogs from the main window and submits each mutation', async ({ page }) => {

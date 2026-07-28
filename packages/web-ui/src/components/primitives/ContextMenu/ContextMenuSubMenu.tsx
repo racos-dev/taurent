@@ -237,7 +237,9 @@ export function ContextMenuSubMenu({
   );
 
   const handlePanelBlur = useCallback(
-    (_e: React.FocusEvent<HTMLDivElement>) => {
+    (e: React.FocusEvent<HTMLDivElement>) => {
+      const nextFocus = e.relatedTarget;
+      if (nextFocus instanceof Node && e.currentTarget.contains(nextFocus)) return;
       setIsOpen(false);
     },
     []

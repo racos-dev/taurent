@@ -331,17 +331,18 @@ export function TorrentContextMenu({
       label: 'Category',
       icon: FolderOpen,
       children: [
-        { kind: 'item', id: 'cat-new', label: 'New...', disabled: !hasSelection, onClick: () => openDialog('newCategory') },
-        { kind: 'item', id: 'cat-reset', label: 'Reset', disabled: !canResetCategory, onClick: () => { setTorrentCategory.mutate({ hashes: selectionHashes, category: '' }); onClose(); } },
+        { kind: 'item', id: 'category-action-new', label: 'New...', disabled: !hasSelection, onClick: () => openDialog('newCategory') },
+        { kind: 'item', id: 'category-action-reset', label: 'Reset', disabled: !canResetCategory, closeOnSelect: false, onClick: () => { setTorrentCategory.mutate({ hashes: selectionHashes, category: '' }); } },
         ...(activeCategoryList.length > 0
           ? [
-              { kind: 'separator' as const, id: 'cat-sep' },
+              { kind: 'separator' as const, id: 'category-separator' },
               ...activeCategoryList.map((cat) => ({
                 kind: 'item' as const,
-                id: `cat-${cat}`,
+                id: `category-option-${encodeURIComponent(cat)}`,
                 label: cat,
                 icon: currentCategory === cat ? CheckIcon : undefined,
-                onClick: () => { setTorrentCategory.mutate({ hashes: selectionHashes, category: cat }); onClose(); },
+                closeOnSelect: false,
+                onClick: () => { setTorrentCategory.mutate({ hashes: selectionHashes, category: cat }); },
               })),
             ]
           : []),
@@ -355,17 +356,18 @@ export function TorrentContextMenu({
       label: 'Tags',
       icon: Tag,
       children: [
-        { kind: 'item', id: 'tag-add', label: 'Add...', disabled: !hasSelection, onClick: () => openDialog('addTag') },
-        { kind: 'item', id: 'tag-remove-all', label: 'Remove All', disabled: allTagsInSelection.size === 0, onClick: () => { if (allTagsInSelection.size > 0) { removeTorrentTags.mutate({ hashes: selectionHashes, tags: Array.from(allTagsInSelection) }); onClose(); } } },
+        { kind: 'item', id: 'tag-action-add', label: 'Add...', disabled: !hasSelection, onClick: () => openDialog('addTag') },
+        { kind: 'item', id: 'tag-action-remove-all', label: 'Remove All', disabled: allTagsInSelection.size === 0, closeOnSelect: false, onClick: () => { if (allTagsInSelection.size > 0) { removeTorrentTags.mutate({ hashes: selectionHashes, tags: Array.from(allTagsInSelection) }); } } },
         ...(tags && tags.length > 0
           ? [
-              { kind: 'separator' as const, id: 'tag-sep' },
+              { kind: 'separator' as const, id: 'tag-separator' },
               ...tags.map((tag) => ({
                 kind: 'item' as const,
-                id: `tag-${tag}`,
+                id: `tag-option-${encodeURIComponent(tag)}`,
                 label: tag,
                 icon: sharedTags.includes(tag) ? CheckIcon : undefined,
-                onClick: () => { if (sharedTags.includes(tag)) { removeTorrentTags.mutate({ hashes: selectionHashes, tags: [tag] }); } else { addTorrentTags.mutate({ hashes: selectionHashes, tags: [tag] }); } onClose(); },
+                closeOnSelect: false,
+                onClick: () => { if (sharedTags.includes(tag)) { removeTorrentTags.mutate({ hashes: selectionHashes, tags: [tag] }); } else { addTorrentTags.mutate({ hashes: selectionHashes, tags: [tag] }); } },
               })),
             ]
           : []),
@@ -431,7 +433,7 @@ export function TorrentContextMenu({
   ], [
     isSingle, selectionHashes, resumeCmd, pauseCmd, forceStartCmd, deleteCmd, handleAction,
     canSetLocation, canRename, openDialog, hasSelection, canResetCategory, setTorrentCategory,
-    onClose, activeCategoryList, currentCategory, tags, allTagsInSelection, addTorrentTags,
+    activeCategoryList, currentCategory, tags, allTagsInSelection, addTorrentTags,
     removeTorrentTags, sharedTags, hasService, handleToggleAutoTmm, isAutoTmmEnabled,
     hasIncompleteSelection, canSetDownloadLimit, canSetUploadLimit,
     isDownloadingSelection, isMixedDownloadingAndSeedingSelection,

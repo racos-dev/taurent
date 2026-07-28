@@ -1308,7 +1308,11 @@ function createMockBridge(): DesktopBridge {
       getCategories() {
         return Promise.resolve({
           session_generation: GEN, server_id: 'mock-server-id',
-          categories: { videos: { name: 'videos', savePath: '/data/videos' }, audio: { name: 'audio', savePath: '/data/audio' } },
+          categories: {
+            videos: { name: 'videos', savePath: '/data/videos' },
+            audio: { name: 'audio', savePath: '/data/audio' },
+            new: { name: 'new', savePath: '/data/new' },
+          },
         });
       },
       createCategory(name: string, savePath: string) {
@@ -1346,8 +1350,14 @@ function createMockBridge(): DesktopBridge {
         recordCall('tags.deleteTags', [tags]);
         return Promise.resolve(OK());
       },
-      addTorrentTags() { return Promise.resolve(OK()); },
-      removeTorrentTags() { return Promise.resolve(OK()); },
+      addTorrentTags(hashes: string[], tags: string[]) {
+        recordCall('tags.addTorrentTags', [hashes, tags]);
+        return Promise.resolve(OK());
+      },
+      removeTorrentTags(hashes: string[], tags: string[]) {
+        recordCall('tags.removeTorrentTags', [hashes, tags]);
+        return Promise.resolve(OK());
+      },
     },
 
     // ── Application ──────────────────────────────────────────────────────────

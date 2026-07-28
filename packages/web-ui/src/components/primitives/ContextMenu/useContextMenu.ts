@@ -138,7 +138,7 @@ export function useContextMenu({
           const activeItem = navigable.find(({ index }) => index === activeIndex);
           if (activeItem && activeItem.item.kind === 'item') {
             onSelect(activeItem.item);
-            onClose();
+            if (activeItem.item.closeOnSelect !== false) onClose();
           }
           break;
         }

@@ -78,7 +78,7 @@ function renderSubMenuChild(item: TContextMenuItem, onClose: () => void): React.
       destructive={item.destructive}
       onClick={() => {
         item.onClick();
-        onClose();
+        if (item.closeOnSelect !== false) onClose();
       }}
     />
   );
@@ -164,7 +164,7 @@ export function ContextMenu({ x, y, items, onClose, className, width = 'w-48' }:
                         destructive={child.destructive}
                         onClick={() => {
                           child.onClick();
-                          onClose();
+                          if (child.closeOnSelect !== false) onClose();
                         }}
                         ref={ref as React.Ref<HTMLButtonElement>}
                       />
@@ -205,7 +205,7 @@ export function ContextMenu({ x, y, items, onClose, className, width = 'w-48' }:
               destructive={item.destructive}
               onClick={() => {
                 item.onClick();
-                onClose();
+                if (item.closeOnSelect !== false) onClose();
               }}
               ref={ref as React.Ref<HTMLButtonElement>}
             />
