@@ -112,7 +112,7 @@ apps/mobile/src/
 
 - **Unit**: Vitest with jsdom — `pnpm mobile:test`.
 - **Renderer E2E**: Playwright — `pnpm mobile:renderer:e2e`.
-- **CI**: `mobile-test` job in `.github/workflows/ci.yml`.
+- **CI**: The `JS Quality` job in `.github/workflows/pr-ci.yml` runs both mobile unit tests and mobile renderer E2E.
 - Test locations:
   - `src/session/__tests__/useSessionBootstrap.test.ts` — Session/bootstrap routing tests.
   - `src/auth/__tests__/AuthBoundary.test.tsx` — Integration smoke for auth boundary.

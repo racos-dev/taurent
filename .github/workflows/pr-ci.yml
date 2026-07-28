@@ -16,17 +16,16 @@ jobs:
   js-quality:
     name: JS Quality
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Enable pnpm
-        uses: pnpm/action-setup@v6
-        with:
-          version: 11.0.0
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6
 
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '24'
           cache: pnpm
@@ -36,62 +35,63 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate capabilities
-        id: codegen-capabilities
         run: pnpm codegen:capabilities
 
       - name: Install Playwright Chromium
         run: pnpm --filter taurent exec playwright install --with-deps chromium
 
       - name: Check app versions
-        id: check-versions
         run: node scripts/ci/check-versions.mjs
 
+      - name: Script tests
+        run: pnpm test:scripts
+
       - name: Lint
-        id: lint
         run: pnpm lint
 
       - name: Typecheck
-        id: typecheck
         run: pnpm typecheck
 
       - name: Unit tests
-        id: unit-tests
         run: pnpm test:unit
 
-      - name: Renderer e2e
-        id: renderer-e2e
+      - name: Mobile unit tests
+        run: pnpm mobile:test
+
+      - name: Desktop renderer E2E
+        id: desktop-renderer-e2e
         run: pnpm desktop:renderer:e2e
 
-      - name: Write summary
-        if: always()
-        env:
-          CI_JOB_KIND: js-quality
-          CI_JOB_RESULT: ${{ job.status }}
-          CI_STEP_OUTCOMES: >-
-            {
-              "check-versions": "${{ steps.check-versions.outcome }}",
-              "codegen-capabilities": "${{ steps.codegen-capabilities.outcome }}",
-              "lint": "${{ steps.lint.outcome }}",
-              "typecheck": "${{ steps.typecheck.outcome }}",
-              "unit-tests": "${{ steps.unit-tests.outcome }}",
-              "renderer-e2e": "${{ steps.renderer-e2e.outcome }}"
-            }
-        run: node scripts/ci/write-pr-ci-summary.mjs
+      - name: Mobile renderer E2E
+        id: mobile-renderer-e2e
+        run: pnpm mobile:renderer:e2e
+
+      - name: Upload renderer failure artifacts
+        if: ${{ steps.desktop-renderer-e2e.outcome == 'failure' || steps.mobile-renderer-e2e.outcome == 'failure' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: renderer-e2e-failure-artifacts
+          path: |
+            test-results/desktop/
+            test-results/mobile/
+            artifacts/desktop/playwright-report/
+            artifacts/mobile/playwright-report/
+          if-no-files-found: ignore
+          retention-days: 3
 
   rust-quality:
     name: Rust Quality
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Enable pnpm
-        uses: pnpm/action-setup@v6
-        with:
-          version: 11.0.0
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6
 
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '24'
           cache: pnpm
@@ -101,18 +101,15 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate capabilities
-        id: codegen-capabilities
         run: pnpm codegen:capabilities
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@1.90.0
+        uses: dtolnay/rust-toolchain@0a0b1db3a4e40d68af9ce1f11281259916528f39 # 1.90.0
         with:
           components: rustfmt, clippy
 
       - name: Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          key: rust-quality-${{ hashFiles('**/Cargo.lock') }}
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
 
       - name: Install Linux deps
         run: |
@@ -120,68 +117,41 @@ jobs:
           sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf build-essential curl wget file
 
       - name: Rustfmt check
-        id: rustfmt-check
         run: cargo fmt --all --check
 
-      - name: Cargo check (core)
-        id: cargo-check-core
-        run: cargo check --workspace --locked -p qb-core
+      - name: Cargo check
+        run: cargo check --workspace --locked
 
-      - name: Cargo check (tauri)
-        id: cargo-check-tauri
-        run: cargo check --workspace --locked --features desktop -p qb-tauri
+      - name: Cargo tests
+        run: cargo test --workspace --locked
 
-      - name: Clippy (core)
-        id: clippy-core
-        run: cargo clippy --workspace --all-targets --locked -p qb-core
-
-      - name: Clippy (tauri)
-        id: clippy-tauri
-        run: cargo clippy --workspace --all-targets --locked --features desktop -p qb-tauri
-
-      - name: Write summary
-        if: always()
-        env:
-          CI_JOB_KIND: rust-quality
-          CI_JOB_RESULT: ${{ job.status }}
-          CI_STEP_OUTCOMES: >-
-            {
-              "codegen-capabilities": "${{ steps.codegen-capabilities.outcome }}",
-              "rustfmt-check": "${{ steps.rustfmt-check.outcome }}",
-              "cargo-check-core": "${{ steps.cargo-check-core.outcome }}",
-              "cargo-check-tauri": "${{ steps.cargo-check-tauri.outcome }}",
-              "clippy-core": "${{ steps.clippy-core.outcome }}",
-              "clippy-tauri": "${{ steps.clippy-tauri.outcome }}"
-            }
-        run: node scripts/ci/write-pr-ci-summary.mjs
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets --locked
 
   native-build:
     name: Desktop Tauri Build (Linux)
     needs: [js-quality, rust-quality]
     runs-on: ubuntu-22.04
+    timeout-minutes: 45
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Enable pnpm
-        uses: pnpm/action-setup@v6
-        with:
-          version: 11.0.0
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6
 
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '24'
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@1.90.0
+        uses: dtolnay/rust-toolchain@0a0b1db3a4e40d68af9ce1f11281259916528f39 # 1.90.0
 
       - name: Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          key: rust-desktop-build-${{ hashFiles('**/Cargo.lock') }}
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
