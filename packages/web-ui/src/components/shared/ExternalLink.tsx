@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext } from 'react';
+import { cn } from '@taurent/shared';
 
 export interface ExternalLinkProps {
   href: string;
@@ -45,7 +46,11 @@ export const ExternalLink = React.memo(({ href, children, className }: ExternalL
 
   if (onNavigate) {
     return (
-      <button type="button" onClick={handleClick} className={className}>
+      <button
+        type="button"
+        onClick={handleClick}
+        className={cn('cursor-pointer border-none bg-transparent p-0 text-left', className)}
+      >
         {children}
       </button>
     );
