@@ -25,7 +25,7 @@
     "@taurent/bridge": "workspace:*",
     "@taurent/shared": "workspace:*",
     "@taurent/web-core": "workspace:*",
-    "@tanstack/react-virtual": "^3.14.3",
+    "@tanstack/react-virtual": "^3.14.7",
     "sonner": "^2.0.3"
   },
   "devDependencies": {

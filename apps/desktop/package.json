@@ -40,7 +40,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@tanstack/react-query": "^5.101.0",
-    "@tanstack/react-virtual": "^3.14.3",
+    "@tanstack/react-virtual": "^3.14.7",
     "@taurent/bridge": "workspace:*",
     "@taurent/shared": "workspace:*",
     "@taurent/web-core": "workspace:*",
