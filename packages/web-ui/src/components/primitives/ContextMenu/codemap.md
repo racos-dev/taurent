@@ -9,7 +9,7 @@ Full-featured context menu system with items, separators, groups, nested submenu
 - **ContextMenu**: Top-level composed component. Maps `ContextMenuItem[]` (union of item/separator/group/submenu types) to appropriate sub-components. Toggle-style items can set `closeOnSelect: false` to remain open until an outside click or Escape.
 - **useContextMenu**: Hook managing `activeIndex`, `panelPosition`, `panelRef`, `registerItemRef`, and `handlePanelBlur`. Handles viewport clamping and keyboard navigation.
 - **ContextMenuPanel**: Portal-based positioned panel (similar to `DropdownPanel`).
-- **ContextMenuItem**: Single menu item with icon, label, shortcut, and destructive styling. Uses `forwardRef` for keyboard navigation integration.
+- **ContextMenuItem**: Single menu item with icon, label, shortcut, and destructive styling. Uses `forwardRef` for keyboard navigation integration. Non-dismissing items preserve focus on mouse down so submenu blur cannot unmount them before their click handler runs.
 - **ContextMenuSeparator**: Separator line with optional label.
 - **ContextMenuGroup**: Grouped items under a shared heading.
 - **ContextMenuSubMenu**: Expandable submenu with child items. Renders flyout via `createPortal`, with viewport-aware placement, keyboard navigation (ArrowRight/ArrowLeft), and mouse hover delay (80ms open timer).

@@ -37,7 +37,9 @@ describe('ContextMenu', () => {
 
     fireEvent.mouseEnter(getByRole('menuitem', { name: 'Labels' }));
     act(() => vi.advanceTimersByTime(100));
-    fireEvent.click(getByRole('menuitem', { name: 'Label A' }));
+    const toggleItem = getByRole('menuitem', { name: 'Label A' });
+    expect(fireEvent.mouseDown(toggleItem)).toBe(false);
+    fireEvent.click(toggleItem);
 
     expect(onSelect).toHaveBeenCalledTimes(1);
     expect(onClose).not.toHaveBeenCalled();

@@ -15,6 +15,8 @@ interface ContextMenuItemProps {
   destructive?: boolean;
   /** Highlights the item as keyboard-active. */
   active?: boolean;
+  /** Whether selecting the item dismisses its composed context menu. */
+  closeOnSelect?: boolean;
   /** Invoked on click. */
   onClick?: () => void;
   /** Attached to the native `onMouseEnter` event. */
@@ -33,6 +35,7 @@ export const ContextMenuItem = forwardRef<HTMLButtonElement, ContextMenuItemProp
       disabled = false,
       destructive = false,
       active = false,
+      closeOnSelect = true,
       onClick,
       onMouseEnter,
       onMouseLeave,
@@ -48,6 +51,7 @@ export const ContextMenuItem = forwardRef<HTMLButtonElement, ContextMenuItemProp
         aria-label={label}
         aria-disabled={disabled}
         disabled={disabled}
+        onMouseDown={disabled || closeOnSelect ? undefined : (event) => event.preventDefault()}
         onClick={disabled ? undefined : onClick}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}

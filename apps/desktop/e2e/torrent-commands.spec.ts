@@ -107,12 +107,7 @@ async function clickSubMenuItem(page: Page, label: string) {
   await expect(subMenu(page)).toBeVisible({ timeout: 5_000 });
   const item = subMenu(page).getByRole('menuitem', { name: label, exact: true });
   await expect(item).toBeEnabled();
-  await item.evaluate((element) => {
-    if (!(element instanceof HTMLButtonElement)) {
-      throw new Error('Expected submenu item to render as a button.');
-    }
-    element.click();
-  });
+  await item.click();
 }
 
 async function readRequiredTorrentRowHash(row: Locator): Promise<string> {
