@@ -331,42 +331,31 @@ fn normalize_stored_server_url(url: &str) -> String {
     }
 }
 
-/// Returns the credential status for a server given the current repo state.
-/// This checks both keychain (secure storage) and the transient map.
-fn compute_credential_status<R: Runtime>(
-    app: &AppHandle<R>,
+/// Returns the credential status that can be determined without accessing
+/// secure storage. Passive metadata reads must not trigger an OS credential
+/// prompt; the keychain is consulted only by an explicit credential operation.
+fn credential_status_from_memory(
     repo: &ServerRepositoryState,
     server_id: &str,
-) -> (CredentialStatus, Option<String>) {
-    // Check keychain first
-    if get_credentials(app, server_id).is_some() {
-        return (CredentialStatus::Stored, None);
-    }
-    // Check transient map
+) -> CredentialStatus {
     if repo.transient_credentials.contains_key(server_id) {
-        return (CredentialStatus::SessionOnly, None);
+        return CredentialStatus::SessionOnly;
     }
-    (CredentialStatus::Missing, None)
+    CredentialStatus::Unknown
 }
 
 /// List all saved servers (password-free).
-pub fn list_servers<R: Runtime>(
-    app: &AppHandle<R>,
-    repo: &ServerRepositoryState,
-) -> Vec<SavedServerSummary> {
+pub fn list_servers(repo: &ServerRepositoryState) -> Vec<SavedServerSummary> {
     let mut servers: Vec<SavedServerSummary> = repo
         .servers
         .values()
-        .map(|r| {
-            let (status, warning) = compute_credential_status(app, repo, &r.id);
-            SavedServerSummary {
-                id: r.id.clone(),
-                name: r.name.clone(),
-                url: r.url.clone(),
-                username: r.username.clone(),
-                credential_status: Some(status),
-                credential_warning: warning,
-            }
+        .map(|r| SavedServerSummary {
+            id: r.id.clone(),
+            name: r.name.clone(),
+            url: r.url.clone(),
+            username: r.username.clone(),
+            credential_status: Some(credential_status_from_memory(repo, &r.id)),
+            credential_warning: None,
         })
         .collect();
     servers.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
@@ -374,23 +363,17 @@ pub fn list_servers<R: Runtime>(
 }
 
 /// Get the active server summary (password-free).
-pub fn get_active_server<R: Runtime>(
-    app: &AppHandle<R>,
-    repo: &ServerRepositoryState,
-) -> Option<SavedServerSummary> {
+pub fn get_active_server(repo: &ServerRepositoryState) -> Option<SavedServerSummary> {
     repo.active_server_id
         .as_ref()
         .and_then(|id| repo.servers.get(id))
-        .map(|r| {
-            let (status, warning) = compute_credential_status(app, repo, &r.id);
-            SavedServerSummary {
-                id: r.id.clone(),
-                name: r.name.clone(),
-                url: r.url.clone(),
-                username: r.username.clone(),
-                credential_status: Some(status),
-                credential_warning: warning,
-            }
+        .map(|r| SavedServerSummary {
+            id: r.id.clone(),
+            name: r.name.clone(),
+            url: r.url.clone(),
+            username: r.username.clone(),
+            credential_status: Some(credential_status_from_memory(repo, &r.id)),
+            credential_warning: None,
         })
 }
 
@@ -485,7 +468,7 @@ pub fn update_server<R: Runtime>(
     repo: &mut ServerRepositoryState,
     input: UpdateServerInput,
 ) -> Result<SavedServerSummary, String> {
-    // Get server ID first (before any mutable borrow) so we can call compute_credential_status
+    // Get server ID first (before any mutable borrow) so we can derive credential status.
     let server_id = input.id.clone();
     let _meta = repo
         .servers
@@ -496,7 +479,7 @@ pub fn update_server<R: Runtime>(
     // Compute credential status before any mutation (avoids borrow conflict)
     let (credential_status, credential_warning) =
         if input.password.is_none() && input.api_key.is_none() {
-            compute_credential_status(app, repo, &server_id)
+            (credential_status_from_memory(repo, &server_id), None)
         } else {
             (CredentialStatus::Unknown, None)
         };
@@ -731,5 +714,47 @@ mod tests {
             "http://localhost:8080"
         );
         assert_eq!(repo.active_server_id.as_deref(), Some("current"));
+    }
+
+    #[test]
+    fn passive_summaries_are_unknown_without_transient_credentials() {
+        let repo = test_repository();
+        let servers = list_servers(&repo);
+        let current = servers
+            .iter()
+            .find(|server| server.id == "current")
+            .unwrap();
+        let active = get_active_server(&repo).unwrap();
+
+        assert_eq!(current.credential_status, Some(CredentialStatus::Unknown));
+        assert_eq!(active.credential_status, Some(CredentialStatus::Unknown));
+    }
+
+    #[test]
+    fn passive_summaries_report_transient_credentials() {
+        let mut repo = test_repository();
+        repo.transient_credentials.insert(
+            "current".to_string(),
+            AuthCredentials {
+                api_key: None,
+                username: "admin".to_string(),
+                password: "session-secret".to_string(),
+            },
+        );
+        let servers = list_servers(&repo);
+        let current = servers
+            .iter()
+            .find(|server| server.id == "current")
+            .unwrap();
+        let active = get_active_server(&repo).unwrap();
+
+        assert_eq!(
+            current.credential_status,
+            Some(CredentialStatus::SessionOnly)
+        );
+        assert_eq!(
+            active.credential_status,
+            Some(CredentialStatus::SessionOnly)
+        );
     }
 }
