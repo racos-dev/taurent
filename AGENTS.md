@@ -38,8 +38,8 @@ Taurent is a pnpm/Rust monorepo for Tauri-based qBittorrent clients. Keep future
 ## Focused verification
 
 - Whole JS workspace: `pnpm lint`, `pnpm typecheck`, `pnpm test:unit`
-- Local CI smoke: `pnpm ci:local`
-- Full local CI path: `pnpm ci:local:full`
+- Local CI smoke: `pnpm ci:local` (script tests, lint, typecheck, shared/desktop unit tests, and mobile unit tests)
+- Full local CI path: `pnpm ci:local:full` (local smoke, Rust CI, both frontend builds, and both renderer E2E suites)
 - Single package/app: `pnpm --filter <name> lint`, `pnpm --filter <name> typecheck`, `pnpm --filter <name> build`
 - Desktop tests:
   - `pnpm desktop:test` -> Vitest
@@ -50,10 +50,9 @@ Taurent is a pnpm/Rust monorepo for Tauri-based qBittorrent clients. Keep future
   - `pnpm mobile:renderer:e2e` -> Playwright renderer E2E
 - If you touch Rust, mirror CI with:
   - `cargo fmt --all --check`
-  - `cargo check --workspace --locked -p qb-core`
-  - `cargo check --workspace --locked --features desktop -p qb-tauri`
-  - `cargo clippy --workspace --all-targets --locked -p qb-core`
-  - `cargo clippy --workspace --all-targets --locked --features desktop -p qb-tauri`
+  - `cargo check --workspace --locked`
+  - `cargo test --workspace --locked`
+  - `cargo clippy --workspace --all-targets --locked`
 
 ## Architecture that changes where code belongs
 

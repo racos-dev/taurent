@@ -19,174 +19,92 @@ concurrency:
 
 env:
   NODE_VERSION: '24'
-  PNPM_VERSION: '11.0.0'
   ANDROID_NDK_VERSION: '28.2.13676358'
 
 jobs:
   release-preflight:
     name: Release Preflight
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       release_tag: ${{ steps.release.outputs.release_tag }}
       app_version: ${{ steps.release.outputs.app_version }}
       is_prerelease: ${{ steps.release.outputs.is_prerelease }}
       git_sha: ${{ steps.build_metadata.outputs.git_sha }}
     steps:
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
       - name: Resolve release tag
         id: release
         shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          MANUAL_TAG: ${{ inputs.tag }}
+          PUSH_TAG: ${{ github.ref_name }}
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            release_tag="${{ inputs.tag }}"
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            release_tag="$MANUAL_TAG"
           else
-            release_tag="${GITHUB_REF_NAME}"
+            release_tag="$PUSH_TAG"
           fi
 
-          if [[ ! "$release_tag" =~ ^v.+ ]]; then
-            echo "Release builds only accept v* tags. Got: $release_tag" >&2
+          if ! RELEASE_TAG_CANDIDATE="$release_tag" node -e '
+            const semver = /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/;
+            if (!semver.test(process.env.RELEASE_TAG_CANDIDATE)) process.exit(1);
+          '; then
+            echo "Release builds require a v-prefixed SemVer tag. Got: $release_tag" >&2
             exit 1
           fi
 
-          echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
           app_version="${release_tag#v}"
+          echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
           echo "app_version=$app_version" >> "$GITHUB_OUTPUT"
 
-          if [[ "$app_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+- ]]; then
+          if [[ "${app_version%%+*}" == *-* ]]; then
             echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Checkout
-        uses: actions/checkout@v7
+      - name: Checkout release tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ steps.release.outputs.release_tag }}
+          fetch-depth: 0
+
+      - name: Verify release commit is on main
+        shell: bash
+        run: |
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor HEAD origin/main; then
+            echo "Release tag must point to a commit reachable from main." >&2
+            exit 1
+          fi
 
       - name: Resolve build metadata
         id: build_metadata
         shell: bash
         run: echo "git_sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Enable pnpm
-        uses: pnpm/action-setup@v6
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Setup Node
-        uses: actions/setup-node@v7
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
-
       - name: Apply release tag version
         run: node scripts/version-app.mjs "${{ steps.release.outputs.app_version }}"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Generate capabilities
-        run: pnpm codegen:capabilities
 
       - name: Check app versions
         env:
           RELEASE_TAG: ${{ steps.release.outputs.release_tag }}
         run: node scripts/ci/check-versions.mjs
 
-      - name: Script tests
-        run: pnpm test:scripts
-
-      - name: Lint
-        run: pnpm lint
-
-      - name: Typecheck
-        run: pnpm typecheck
-
-      - name: Unit tests
-        run: pnpm test:unit
-
-      - name: Mobile unit tests
-        run: pnpm mobile:test
-
-  rust-quality:
-    name: Rust Quality
-    runs-on: ubuntu-latest
-    steps:
-      - name: Resolve release tag
-        id: release
-        shell: bash
-        run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            release_tag="${{ inputs.tag }}"
-          else
-            release_tag="${GITHUB_REF_NAME}"
-          fi
-          echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
-
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          ref: ${{ steps.release.outputs.release_tag }}
-
-      - name: Enable pnpm
-        uses: pnpm/action-setup@v6
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Setup Node
-        uses: actions/setup-node@v7
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Generate capabilities
-        run: pnpm codegen:capabilities
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@1.90.0
-        with:
-          components: rustfmt, clippy
-
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          key: rust-release-quality-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Install Linux deps
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf build-essential curl wget file
-
-      - name: Rustfmt check
-        run: cargo fmt --all --check
-
-      - name: Cargo check (core)
-        run: cargo check --workspace --locked -p qb-core
-
-      - name: Cargo check (tauri desktop)
-        run: cargo check --workspace --locked --features desktop -p qb-tauri
-
-      - name: Cargo check (tauri mobile)
-        run: cargo check --workspace --locked --features mobile -p qb-tauri
-
-      - name: Clippy (core)
-        run: cargo clippy --workspace --all-targets --locked -p qb-core
-
-      - name: Clippy (tauri desktop)
-        run: cargo clippy --workspace --all-targets --locked --features desktop -p qb-tauri
-
-      - name: Clippy (tauri mobile)
-        run: cargo clippy --workspace --all-targets --locked --features mobile -p qb-tauri
-
   desktop-build:
-    environment: release
+    environment:
+      name: release
+      deployment: false
     name: Desktop Build (${{ matrix.name }})
-    needs: [release-preflight, rust-quality]
+    needs: release-preflight
     runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -214,45 +132,38 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.release-preflight.outputs.release_tag }}
 
       - name: Enable pnpm
-        uses: pnpm/action-setup@v6
-        with:
-          version: ${{ env.PNPM_VERSION }}
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6
 
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          key: rust-release-desktop-${{ matrix.artifact }}-${{ hashFiles('**/Cargo.lock') }}
-
       - name: Apply release tag version
         run: node scripts/version-app.mjs "${{ needs.release-preflight.outputs.app_version }}"
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@1.90.0
+        uses: dtolnay/rust-toolchain@0a0b1db3a4e40d68af9ce1f11281259916528f39 # 1.90.0
         with:
           targets: ${{ matrix.rustTargets }}
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+        with:
+          key: ${{ matrix.artifact }}
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Generate capabilities
         run: pnpm codegen:capabilities
-
-      - name: Resolve build metadata
-        id: build_metadata
-        shell: bash
-        run: echo "git_sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Install Linux deps
         if: matrix.name == 'Linux'
@@ -263,11 +174,11 @@ jobs:
       # NOTE: macOS notarization not configured. Users will hit Gatekeeper.
       # To enable: add APPLE_CERTIFICATE, APPLE_CERTIFICATE_PASSWORD, APPLE_TEAM_ID, APPLE_ID, APPLE_PASSWORD secrets.
       - name: Build desktop Tauri app
-        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5
+        uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5 # v0.6.2
         env:
           VITE_APP_VERSION: ${{ needs.release-preflight.outputs.app_version }}
           VITE_RELEASE_TAG: ${{ needs.release-preflight.outputs.release_tag }}
-          VITE_GIT_SHA: ${{ steps.build_metadata.outputs.git_sha }}
+          VITE_GIT_SHA: ${{ needs.release-preflight.outputs.git_sha }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
@@ -294,7 +205,7 @@ jobs:
           test -n "$(find artifacts/release/desktop -type f -print -quit)"
 
       - name: Upload desktop artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: ${{ matrix.artifact }}
           path: artifacts/release/desktop/*
@@ -302,34 +213,37 @@ jobs:
           retention-days: 1
 
   fedora-rpm-build:
-    environment: release
+    environment:
+      name: release
+      deployment: false
     name: Fedora RPM Build
-    needs: [release-preflight, rust-quality]
+    needs: release-preflight
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     container: fedora:44
     steps:
       - name: Install runner tools
         run: dnf install -y git tar gzip xz findutils which libatomic
 
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.release-preflight.outputs.release_tag }}
 
       - name: Enable pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6
         with:
-          version: ${{ env.PNPM_VERSION }}
+          standalone: true
 
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@1.90.0
+        uses: dtolnay/rust-toolchain@0a0b1db3a4e40d68af9ce1f11281259916528f39 # 1.90.0
 
       - name: Install Fedora deps
         run: |
@@ -345,16 +259,11 @@ jobs:
       - name: Generate capabilities
         run: pnpm codegen:capabilities
 
-      - name: Resolve build metadata
-        id: build_metadata
-        shell: bash
-        run: echo "git_sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
-
       - name: Build Fedora RPM
         env:
           VITE_APP_VERSION: ${{ needs.release-preflight.outputs.app_version }}
           VITE_RELEASE_TAG: ${{ needs.release-preflight.outputs.release_tag }}
-          VITE_GIT_SHA: ${{ steps.build_metadata.outputs.git_sha }}
+          VITE_GIT_SHA: ${{ needs.release-preflight.outputs.git_sha }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: pnpm --filter taurent tauri build --bundles rpm
@@ -367,7 +276,7 @@ jobs:
           test -n "$(find artifacts/release/fedora-rpm -type f -print -quit)"
 
       - name: Upload Fedora RPM artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: taurent-linux-fedora-rpm
           path: artifacts/release/fedora-rpm/*.rpm
@@ -375,30 +284,28 @@ jobs:
           retention-days: 1
 
   flatpak-build:
-    environment: release
     name: Flatpak Bundle Build
-    needs: [release-preflight, rust-quality]
+    needs: release-preflight
     runs-on: ubuntu-22.04
+    timeout-minutes: 60
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.release-preflight.outputs.release_tag }}
 
       - name: Enable pnpm
-        uses: pnpm/action-setup@v6
-        with:
-          version: ${{ env.PNPM_VERSION }}
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6
 
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@1.90.0
+        uses: dtolnay/rust-toolchain@0a0b1db3a4e40d68af9ce1f11281259916528f39 # 1.90.0
 
       - name: Install Linux and Flatpak deps
         run: |
@@ -414,16 +321,11 @@ jobs:
       - name: Generate capabilities
         run: pnpm codegen:capabilities
 
-      - name: Resolve build metadata
-        id: build_metadata
-        shell: bash
-        run: echo "git_sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
-
       - name: Build desktop binary
         env:
           VITE_APP_VERSION: ${{ needs.release-preflight.outputs.app_version }}
           VITE_RELEASE_TAG: ${{ needs.release-preflight.outputs.release_tag }}
-          VITE_GIT_SHA: ${{ steps.build_metadata.outputs.git_sha }}
+          VITE_GIT_SHA: ${{ needs.release-preflight.outputs.git_sha }}
         run: pnpm --filter taurent tauri build --no-bundle
 
       - name: Build Flatpak bundle
@@ -432,7 +334,7 @@ jobs:
         run: node scripts/release/build-flatpak-bundle.mjs
 
       - name: Upload Flatpak artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: taurent-linux-flatpak
           path: artifacts/release/flatpak/*.flatpak
@@ -441,46 +343,40 @@ jobs:
 
   android-build:
     name: Android Build
-    needs: [release-preflight, rust-quality]
+    needs: release-preflight
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.release-preflight.outputs.release_tag }}
 
       - name: Enable pnpm
-        uses: pnpm/action-setup@v6
-        with:
-          version: ${{ env.PNPM_VERSION }}
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6
 
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          key: rust-release-android-${{ hashFiles('**/Cargo.lock') }}
-
       - name: Apply release tag version
         run: node scripts/version-app.mjs "${{ needs.release-preflight.outputs.app_version }}"
 
       - name: Setup Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
         with:
           distribution: temurin
           java-version: '17'
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699
+        uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4
 
       - name: Cache Android NDK
         id: ndk-cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: /usr/local/lib/android/sdk/ndk/${{ env.ANDROID_NDK_VERSION }}
           key: android-ndk-${{ runner.os }}-${{ env.ANDROID_NDK_VERSION }}
@@ -495,20 +391,18 @@ jobs:
           echo "ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/${ANDROID_NDK_VERSION}" >> "$GITHUB_ENV"
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@1.90.0
+        uses: dtolnay/rust-toolchain@0a0b1db3a4e40d68af9ce1f11281259916528f39 # 1.90.0
         with:
           targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Generate capabilities
         run: pnpm codegen:capabilities
-
-      - name: Resolve build metadata
-        id: build_metadata
-        shell: bash
-        run: echo "git_sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
       # WARNING: tauri android init regenerates gen/android/ from scratch.
       # Any signing config, Gradle tweaks, or native hooks must be injected AFTER this step.
@@ -520,7 +414,7 @@ jobs:
         env:
           VITE_APP_VERSION: ${{ needs.release-preflight.outputs.app_version }}
           VITE_RELEASE_TAG: ${{ needs.release-preflight.outputs.release_tag }}
-          VITE_GIT_SHA: ${{ steps.build_metadata.outputs.git_sha }}
+          VITE_GIT_SHA: ${{ needs.release-preflight.outputs.git_sha }}
         run: pnpm --filter taurent-mobile tauri android build --apk
 
       - name: Collect Android release APK
@@ -536,7 +430,7 @@ jobs:
           fi
 
       - name: Upload Android artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: taurent-android-unsigned-release-apk
           path: artifacts/release/android/*.apk
@@ -545,7 +439,7 @@ jobs:
 
       - name: Upload Android build logs on failure
         if: failure()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: android-build-logs
           path: |
@@ -558,21 +452,22 @@ jobs:
     name: Publish GitHub Release
     needs: [release-preflight, desktop-build, fedora-rpm-build, flatpak-build, android-build]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.release-preflight.outputs.release_tag }}
 
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Download release artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           path: release-assets
 
