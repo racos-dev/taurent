@@ -103,18 +103,18 @@ const router = createBrowserRouter([
     children: [
       {
         path: '/login',
-        element: <LazyContent kind="workspace"><LoginScreen /></LazyContent>,
+        element: <LazyContent kind="auth"><LoginScreen /></LazyContent>,
       },
       {
         path: '/add-server',
-        element: <LazyContent kind="workspace"><AddServerScreen /></LazyContent>,
+        element: <LazyContent kind="auth"><AddServerScreen /></LazyContent>,
       },
       {
-        element: <LazyContent kind="workspace"><ProtectedLayout /></LazyContent>,
+        element: <LazyContent kind="app-shell"><ProtectedLayout /></LazyContent>,
         children: [
           {
             index: true,
-            element: <LazyContent kind="workspace"><HomeScreen /></LazyContent>,
+            element: <LazyContent kind="torrent-list"><HomeScreen /></LazyContent>,
           },
           {
             path: 'add-torrent',
@@ -122,7 +122,7 @@ const router = createBrowserRouter([
           },
           {
             path: 'filters',
-            element: <LazyContent kind="workspace"><FiltersScreen /></LazyContent>,
+            element: <LazyContent kind="filters"><FiltersScreen /></LazyContent>,
           },
           {
             path: 'search',
