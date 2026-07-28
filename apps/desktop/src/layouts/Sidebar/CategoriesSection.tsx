@@ -101,12 +101,13 @@ export function CategoriesSection({
           isRemoved={capStatus.isRemoved}
           removedIn={capStatus.removedIn}
           isUnreleased={capStatus.isUnreleased}
+          variant="ghost"
+          size="sm"
           onClick={() => void openCreateDialogWindow({ type: 'category' })}
-          className="w-full flex items-center gap-2 px-2 py-1 cursor-pointer transition-colors text-text-secondary hover:bg-surface-interactive"
+          className="h-auto w-full justify-start rounded-none px-2 py-1 font-normal text-text-secondary"
         >
-          <Plus className="w-3 h-3 flex-shrink-0" />
-          <span className="min-w-0 truncate text-xs text-left">Add Category</span>
-          <span className="flex-1" aria-hidden="true" />
+          <Plus className="h-3 w-3 shrink-0" />
+          <span className="min-w-0 truncate text-left text-xs">Add Category</span>
         </CapabilityButton>
       </SidebarSection>
 
