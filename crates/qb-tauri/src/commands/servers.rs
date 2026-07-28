@@ -659,22 +659,16 @@ fn load_path_mappings_by_server(
 
 /// List all saved servers (password-free summary, with credential status).
 #[tauri::command]
-pub fn list_servers(
-    state: State<'_, ServerRepoStateHandle>,
-    app: AppHandle,
-) -> Vec<SavedServerSummary> {
+pub fn list_servers(state: State<'_, ServerRepoStateHandle>) -> Vec<SavedServerSummary> {
     let repo = state.lock().unwrap();
-    repo_list_servers(&app, &repo)
+    repo_list_servers(&repo)
 }
 
 /// Get the currently active server (password-free summary, with credential status).
 #[tauri::command]
-pub fn get_active_server(
-    state: State<'_, ServerRepoStateHandle>,
-    app: AppHandle,
-) -> Option<SavedServerSummary> {
+pub fn get_active_server(state: State<'_, ServerRepoStateHandle>) -> Option<SavedServerSummary> {
     let repo = state.lock().unwrap();
-    repo_get_active_server(&app, &repo)
+    repo_get_active_server(&repo)
 }
 
 /// Add a new server.
