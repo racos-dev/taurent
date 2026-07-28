@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { open } from '@tauri-apps/plugin-dialog';
-import { Trash2, FolderOpen } from '@taurent/shared';
+import { Trash2, FolderOpen, Check } from '@taurent/shared';
 import { Button, Input, Spinner } from '@taurent/web-ui';
 import type { PathMapping } from '@taurent/bridge';
 import { BridgeAdapter } from '@taurent/bridge/adapters/desktop'
@@ -34,6 +34,7 @@ export const PathMappingsSettings = React.memo(() => {
   const [mappings, setMappings] = useState<MappingRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [showSaved, setShowSaved] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -69,11 +70,10 @@ export const PathMappingsSettings = React.memo(() => {
     };
   }, [serverId]);
 
-  // ── Persist mappings whenever they change ──────────────────────────────
-  const persistMappings = useCallback(
+  // ── Raw save (no debounce, no loading-state management) ─────────────────
+  const saveMappings = useCallback(
     async (rows: MappingRow[]) => {
       if (!serverId) return;
-      setIsSaving(true);
       setSaveError(null);
       try {
         const toSave: PathMapping[] = rows
@@ -86,34 +86,66 @@ export const PathMappingsSettings = React.memo(() => {
       } catch (err) {
         console.error('[PathMappingsSettings] autosave failed', err);
         setSaveError(formatUserMessageForContext(err, 'path-mappings'));
-      } finally {
-        setIsSaving(false);
       }
     },
     [serverId],
   );
+
+  // ── Debounced persist ──────────────────────────────────────────────────
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const savedTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const latestRowsRef = useRef<MappingRow[]>([]);
+
+  const debouncedPersist = useCallback(
+    (rows: MappingRow[]) => {
+      latestRowsRef.current = rows;
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      // User is typing again — dismiss any stale "Saved" indicator
+      setShowSaved(false);
+
+      debounceRef.current = setTimeout(() => {
+        setIsSaving(true);
+        setShowSaved(false);
+        void saveMappings(latestRowsRef.current).then(() => {
+          setIsSaving(false);
+          setShowSaved(true);
+          if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+          savedTimerRef.current = setTimeout(() => setShowSaved(false), 2000);
+        });
+      }, 600);
+    },
+    [saveMappings],
+  );
+
+  // Clean up timers on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+    };
+  }, []);
 
   // ── Handlers ───────────────────────────────────────────────────────────
   const handleServerPathChange = useCallback(
     (id: string, value: string) => {
       setMappings((prev) => {
         const next = prev.map((row) => (row.id === id ? { ...row, serverPath: value } : row));
-        void persistMappings(next);
+        debouncedPersist(next);
         return next;
       });
     },
-    [persistMappings],
+    [debouncedPersist],
   );
 
   const handleLocalPathChange = useCallback(
     (id: string, value: string) => {
       setMappings((prev) => {
         const next = prev.map((row) => (row.id === id ? { ...row, localPath: value } : row));
-        void persistMappings(next);
+        debouncedPersist(next);
         return next;
       });
     },
-    [persistMappings],
+    [debouncedPersist],
   );
 
   const handlePickLocalPath = useCallback(
@@ -129,20 +161,20 @@ export const PathMappingsSettings = React.memo(() => {
   const handleAddRow = useCallback(() => {
     setMappings((prev) => {
       const next = [...prev, emptyRow()];
-      void persistMappings(next);
+      debouncedPersist(next);
       return next;
     });
-  }, [persistMappings]);
+  }, [debouncedPersist]);
 
   const handleRemoveRow = useCallback(
     (id: string) => {
       setMappings((prev) => {
         const next = prev.filter((row) => row.id !== id);
-        void persistMappings(next);
+        debouncedPersist(next);
         return next;
       });
     },
-    [persistMappings],
+    [debouncedPersist],
   );
 
   // ── Render ─────────────────────────────────────────────────────────────
@@ -153,15 +185,25 @@ export const PathMappingsSettings = React.memo(() => {
         <p className="max-w-2xl text-sm leading-6 text-text-secondary">
           Map server-side paths to local paths. Use this when your server and local storage are on different drives or network locations.
         </p>
-        <Button variant="secondary" size="sm" onClick={handleAddRow}><Icon name="plus" iconSize="sm" /><span>Add path mapping</span></Button>
+        <div className="flex items-center gap-2">
+          <Button variant="secondary" size="sm" onClick={handleAddRow}><Icon name="plus" iconSize="sm" /><span>Add path mapping</span></Button>
+          {isSaving && (
+            <span className="flex items-center gap-1 text-xs text-text-muted">
+              <Spinner variant="ring" size="sm" />
+              Saving…
+            </span>
+          )}
+          {!isSaving && showSaved && (
+            <span className="flex items-center gap-1 text-xs text-success">
+              <Check size={12} />
+              Saved
+            </span>
+          )}
+          {!isSaving && saveError && (
+            <span className="text-xs text-error">{saveError}</span>
+          )}
+        </div>
       </div>
-
-      {/* Save indicator */}
-      {(isSaving || saveError) && (
-        <p className={saveError ? 'text-sm text-error' : 'text-xs text-text-muted'}>
-          {saveError ?? 'Saving…'}
-        </p>
-      )}
 
       {/* Load error */}
       {loadError && (
