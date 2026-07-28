@@ -97,6 +97,35 @@ describe('useDesktopWindowSettings', () => {
     expect(mocks.getDownloadCompletionNotificationsEnabled).toHaveBeenCalled();
   });
 
+  it('starts independent settings reads without serial waits', async () => {
+    let releaseReads: (() => void) | undefined;
+    const readGate = new Promise<void>((resolve) => {
+      releaseReads = resolve;
+    });
+
+    mocks.getItem.mockImplementation(async () => {
+      await readGate;
+      return null;
+    });
+    mocks.getDownloadCompletionNotificationsEnabled.mockImplementation(async () => {
+      await readGate;
+      return true;
+    });
+
+    render(<SettingsHookHarness onValue={(value) => { current = value; }} />);
+
+    expect(mocks.getItem).toHaveBeenCalledTimes(3);
+    expect(mocks.getDownloadCompletionNotificationsEnabled).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      releaseReads?.();
+      await readGate;
+    });
+    await flushReactWork();
+
+    expect(current?.isLocalSettingsLoading).toBe(false);
+  });
+
   it('toggles downloadCompletionNotifications off via bridge setter', async () => {
     mocks.getDownloadCompletionNotificationsEnabled.mockResolvedValue(true);
 

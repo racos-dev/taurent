@@ -24,7 +24,7 @@ Provides layout wrappers for all desktop window types (main, auxiliary, dialog, 
 ## Flow
 
 1. A window is opened (by `openSettingsWindow`, `openDialogHostWindow`, etc.) → Tauri creates the window → React mounts the corresponding layout.
-2. Layout restores saved geometry (position, size) from store via `useWindowState`.
+2. Layout commits the requested screen or its stable skeleton, restores any saved geometry via `useWindowState`, and then shows the cold window.
 3. Layout listens for navigate events from Tauri — when another part of the app sends a navigate event to this window, the layout routes it.
 4. Layout listens for `resource-invalidated` events — when data changes in another window, this layout refreshes relevant queries.
 5. Layout listens for session loss — when the server disconnects, the window closes itself.

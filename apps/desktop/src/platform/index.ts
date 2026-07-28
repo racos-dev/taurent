@@ -5,13 +5,30 @@ import type { PlatformStorage } from '@taurent/shared/platform';
 
 let storeInstance: Store | null = null;
 let currentPath: string | null = null;
+let pendingStore: { path: string; promise: Promise<Store> } | null = null;
 
 async function getStore(storagePath: string): Promise<Store> {
-  if (!storeInstance || currentPath !== storagePath) {
-    storeInstance = await Store.load(storagePath, { autoSave: false, defaults: {} });
-    currentPath = storagePath;
+  if (storeInstance && currentPath === storagePath) {
+    return storeInstance;
   }
-  return storeInstance;
+
+  if (pendingStore?.path === storagePath) {
+    return pendingStore.promise;
+  }
+
+  const promise = Store.load(storagePath, { autoSave: false, defaults: {} });
+  pendingStore = { path: storagePath, promise };
+
+  try {
+    const store = await promise;
+    storeInstance = store;
+    currentPath = storagePath;
+    return store;
+  } finally {
+    if (pendingStore?.promise === promise) {
+      pendingStore = null;
+    }
+  }
 }
 
 export const storage: PlatformStorage = {

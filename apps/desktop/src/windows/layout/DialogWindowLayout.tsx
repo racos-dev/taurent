@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect } from 'react';
+import { type ReactNode, useEffect, useLayoutEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { emit, listen } from '@tauri-apps/api/event';
 import { getCurrentWindow } from '@tauri-apps/api/window';
@@ -23,29 +23,20 @@ export function DialogWindowLayout({ label, children }: DialogWindowLayoutProps)
   const [searchParams, setSearchParams] = useSearchParams();
   const isPrebakeLaunch = searchParams.get('__prebake') === '1';
 
-  useEffect(() => {
-    // Defer show() by one animation frame so the browser has painted the themed
-    // DOM (ThemeProvider applies CSS variables in effects too) before the OS
-    // window becomes visible — eliminates the residual white flash on show.
+  useLayoutEffect(() => {
+    // The DOM for the dialog or its Suspense fallback has been committed before
+    // this layout effect runs. Show from here, rather than from tauri://created,
+    // so a cold webview never exposes an empty document.
     //
-    // If this window was pre-baked (openAuxWindow with prebake:true was called),
-    // sessionStorage will have the prebaking flag and we must NOT show the window —
-    // it should remain hidden so the next user-triggered open is instant.
+    // If this window was pre-baked, keep it hidden until a user-triggered open.
     const wasPrebaked = isPrebakeLaunch || sessionStorage.getItem(`prebaking:${label}`);
     if (wasPrebaked) {
       sessionStorage.removeItem(`prebaking:${label}`);
-      // Ensure the window is hidden (it should already be, but guard against
-      // any timing where it may have become visible before this effect ran).
-      const raf = requestAnimationFrame(() => {
-        void getCurrentWindow().hide();
-      });
-      return () => cancelAnimationFrame(raf);
+      void getCurrentWindow().hide();
+      return;
     }
 
-    const raf = requestAnimationFrame(() => {
-      void getCurrentWindow().show();
-    });
-    return () => cancelAnimationFrame(raf);
+    void getCurrentWindow().show();
   }, [label, isPrebakeLaunch]);
 
   // Support singleton re-use: update search params when caller sends a new payload

@@ -132,7 +132,6 @@ export default defineConfig(async () => ({
     rollupOptions: {
       input: {
         main: './index.html',
-        settings: './src/settings-index.html',
       },
       output: {
         manualChunks: (id: string) => {

@@ -33,6 +33,21 @@ const DEFAULT_LOCAL_SETTINGS: DesktopLocalSettings = {
   downloadCompletionNotifications: true,
 };
 
+async function reconcileAutoStartPreference(autoStartStored: boolean): Promise<void> {
+  try {
+    const currentlyEnabled = await isEnabled();
+    if (autoStartStored === currentlyEnabled) return;
+
+    if (autoStartStored) {
+      await enable();
+    } else {
+      await disable();
+    }
+  } catch {
+    console.warn('Autostart sync failed (expected in dev mode).');
+  }
+}
+
 export function useDesktopWindowSettings(): UseDesktopWindowSettingsReturn {
   const [localSettings, setLocalSettings] = useState<DesktopLocalSettings>(DEFAULT_LOCAL_SETTINGS);
   const [isLocalSettingsLoading, setIsLocalSettingsLoading] = useState(true);
@@ -43,24 +58,12 @@ export function useDesktopWindowSettings(): UseDesktopWindowSettingsReturn {
     setLocalSettingsError(null);
 
     try {
-      const closeToTray = await storage.getItem('close_to_tray');
-      const startMinimized = await storage.getItem('start_minimized');
-      const autoStart = await storage.getItem('auto_start');
-      const autoStartStored = autoStart === 'true';
-      // Sync: ensure OS autostart state matches the stored preference
-      try {
-        const currentlyEnabled = await isEnabled();
-        if (autoStartStored !== currentlyEnabled) {
-          if (autoStartStored) {
-            await enable();
-          } else {
-            await disable();
-          }
-        }
-      } catch {
-        console.warn('Autostart sync failed (expected in dev mode).');
-      }
-      const downloadCompletionNotifications = await BridgeAdapter.getDownloadCompletionNotificationsEnabled();
+      const [closeToTray, startMinimized, autoStart, downloadCompletionNotifications] = await Promise.all([
+        storage.getItem('close_to_tray'),
+        storage.getItem('start_minimized'),
+        storage.getItem('auto_start'),
+        BridgeAdapter.getDownloadCompletionNotificationsEnabled(),
+      ]);
 
       setLocalSettings({
         closeToTray: closeToTray === 'true',
@@ -68,6 +71,7 @@ export function useDesktopWindowSettings(): UseDesktopWindowSettingsReturn {
         autoStart: autoStart === 'true',
         downloadCompletionNotifications,
       });
+      void reconcileAutoStartPreference(autoStart === 'true');
     } catch (error) {
       setLocalSettingsError(formatUserMessageForContext(error, 'app-settings'));
     } finally {
