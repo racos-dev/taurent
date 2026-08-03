@@ -30,7 +30,7 @@
     "test:coverage": "vitest run --coverage.enabled"
   },
   "devDependencies": {
-    "@types/node": "^24.13.2",
+    "@types/node": "^26.1.2",
     "@types/react": "^19.2.17",
     "@vitest/coverage-v8": "4.1.10",
     "react": "^19.2.7",
