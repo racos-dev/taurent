@@ -1,12 +1,24 @@
 name: Release Build
+run-name: >-
+  ${{ github.event_name == 'workflow_dispatch'
+      && format('Release {0} ({1})', inputs.tag, inputs.operation)
+      || format('Release {0}', github.ref_name) }}
 
 on:
   push:
     tags: ['v*']
   workflow_dispatch:
     inputs:
+      operation:
+        description: 'Create a new release or rebuild an existing tag'
+        required: true
+        default: create
+        type: choice
+        options:
+          - create
+          - rebuild
       tag:
-        description: 'Existing v* tag to build and publish'
+        description: 'v-prefixed SemVer tag (for example, v0.9.7)'
         required: true
         type: string
 
@@ -27,10 +39,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
+      operation: ${{ steps.release.outputs.operation }}
       release_tag: ${{ steps.release.outputs.release_tag }}
+      checkout_ref: ${{ steps.release.outputs.checkout_ref }}
+      create_tag: ${{ steps.release.outputs.create_tag }}
       app_version: ${{ steps.release.outputs.app_version }}
       is_prerelease: ${{ steps.release.outputs.is_prerelease }}
       git_sha: ${{ steps.build_metadata.outputs.git_sha }}
+      git_commit: ${{ steps.build_metadata.outputs.git_commit }}
     steps:
       - name: Setup Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
@@ -42,13 +58,36 @@ jobs:
         shell: bash
         env:
           EVENT_NAME: ${{ github.event_name }}
+          MANUAL_OPERATION: ${{ inputs.operation }}
           MANUAL_TAG: ${{ inputs.tag }}
           PUSH_TAG: ${{ github.ref_name }}
+          DISPATCH_SHA: ${{ github.sha }}
+          WORKFLOW_REF_NAME: ${{ github.ref_name }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            if [[ "$WORKFLOW_REF_NAME" != "$DEFAULT_BRANCH" ]]; then
+              echo "Manual releases must run from the default branch ($DEFAULT_BRANCH)." >&2
+              exit 1
+            fi
+
+            operation="$MANUAL_OPERATION"
             release_tag="$MANUAL_TAG"
+            if [[ "$operation" == "create" ]]; then
+              checkout_ref="$DISPATCH_SHA"
+              create_tag=true
+            elif [[ "$operation" == "rebuild" ]]; then
+              checkout_ref="$release_tag"
+              create_tag=false
+            else
+              echo "Unsupported manual release operation: $operation" >&2
+              exit 1
+            fi
           else
+            operation=push
             release_tag="$PUSH_TAG"
+            checkout_ref="$release_tag"
+            create_tag=false
           fi
 
           if ! RELEASE_TAG_CANDIDATE="$release_tag" node -e '
@@ -60,7 +99,10 @@ jobs:
           fi
 
           app_version="${release_tag#v}"
+          echo "operation=$operation" >> "$GITHUB_OUTPUT"
           echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
+          echo "checkout_ref=$checkout_ref" >> "$GITHUB_OUTPUT"
+          echo "create_tag=$create_tag" >> "$GITHUB_OUTPUT"
           echo "app_version=$app_version" >> "$GITHUB_OUTPUT"
 
           if [[ "${app_version%%+*}" == *-* ]]; then
@@ -69,25 +111,47 @@ jobs:
             echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Checkout release tag
+      - name: Checkout release source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: ${{ steps.release.outputs.release_tag }}
+          ref: ${{ steps.release.outputs.checkout_ref }}
           fetch-depth: 0
 
-      - name: Verify release commit is on main
+      - name: Verify release source
+        env:
+          OPERATION: ${{ steps.release.outputs.operation }}
+          RELEASE_TAG: ${{ steps.release.outputs.release_tag }}
+          CREATE_TAG: ${{ steps.release.outputs.create_tag }}
         shell: bash
         run: |
           git fetch --no-tags origin main
           if ! git merge-base --is-ancestor HEAD origin/main; then
-            echo "Release tag must point to a commit reachable from main." >&2
+            echo "Release source must be a commit reachable from main." >&2
+            exit 1
+          fi
+
+          if git rev-parse --verify --quiet "refs/tags/$RELEASE_TAG^{commit}" >/dev/null; then
+            tag_exists=true
+          else
+            tag_exists=false
+          fi
+
+          if [[ "$CREATE_TAG" == "true" && "$tag_exists" == "true" ]]; then
+            echo "Create requires a new tag, but $RELEASE_TAG already exists." >&2
+            exit 1
+          fi
+
+          if [[ "$OPERATION" == "rebuild" && "$tag_exists" == "false" ]]; then
+            echo "Rebuild requires an existing tag, but $RELEASE_TAG was not found." >&2
             exit 1
           fi
 
       - name: Resolve build metadata
         id: build_metadata
         shell: bash
-        run: echo "git_sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "git_sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          echo "git_commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Apply release tag version
         run: node scripts/version-app.mjs "${{ steps.release.outputs.app_version }}"
@@ -134,7 +198,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: ${{ needs.release-preflight.outputs.release_tag }}
+          ref: ${{ needs.release-preflight.outputs.checkout_ref }}
 
       - name: Enable pnpm
         uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6
@@ -228,7 +292,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: ${{ needs.release-preflight.outputs.release_tag }}
+          ref: ${{ needs.release-preflight.outputs.checkout_ref }}
 
       - name: Setup Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
@@ -290,7 +354,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: ${{ needs.release-preflight.outputs.release_tag }}
+          ref: ${{ needs.release-preflight.outputs.checkout_ref }}
 
       - name: Enable pnpm
         uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6
@@ -348,7 +412,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: ${{ needs.release-preflight.outputs.release_tag }}
+          ref: ${{ needs.release-preflight.outputs.checkout_ref }}
 
       - name: Enable pnpm
         uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6
@@ -451,13 +515,16 @@ jobs:
     needs: [release-preflight, desktop-build, fedora-rpm-build, flatpak-build, android-build]
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    environment:
+      name: release
+      url: https://github.com/${{ github.repository }}/releases/tag/${{ needs.release-preflight.outputs.release_tag }}
     permissions:
       contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: ${{ needs.release-preflight.outputs.release_tag }}
+          ref: ${{ needs.release-preflight.outputs.checkout_ref }}
 
       - name: Setup Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
@@ -478,7 +545,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          OPERATION: ${{ needs.release-preflight.outputs.operation }}
           RELEASE_TAG: ${{ needs.release-preflight.outputs.release_tag }}
+          RELEASE_COMMIT: ${{ needs.release-preflight.outputs.git_commit }}
+          CREATE_TAG: ${{ needs.release-preflight.outputs.create_tag }}
           IS_PRERELEASE: ${{ needs.release-preflight.outputs.is_prerelease }}
         shell: bash
         run: |
@@ -488,13 +558,30 @@ jobs:
             exit 1
           fi
 
+          if [[ "$CREATE_TAG" == "true" ]]; then
+            remote_tag="$(git ls-remote --tags origin "refs/tags/$RELEASE_TAG")"
+            if [[ -n "$remote_tag" ]]; then
+              echo "Cannot create $RELEASE_TAG because the tag now exists." >&2
+              exit 1
+            fi
+            if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+              echo "Cannot create $RELEASE_TAG because its GitHub Release now exists." >&2
+              exit 1
+            fi
+
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag --annotate "$RELEASE_TAG" "$RELEASE_COMMIT" --message "$RELEASE_TAG"
+            git push origin "refs/tags/$RELEASE_TAG"
+          fi
+
           edit_flags=(--title "$RELEASE_TAG")
           create_flags=(--title "$RELEASE_TAG" --notes "Automated release build for $RELEASE_TAG.")
           if [[ "$IS_PRERELEASE" == "true" ]]; then
             edit_flags+=(--prerelease)
             create_flags+=(--prerelease)
           fi
-          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" || "$IS_PRERELEASE" == "true" ]]; then
+          if [[ "$OPERATION" == "rebuild" || "$IS_PRERELEASE" == "true" ]]; then
             edit_flags+=(--latest=false)
             create_flags+=(--latest=false)
           else
