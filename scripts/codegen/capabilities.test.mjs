@@ -511,20 +511,20 @@ test('script --check detects drift when a generated file is modified', () => {
 });
 
 test('CLI --check exits non-zero when generated output is mutated', () => {
-  // Verify the actual CLI surfaces drift: mutate a generated file in
-  // place, run `node scripts/codegen/capabilities.mjs --check`, and assert a
-  // non-zero exit. Restore the file afterwards so other tests stay clean.
-  const targetPath = resolve(repoRoot, RUST_PATH);
+  // Verify the CLI surfaces drift without mutating repository files:
+  // generate into a temp out-dir, mutate one generated file there, and run
+  // `--check` against that directory.
+  const outDir = createTempDir('cli-check-drift');
+  const generate = runScriptInDir([`--toml-path=${realTomlPath}`, `--out-dir=${outDir}`], repoRoot);
+  assert.equal(generate.status, 0, generate.stderr);
+
+  const targetPath = resolve(outDir, RUST_PATH);
   const original = readFileSync(targetPath, 'utf8');
   writeFileSync(targetPath, `${original}\n// injected drift\n`);
 
-  try {
-    const result = runScript(['--check']);
-    assert.notEqual(result.status, 0, 'expected non-zero exit on drift');
-    assert.match(result.stderr, /Drift detected/);
-  } finally {
-    writeFileSync(targetPath, original);
-  }
+  const result = runScript([`--check`, `--toml-path=${realTomlPath}`, `--out-dir=${outDir}`]);
+  assert.notEqual(result.status, 0, 'expected non-zero exit on drift');
+  assert.match(result.stderr, /Drift detected/);
 });
 
 test('script prints help and exits 0 on --help', () => {
