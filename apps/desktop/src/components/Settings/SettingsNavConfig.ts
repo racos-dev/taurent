@@ -18,6 +18,7 @@ type SettingsDomain = 'app' | 'qbittorrent';
 type AppSection =
   | 'desktop-window'
   | 'desktop-theme'
+  | 'desktop-language'
   | 'desktop-about'
   | 'desktop-servers'
   | 'desktop-path-mappings';
@@ -29,7 +30,7 @@ export type SectionId = AppSection | RemoteSection;
 interface SettingsNavItem {
   id: SectionId;
   domain: SettingsDomain;
-  label: string;
+  labelKey: string;
   icon: import('react').ComponentType<{ className?: string }>;
   badge?: string;
   remoteSection?: RemoteSettingsSectionKey;
@@ -38,26 +39,27 @@ interface SettingsNavItem {
 export interface SettingsNavGroup {
   id: string;
   label: string;
-  items: SettingsNavItem[];
+  items: Array<SettingsNavItem & { label: string }>;
 }
 
 export const REMOTE_SECTION_NAV: Array<{
   key: RemoteSettingsSectionKey;
-  label: string;
+  labelKey: string;
   icon: import('react').ComponentType<{ className?: string }>;
 }> = [
-  { key: 'downloads', label: 'Downloads', icon: Download },
-  { key: 'connection', label: 'Connection', icon: Globe },
-  { key: 'speed', label: 'Speed', icon: Gauge },
-  { key: 'bittorrent', label: 'BitTorrent', icon: Link2 },
-  { key: 'webui', label: 'WebUI', icon: Shield },
-  { key: 'advanced', label: 'Advanced', icon: Settings },
+  { key: 'downloads', labelKey: 'downloads', icon: Download },
+  { key: 'connection', labelKey: 'connection', icon: Globe },
+  { key: 'speed', labelKey: 'speed', icon: Gauge },
+  { key: 'bittorrent', labelKey: 'bittorrent', icon: Link2 },
+  { key: 'webui', labelKey: 'webui', icon: Shield },
+  { key: 'advanced', labelKey: 'advanced', icon: Settings },
 ];
 
 export const APP_NAV_ITEMS: SettingsNavItem[] = [
-  { id: 'desktop-window', domain: 'app', label: 'App Behavior', icon: MonitorCog },
-  { id: 'desktop-theme', domain: 'app', label: 'Theme', icon: Palette },
-  { id: 'desktop-about', domain: 'app', label: 'About', icon: Info },
-  { id: 'desktop-servers', domain: 'app', label: 'Servers', icon: ServerIcon },
-  { id: 'desktop-path-mappings', domain: 'app', label: 'Path Mappings', icon: FolderSync },
+  { id: 'desktop-window', domain: 'app', labelKey: 'appBehavior', icon: MonitorCog },
+  { id: 'desktop-theme', domain: 'app', labelKey: 'theme', icon: Palette },
+  { id: 'desktop-language', domain: 'app', labelKey: 'language', icon: Globe },
+  { id: 'desktop-about', domain: 'app', labelKey: 'about', icon: Info },
+  { id: 'desktop-servers', domain: 'app', labelKey: 'servers', icon: ServerIcon },
+  { id: 'desktop-path-mappings', domain: 'app', labelKey: 'pathMappings', icon: FolderSync },
 ];

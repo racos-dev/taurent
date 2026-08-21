@@ -22,6 +22,7 @@ use tauri::tray::{MouseButton, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
 use urlencoding::encode as url_encode;
 
+use crate::native_ui::{NativeUiLabels, NativeUiLabelsState};
 use crate::request_app_quit;
 use crate::show_main_window;
 use crate::suspend_main_window_to_tray;
@@ -62,6 +63,11 @@ struct TrayStateInner {
     /// Handle to the Alternative Speed Limits check menu item so we can
     /// update its checked state in-place without rebuilding the tray menu.
     alt_speed_item: Mutex<Option<CheckMenuItem<tauri::Wry>>>,
+    add_torrent_item: Mutex<Option<MenuItem<tauri::Wry>>>,
+    global_speed_item: Mutex<Option<MenuItem<tauri::Wry>>>,
+    quit_item: Mutex<Option<MenuItem<tauri::Wry>>>,
+    show_label: String,
+    hide_label: String,
 }
 
 impl Default for TrayStateInner {
@@ -71,6 +77,11 @@ impl Default for TrayStateInner {
             renderer_synced: AtomicBool::new(false),
             show_hide_item: Mutex::new(None),
             alt_speed_item: Mutex::new(None),
+            add_torrent_item: Mutex::new(None),
+            global_speed_item: Mutex::new(None),
+            quit_item: Mutex::new(None),
+            show_label: "Show".into(),
+            hide_label: "Hide".into(),
         }
     }
 }
@@ -123,11 +134,27 @@ impl TrayStateHandle {
         *slot = Some(item);
     }
 
+    pub fn set_static_items(
+        &self,
+        add_torrent_item: MenuItem<tauri::Wry>,
+        global_speed_item: MenuItem<tauri::Wry>,
+        quit_item: MenuItem<tauri::Wry>,
+    ) {
+        let mut inner = self.inner.lock().unwrap();
+        *inner.add_torrent_item.get_mut().unwrap() = Some(add_torrent_item);
+        *inner.global_speed_item.get_mut().unwrap() = Some(global_speed_item);
+        *inner.quit_item.get_mut().unwrap() = Some(quit_item);
+    }
+
     /// Update the Show/Hide menu item label in-place using `set_text`,
     /// avoiding a full menu rebuild. No-ops if the handle is not yet registered.
     pub fn update_show_hide_label(&self, window_visible: bool) {
-        let label = visibility_label(window_visible);
         let inner_guard = self.inner.lock().unwrap();
+        let label = if window_visible {
+            &inner_guard.hide_label
+        } else {
+            &inner_guard.show_label
+        };
         let item_guard = inner_guard.show_hide_item.lock().unwrap();
         if let Some(item) = item_guard.as_ref() {
             let _ = item.set_text(label);
@@ -151,16 +178,42 @@ impl TrayStateHandle {
         self.update_show_hide_label(state.window_visible);
         self.update_alt_speed_checked(state.alt_speed_active);
     }
+
+    pub fn apply_native_labels(&self, labels: &NativeUiLabels) {
+        let mut inner = self.inner.lock().unwrap();
+        inner.show_label.clone_from(&labels.tray_show);
+        inner.hide_label.clone_from(&labels.tray_hide);
+        let visibility = if inner.state.window_visible {
+            &labels.tray_hide
+        } else {
+            &labels.tray_show
+        };
+        if let Some(item) = inner.show_hide_item.get_mut().unwrap().as_ref() {
+            let _ = item.set_text(visibility);
+        }
+        if let Some(item) = inner.add_torrent_item.get_mut().unwrap().as_ref() {
+            let _ = item.set_text(&labels.tray_add_torrent);
+        }
+        if let Some(item) = inner.alt_speed_item.get_mut().unwrap().as_ref() {
+            let _ = item.set_text(&labels.tray_alternative_speed);
+        }
+        if let Some(item) = inner.global_speed_item.get_mut().unwrap().as_ref() {
+            let _ = item.set_text(&labels.tray_global_speed_limits);
+        }
+        if let Some(item) = inner.quit_item.get_mut().unwrap().as_ref() {
+            let _ = item.set_text(&labels.tray_quit);
+        }
+    }
 }
 
 // ─── Helpers available to lib.rs ────────────────────────────────────────────
 
 /// Visibility toggle label: "Hide" when visible, "Show" when hidden.
-fn visibility_label(window_visible: bool) -> &'static str {
+fn visibility_label(window_visible: bool, labels: &NativeUiLabels) -> &str {
     if window_visible {
-        "Hide"
+        &labels.tray_hide
     } else {
-        "Show"
+        &labels.tray_show
     }
 }
 
@@ -171,18 +224,24 @@ fn show_pause_item(_state: &TrayMenuState) -> bool {
     false
 }
 
+struct TrayMenuHandles {
+    menu: Menu<tauri::Wry>,
+    show_hide: MenuItem<tauri::Wry>,
+    alternative_speed: CheckMenuItem<tauri::Wry>,
+    add_torrent: MenuItem<tauri::Wry>,
+    global_speed_limits: MenuItem<tauri::Wry>,
+    quit: MenuItem<tauri::Wry>,
+}
+
 /// Build the tray menu from the current state.
-/// Returns the menu and handles to the two dynamic items that need runtime
-/// label/checked-state updates so callers can store them directly (not clones).
+/// Returns the menu and all text-settable handles so callers can retain the
+/// exact items inserted into the native menu.
 fn build_tray_menu(
     app_handle: &AppHandle,
     state: &TrayMenuState,
-) -> tauri::Result<(
-    Menu<tauri::Wry>,
-    MenuItem<tauri::Wry>,
-    CheckMenuItem<tauri::Wry>,
-)> {
-    let show_hide_label = visibility_label(state.window_visible);
+    labels: &NativeUiLabels,
+) -> tauri::Result<TrayMenuHandles> {
+    let show_hide_label = visibility_label(state.window_visible, labels);
 
     let show_hide_item = MenuItem::with_id(
         app_handle,
@@ -195,7 +254,7 @@ fn build_tray_menu(
     let add_torrent_item = MenuItem::with_id(
         app_handle,
         id::ADD_TORRENT,
-        "Add Torrent File/Magnet...",
+        &labels.tray_add_torrent,
         true,
         None::<&str>,
     )?;
@@ -203,7 +262,7 @@ fn build_tray_menu(
     let alt_speed_check = CheckMenuItem::with_id(
         app_handle,
         id::ALTERNATIVE_SPEED,
-        "Alternative Speed Limits",
+        &labels.tray_alternative_speed,
         true,
         state.alt_speed_active,
         None::<&str>,
@@ -212,12 +271,12 @@ fn build_tray_menu(
     let global_speed_item = MenuItem::with_id(
         app_handle,
         id::SET_GLOBAL_SPEED_LIMITS,
-        "Set Global Speed Limits...",
+        &labels.tray_global_speed_limits,
         true,
         None::<&str>,
     )?;
 
-    let quit_item = MenuItem::with_id(app_handle, id::QUIT, "Quit", true, None::<&str>)?;
+    let quit_item = MenuItem::with_id(app_handle, id::QUIT, &labels.tray_quit, true, None::<&str>)?;
 
     // Each separator is a distinct handle — reuse of the same variable would
     // cause a native tray crash on some platforms.
@@ -240,7 +299,14 @@ fn build_tray_menu(
         ],
     )?;
 
-    Ok((menu, show_hide_item, alt_speed_check))
+    Ok(TrayMenuHandles {
+        menu,
+        show_hide: show_hide_item,
+        alternative_speed: alt_speed_check,
+        add_torrent: add_torrent_item,
+        global_speed_limits: global_speed_item,
+        quit: quit_item,
+    })
 }
 
 // ─── Tray event handlers ──────────────────────────────────────────────────────
@@ -270,7 +336,12 @@ fn open_add_torrent_window(app_handle: &AppHandle) {
     let url = WebviewUrl::App(format!("{}?{}", route, query).into());
 
     match WebviewWindowBuilder::new(app_handle, label, url)
-        .title("Add Torrent")
+        .title(
+            app_handle
+                .state::<NativeUiLabelsState>()
+                .get()
+                .window_add_torrent,
+        )
         .inner_size(700.0, 680.0)
         .min_inner_size(700.0, 680.0)
         .resizable(false)
@@ -323,7 +394,12 @@ fn open_global_speed_limits_dialog(app_handle: &AppHandle) {
     let url = WebviewUrl::App(format!("{}?{}", route, query).into());
 
     match WebviewWindowBuilder::new(app_handle, label, url)
-        .title("Global Speed Limits")
+        .title(
+            app_handle
+                .state::<NativeUiLabelsState>()
+                .get()
+                .window_global_speed_limits,
+        )
         .inner_size(400.0, 340.0)
         .min_inner_size(400.0, 340.0)
         .resizable(false)
@@ -352,9 +428,10 @@ fn rebuild_tray_menu(app_handle: &AppHandle) {
     };
     let state_handle = app_handle.state::<TrayStateHandle>();
     let state = state_handle.get_state();
-    match build_tray_menu(app_handle, &state) {
-        Ok((menu, _, _)) => {
-            let _ = tray.set_menu(Some(menu));
+    let labels = app_handle.state::<NativeUiLabelsState>().get();
+    match build_tray_menu(app_handle, &state, &labels) {
+        Ok(handles) => {
+            let _ = tray.set_menu(Some(handles.menu));
         }
         Err(err) => {
             log::error!("failed to rebuild tray menu: {err}");
@@ -369,6 +446,12 @@ pub fn update_tray_state(app_handle: &AppHandle, state: TrayMenuState, from_rend
     state_handle.set_state(state.clone(), from_renderer);
     // Update both dynamic items in-place (show/hide label + alt-speed checked state)
     state_handle.update_stored_item_states(&state);
+}
+
+pub fn apply_native_labels(app_handle: &AppHandle, labels: &NativeUiLabels) {
+    app_handle
+        .state::<TrayStateHandle>()
+        .apply_native_labels(labels);
 }
 
 /// Refresh the tray menu label after a visibility change.
@@ -518,17 +601,21 @@ pub fn setup_tray(app: &mut tauri::App) -> tauri::Result<()> {
         .build(app.handle())?;
 
     // Build initial menu now that the tray handle exists.
-    // build_tray_menu returns the menu plus handles to the two dynamic items
-    // (show/hide and alt-speed check). Store the exact handles inserted into
-    // the menu so in-place updates work correctly.
+    // Store the exact handles inserted into the menu so in-place updates work.
     let state = app.state::<TrayStateHandle>().get_state();
-    let (menu, show_hide_item, alt_speed_check) = build_tray_menu(app.handle(), &state)?;
+    let labels = app.state::<NativeUiLabelsState>().get();
+    let handles = build_tray_menu(app.handle(), &state, &labels)?;
 
     let state_handle = app.state::<TrayStateHandle>();
-    state_handle.set_show_hide_item(show_hide_item);
-    state_handle.set_alt_speed_item(alt_speed_check);
+    state_handle.set_show_hide_item(handles.show_hide);
+    state_handle.set_alt_speed_item(handles.alternative_speed);
+    state_handle.set_static_items(
+        handles.add_torrent,
+        handles.global_speed_limits,
+        handles.quit,
+    );
 
-    let _ = tray.set_menu(Some(menu));
+    let _ = tray.set_menu(Some(handles.menu));
 
     Ok(())
 }

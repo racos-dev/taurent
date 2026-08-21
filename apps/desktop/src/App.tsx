@@ -25,6 +25,7 @@ import { ExternalLinkProvider } from '@taurent/web-ui';
 import { useOperationNotifications } from '@taurent/web-core/hooks/useOperationNotifications';
 import { notifyNative } from '@taurent/bridge/desktop/notification';
 import { LazyContentFallback, type LazyContentKind } from './components/LazyContentFallback';
+import { LocalizationProvider } from './i18n/LocalizationProvider';
 
 // Lazy-load auxiliary windows and heavier non-initial routes
 const AppShell = lazy(() => import('./layouts/AppShell/AppShell').then(m => ({ default: m.AppShell })));
@@ -173,16 +174,18 @@ function AppContent() {
 
   return (
     <ExternalLinkProvider onNavigate={url => void openUrl(url)}>
-      <SearchFocusProvider>
-        <ThemeProvider defaultTheme="catppuccin">
-          <ServerManagerProvider>
-            <QBClientProvider>
-              <AppNotifications />
-              <RouterProvider router={router} />
-            </QBClientProvider>
-          </ServerManagerProvider>
-        </ThemeProvider>
-      </SearchFocusProvider>
+      <LocalizationProvider>
+        <SearchFocusProvider>
+          <ThemeProvider defaultTheme="catppuccin">
+            <ServerManagerProvider>
+              <QBClientProvider>
+                <AppNotifications />
+                <RouterProvider router={router} />
+              </QBClientProvider>
+            </ServerManagerProvider>
+          </ThemeProvider>
+        </SearchFocusProvider>
+      </LocalizationProvider>
     </ExternalLinkProvider>
   );
 }

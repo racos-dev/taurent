@@ -27,7 +27,9 @@ import {
   formatTags,
   formatTracker,
   formatTransferLimit,
-  getTorrentDetailedStateLabel,
+  createLocalizedFormatters,
+  getLanguageState,
+  localization,
 } from '@taurent/shared';
 
 // ============================================================================
@@ -39,7 +41,8 @@ import {
  * Uses shared getTorrentDetailedStateLabel for raw-state detail labels.
  */
 function formatState(state: string): string {
-  return getTorrentDetailedStateLabel(state) || '-';
+  const { locale } = getLanguageState();
+  return createLocalizedFormatters(locale, localization.t.bind(localization)).formatTorrentState(state) || '-';
 }
 
 // ============================================================================

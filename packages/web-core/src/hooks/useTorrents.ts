@@ -14,6 +14,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { WorkspaceViewRequest } from '@taurent/bridge/types';
 import type { Torrent } from '@taurent/shared/types/qbittorrent';
 import type { TorrentFilterType } from '@taurent/shared';
+import { useCurrentLocale } from '@taurent/shared/i18n';
 import {
   isTorrentFilterType,
   isValidSortField,
@@ -78,6 +79,7 @@ export function createTorrentsHook(
   return function useTorrents(options: UseTorrentsOptions = {}): UseTorrentsResult {
     const { filter, category, tag, tracker, search, sort, reverse, enabled = true } = options;
     const { isConnected, isHydrated, maindataState } = scopeProvider();
+    const locale = useCurrentLocale();
 
     const torrentsMap = maindataState?.torrents;
 
@@ -99,9 +101,9 @@ export function createTorrentsHook(
           direction: reverse ? 'desc' : 'asc',
         },
         include_sorted_hashes: true,
-        locale: typeof navigator !== 'undefined' ? navigator.language : 'en-US',
+        locale,
       };
-    }, [filter, category, tag, tracker, search, sort, reverse]);
+    }, [filter, category, tag, tracker, search, sort, reverse, locale]);
 
     const rustView = useWorkspaceView(bridge.qBClient, workspaceRequest);
     // Substitute a no-op when the renderer has no connection or has not yet

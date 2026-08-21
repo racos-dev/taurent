@@ -7,8 +7,10 @@ import { DialogActions, Input } from '@taurent/web-ui';
 import { formatUserMessageForContext } from '@taurent/shared/utils/error';
 import { useQBClient } from '../connection/QBClientProvider';
 import { dismissDialogWindow } from '../windows/dialogs/dialogHostWindow';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export function EditCategoryDialogScreen() {
+  const { t } = useTaurentTranslation('desktop');
   const [searchParams] = useSearchParams();
   const { serverId, sessionGeneration } = useQBClient();
 
@@ -21,8 +23,8 @@ export function EditCategoryDialogScreen() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    void getCurrentWindow().setTitle(`Edit Category — ${name}`);
-  }, [name]);
+    void getCurrentWindow().setTitle(t('windows.editCategoryNamed', { name }));
+  }, [name, t]);
 
   // Sync when singleton window is reused for a different category
   useEffect(() => {

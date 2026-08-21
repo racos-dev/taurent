@@ -8,11 +8,13 @@ import { formatUserMessageForContext } from '@taurent/shared/utils/error';
 import { useQBClient } from '../connection/QBClientProvider';
 import { dismissDialogWindow } from '../windows/dialogs/dialogHostWindow';
 import { RESOURCE } from '@taurent/web-core/query';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 type TransferLimitDialogDirection = 'download' | 'upload';
 type TransferLimitDialogMode = 'single' | 'combined';
 
 export function TransferLimitDialogScreen() {
+  const { t } = useTaurentTranslation('desktop');
   const [searchParams] = useSearchParams();
   const { serverId, sessionGeneration } = useQBClient();
 
@@ -55,12 +57,12 @@ export function TransferLimitDialogScreen() {
   useEffect(() => {
     const title =
       mode === 'combined'
-        ? 'Global Speed Limits'
+        ? t('windows.globalSpeedLimits')
         : isAltSpeed
-          ? direction === 'download' ? 'Alt Download Limit' : 'Alt Upload Limit'
-          : direction === 'download' ? 'Download Limit' : 'Upload Limit';
+          ? direction === 'download' ? t('windows.altDownloadLimit') : t('windows.altUploadLimit')
+          : direction === 'download' ? t('windows.downloadLimit') : t('windows.uploadLimit');
     void getCurrentWindow().setTitle(title);
-  }, [mode, direction, isAltSpeed]);
+  }, [mode, direction, isAltSpeed, t]);
 
   // Focus and select in single-direction mode; focus download in combined mode
   useEffect(() => {

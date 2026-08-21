@@ -57,6 +57,21 @@ async function expectToggleThumbInsideTrack(locator: import('@playwright/test').
 }
 
 test.describe('mobile settings screen in shell', () => {
+  test('loads Romanian before render and localizes shell navigation', async ({ page }) => {
+    await gotoMobile(page, {
+      path: '/settings',
+      appScenario: 'connected',
+      scenario: 'empty',
+      language: 'ro',
+    });
+
+    await expect(page.locator('html')).toHaveAttribute('lang', 'ro');
+    const navigation = page.getByRole('navigation');
+    await expect(navigation.getByRole('link', { name: 'Torrente' })).toBeVisible();
+    await expect(navigation.getByRole('link', { name: 'Căutare' })).toBeVisible();
+    await expect(navigation.getByRole('link', { name: 'Setări' })).toBeVisible();
+  });
+
   test('renders settings screen inside the shell and keeps the tab bar visible', async ({ page }) => {
     await gotoMobile(page, {
       path: '/settings',

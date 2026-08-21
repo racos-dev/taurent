@@ -138,6 +138,9 @@ export default defineConfig(async () => ({
           // Split aliased workspace packages resolved to source paths before node_modules
           const pkg = '/packages/';
           if (id.includes(pkg)) {
+            // Preserve lazy locale boundaries instead of hoisting non-English
+            // catalogs into the eager shared chunk.
+            if (id.includes('/packages/shared/src/i18n/catalogs/ro.ts')) return;
             if (id.includes('/packages/shared/src')) return 'shared';
             if (id.includes('/packages/bridge/src')) return 'bridge';
             if (id.includes('/packages/web-core/src')) return 'web-core';

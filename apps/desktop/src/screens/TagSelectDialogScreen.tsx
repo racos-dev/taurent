@@ -10,8 +10,10 @@ import { useQBClient } from '../connection/QBClientProvider';
 import { useTags } from '../hooks/platform/useTags';
 import { useLiveTorrentByHash } from '../hooks/torrents/useLiveTorrentByHash';
 import { dismissDialogWindow } from '../windows/dialogs/dialogHostWindow';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export function TagSelectDialogScreen() {
+  const { t } = useTaurentTranslation('desktop');
   const [searchParams] = useSearchParams();
   const { serverId, sessionGeneration } = useQBClient();
 
@@ -33,8 +35,8 @@ export function TagSelectDialogScreen() {
   const [checkedTags, setCheckedTags] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    void getCurrentWindow().setTitle('Add/Remove Tags');
-  }, []);
+    void getCurrentWindow().setTitle(t('windows.tags'));
+  }, [t]);
 
   // Toggle a tag's checked state
   function toggleTag(tag: string) {

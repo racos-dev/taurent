@@ -46,20 +46,16 @@ import {
 } from '@taurent/shared';
 import type { Torrent } from '@taurent/shared/types/qbittorrent';
 import type { WorkspaceView, WorkspaceViewRequest } from '@taurent/bridge/types';
+import { useCurrentLocale } from '@taurent/shared/i18n';
 import type { WorkspaceViewBridge } from '../../sync/useWorkspaceView';
 import { useWorkspaceView } from '../../sync/useWorkspaceView';
 
 // Re-export for apps that previously imported the type from this module.
 export type { WorkspaceViewBridge } from '../../sync/useWorkspaceView';
 
-const LOCALE_FALLBACK = 'en-US';
 const WORKSPACE_REQUEST_ID = 'desktop-workspace';
 const HASHLESS_SORT_FIELD: SortField = 'added_on';
 const HASHLESS_SORT_DIRECTION: SortDirection = 'desc';
-
-function getLocale(): string {
-  return typeof navigator !== 'undefined' ? navigator.language : LOCALE_FALLBACK;
-}
 
 function mapStatusCounts(view: WorkspaceView | null): Record<TorrentFilterType, number> {
   return { ...view?.status_counts } as Record<TorrentFilterType, number>;
@@ -99,6 +95,7 @@ function createWorkspaceRequest(
   sortField: SortField,
   sortDirection: SortDirection,
   includeSortedHashes: boolean,
+  locale: string,
 ): WorkspaceViewRequest {
   return {
     request_id: WORKSPACE_REQUEST_ID,
@@ -113,7 +110,7 @@ function createWorkspaceRequest(
       ? { field: sortField, direction: sortDirection }
       : { field: HASHLESS_SORT_FIELD, direction: HASHLESS_SORT_DIRECTION },
     include_sorted_hashes: includeSortedHashes,
-    locale: getLocale(),
+    locale,
   };
 }
 
@@ -227,6 +224,7 @@ export function createTorrentWorkspaceViewProvider(
     includeSortedHashes = true,
   }: TorrentWorkspaceViewProviderProps) {
     const torrents = liveTorrentProvider();
+    const locale = useCurrentLocale();
 
     const filters = useTorrentStore((state) => state.filters);
     const sortField = useTorrentStore((state) => state.sortField);
@@ -242,8 +240,8 @@ export function createTorrentWorkspaceViewProvider(
     const toggleSortDirection = useTorrentStore((state) => state.toggleSortDirection);
 
     const workspaceRequest = useMemo<WorkspaceViewRequest>(
-      () => createWorkspaceRequest(filters, sortField, sortDirection, includeSortedHashes),
-      [filters, sortField, sortDirection, includeSortedHashes],
+      () => createWorkspaceRequest(filters, sortField, sortDirection, includeSortedHashes, locale),
+      [filters, sortField, sortDirection, includeSortedHashes, locale],
     );
 
     const rustView = useWorkspaceView(bridge.qBClient, workspaceRequest);

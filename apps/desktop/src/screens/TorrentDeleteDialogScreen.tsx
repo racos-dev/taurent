@@ -8,8 +8,10 @@ import { formatUserMessageForContext } from '@taurent/shared/utils/error';
 import { useQBClient } from '../connection/QBClientProvider';
 import { AlertCircle, ICON_SIZES } from '@taurent/shared';
 import { dismissDialogWindow } from '../windows/dialogs/dialogHostWindow';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export function TorrentDeleteDialogScreen() {
+  const { t } = useTaurentTranslation('desktop');
   const [searchParams] = useSearchParams();
   const { serverId, sessionGeneration } = useQBClient();
 
@@ -28,8 +30,8 @@ export function TorrentDeleteDialogScreen() {
   }, [hashesParam]);
 
   useEffect(() => {
-    void getCurrentWindow().setTitle('Delete Torrent');
-  }, []);
+    void getCurrentWindow().setTitle(t('windows.deleteTorrent'));
+  }, [t]);
 
   async function handleDelete() {
     setIsSubmitting(true);

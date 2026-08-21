@@ -15,6 +15,7 @@ import {
   Button,
   ConfirmDialog,
   Input,
+  LanguageSettingsPanel,
   NumberInputModal,
   RetryButton,
   ScreenHeader,
@@ -542,6 +543,12 @@ function AppearanceEditor({
 
   return (
     <div className="space-y-5">
+      <SettingsList label="Language">
+        <div className="p-3">
+          <LanguageSettingsPanel />
+        </div>
+      </SettingsList>
+
       <SettingsList label="Mode">
         <SegmentedRow
           options={[

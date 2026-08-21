@@ -76,6 +76,26 @@ async function toggleRemoteCheckbox(page: import('@playwright/test').Page, label
 }
 
 test.describe('desktop utility windows', () => {
+  test('switches the settings window to Romanian at runtime', async ({ page }) => {
+    await gotoDesktop(page, {
+      path: '/settings-window',
+      appScenario: 'connected',
+      scenario: 'empty',
+    });
+
+    await page.getByRole('button', { name: 'Language', exact: true }).click();
+    await page.getByTestId('language-selector').click();
+    await page.getByRole('option', { name: 'Română', exact: true }).click();
+
+    await expect(page.locator('html')).toHaveAttribute('lang', 'ro');
+    await expect(page.getByRole('heading', { name: 'Setări', exact: true }).first()).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Limbă', exact: true })).toBeVisible();
+    await expect.poll(async () => {
+      const calls = await readRecordedCalls(page);
+      return calls.some((call) => call.name === 'syncNativeUiLabels');
+    }).toBe(true);
+  });
+
   test('renders settings for a connected session', async ({ page }) => {
     await gotoDesktop(page, {
       path: '/settings-window',

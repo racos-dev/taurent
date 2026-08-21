@@ -13,6 +13,7 @@ export type { ThemePalette, ThemeVariant, AccentHex, AccentPreference } from './
 export { normalizeAccent, isAccentValue, deriveMidnightAccentTokens, getContrastText, serializeAccentCss } from './theme/accent';
 
 export * from './platform';
+export * from './i18n';
 
 export * from './utils/sortTorrents';
 export * from './utils/maindata';

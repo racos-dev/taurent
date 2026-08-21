@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react';
+import { useTaurentTranslation } from '@taurent/shared';
 import { Input } from '../../primitives/Input';
 import { Button } from '../../primitives/Button';
 import { Checkbox } from '../../primitives/Checkbox';
@@ -55,6 +56,8 @@ export const AddServerForm = React.memo<AddServerFormProps>(
     error,
     isSubmitting = false,
   }) => {
+    const { t } = useTaurentTranslation('auth');
+    const { t: tCommon } = useTaurentTranslation('common');
     const isFormValid =
       name.trim().length > 0 &&
       url.trim().length > 0 &&
@@ -72,10 +75,10 @@ export const AddServerForm = React.memo<AddServerFormProps>(
       [isFormValid, isSubmitting, onSubmit],
     );
 
-    const credentialLabel = useApiKey ? 'API Key' : 'Password';
+    const credentialLabel = useApiKey ? t('form.apiKey') : t('form.password');
     const credentialPlaceholder = useApiKey
       ? 'qbt_...'
-      : 'Enter your password';
+      : t('form.passwordPlaceholder');
 
     return (
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -86,27 +89,27 @@ export const AddServerForm = React.memo<AddServerFormProps>(
         )}
 
         <Input
-          label="Server Name *"
+          label={t('form.serverNameRequired')}
           value={name}
           onChange={onNameChange}
-          placeholder="My Home Server"
+          placeholder={t('form.serverNamePlaceholder')}
           disabled={isSubmitting}
           error={validationErrors?.name ?? undefined}
         />
 
         <Input
-          label="Server URL *"
+          label={t('form.serverUrlRequired')}
           value={url}
           onChange={onUrlChange}
           placeholder="https://server:8080"
           disabled={isSubmitting}
           error={validationErrors?.url ?? undefined}
-          helperText="e.g., localhost:8080 or https://server:8080"
+          helperText={t('form.serverUrlHelper')}
         />
 
         {urlSuggestion && (
           <p className="-mt-2 text-sm text-text-secondary">
-            Did you mean{' '}
+            {t('form.didYouMean')}{' '}
             <button
               type="button"
               onClick={() => onUrlChange(urlSuggestion)}
@@ -120,7 +123,7 @@ export const AddServerForm = React.memo<AddServerFormProps>(
 
         {!useApiKey && (
           <Input
-            label="Username *"
+            label={t('form.usernameRequired')}
             value={username}
             onChange={onUsernameChange}
             placeholder="admin"
@@ -145,15 +148,15 @@ export const AddServerForm = React.memo<AddServerFormProps>(
               onChange={onRememberPasswordChange}
               disabled={isSubmitting}
             />
-            <span className="text-sm text-text-secondary">Remember password</span>
+            <span className="text-sm text-text-secondary">{t('form.rememberPassword')}</span>
           </label>
         )}
 
         <label className="flex items-center justify-between gap-3 rounded-sm border border-border bg-surface p-3 cursor-pointer select-none transition-colors hover:border-border-focus">
           <div className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-text-primary">Use API Key</span>
+            <span className="text-sm font-medium text-text-primary">{t('form.useApiKey')}</span>
             <span className="text-xs text-text-secondary">
-              Authenticate with a qBittorrent API key instead of a username and password
+              {t('form.useApiKeyDescription')}
             </span>
           </div>
           <ToggleSwitch checked={useApiKey} onChange={onUseApiKeyChange} />
@@ -167,7 +170,7 @@ export const AddServerForm = React.memo<AddServerFormProps>(
             disabled={isSubmitting}
             className="sm:flex-1"
           >
-            Cancel
+            {tCommon('actions.cancel')}
           </Button>
           <Button
             type="submit"
@@ -177,10 +180,10 @@ export const AddServerForm = React.memo<AddServerFormProps>(
             {isSubmitting ? (
               <>
                 <Spinner variant="ring" size="md" />
-                Adding...
+                {t('form.adding')}
               </>
             ) : (
-              'Add Server'
+              t('server.add')
             )}
           </Button>
         </div>

@@ -9,8 +9,10 @@ import { useQBClient } from '../connection/QBClientProvider';
 import { useCategories } from '../hooks/platform/useCategories';
 import { useLiveTorrentByHash } from '../hooks/torrents/useLiveTorrentByHash';
 import { dismissDialogWindow } from '../windows/dialogs/dialogHostWindow';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export function CategorySelectDialogScreen() {
+  const { t } = useTaurentTranslation('desktop');
   const [searchParams] = useSearchParams();
   const { serverId, sessionGeneration } = useQBClient();
 
@@ -28,8 +30,8 @@ export function CategorySelectDialogScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    void getCurrentWindow().setTitle('Set Category');
-  }, []);
+    void getCurrentWindow().setTitle(t('windows.category'));
+  }, [t]);
 
   async function handleSelect(category: string) {
     setError(null);

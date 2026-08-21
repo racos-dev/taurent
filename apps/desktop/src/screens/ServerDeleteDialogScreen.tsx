@@ -7,8 +7,10 @@ import { formatUserMessageForContext } from '@taurent/shared/utils/error';
 import { DialogActions } from '@taurent/web-ui';
 import { useQBClient, useServerManager } from '../connection';
 import { dismissDialogWindow } from '../windows/dialogs/dialogHostWindow';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export function ServerDeleteDialogScreen() {
+  const { t } = useTaurentTranslation('desktop');
   const [searchParams] = useSearchParams();
   const serverId = searchParams.get('serverId') ?? '';
   const serverName = searchParams.get('serverName') ?? '';
@@ -18,8 +20,8 @@ export function ServerDeleteDialogScreen() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void getCurrentWindow().setTitle('Delete Server');
-  }, []);
+    void getCurrentWindow().setTitle(t('windows.deleteServer'));
+  }, [t]);
 
   useEffect(() => {
     setError(null);

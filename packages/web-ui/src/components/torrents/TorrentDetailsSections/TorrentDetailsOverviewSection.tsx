@@ -16,7 +16,8 @@ import {
   formatTime,
   formatTransferLimit,
 } from '@taurent/shared/utils/formatters';
-import { getTorrentDetailedStateLabel, RatioIcon, ICON_SIZES } from '@taurent/shared';
+import { localizeTorrentDetailedState, RatioIcon, ICON_SIZES } from '@taurent/shared';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 import { Clock, Download, Upload, Users, Link, HardDrive, Layers, Shield } from '@taurent/shared';
 import type { TorrentDetailsOverviewSectionProps } from './types';
 import type { Torrent, TorrentProperties } from '@taurent/shared/types/qbittorrent';
@@ -25,6 +26,7 @@ import { RetryButton } from '../../shared/RetryButton';
 
 // Desktop overview section — flat key-value layout matching qBittorrent's General tab
 function DesktopOverview({ torrent, properties }: { torrent: Torrent; properties: TorrentProperties | null }) {
+  const { t } = useTaurentTranslation('torrents');
   const wasted = properties?.total_wasted ?? 0;
   const reannounce = properties?.reannounce ?? 0;
   const lastSeen = properties?.last_seen ?? 0;
@@ -60,7 +62,7 @@ function DesktopOverview({ torrent, properties }: { torrent: Torrent; properties
         <h3 className="text-xs font-semibold text-text-secondary border-b border-border pb-1 mb-1">Information</h3>
         <KVRow label="Total Size" value={formatBytes(totalSize)} />
         <KVRow label="Progress" value={formatProgress(torrent.progress)} />
-        <KVRow label="State" value={getTorrentDetailedStateLabel(torrent.state)} />
+        <KVRow label={t('fields.state')} value={localizeTorrentDetailedState(torrent.state, t)} />
         <KVRow label="Save Path" value={properties?.save_path ?? torrent.save_path ?? ''} />
         <KVRow label="Category" value={torrent.category || 'None'} />
         <KVRow label="Tags" value={torrent.tags || 'None'} />

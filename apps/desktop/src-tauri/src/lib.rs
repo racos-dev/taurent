@@ -9,6 +9,7 @@ use tauri_plugin_store::StoreExt;
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 
 mod download_completion_notifications;
+mod native_ui;
 mod tray;
 
 /// Minimal payload for session-changed events, used to toggle the download
@@ -637,6 +638,7 @@ pub fn run() {
         .manage(PendingViewActions::new())
         .manage(ViewListenersReady::new())
         .manage(TrayState::default())
+        .manage(native_ui::NativeUiLabelsState::default())
         // codeql[rust/hard-coded-cryptographic-value] Tauri's handler macro emits command
         // metadata, including parameter names like "password"; no credential value is hard-coded.
         .invoke_handler(tauri::generate_handler![
@@ -761,6 +763,7 @@ pub fn run() {
             qb_tauri::workspace::set_workspace_view,
             qb_tauri::workspace::get_workspace_view,
             menu::sync_menu_state,
+            menu::sync_native_ui_labels,
             menu::exit_app,
             get_pending_torrent_files,
             qb_tauri::magnet_links::get_pending_magnet_links,

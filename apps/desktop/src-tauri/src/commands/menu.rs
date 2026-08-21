@@ -11,6 +11,7 @@ use tauri::{menu::MenuEvent, AppHandle, Emitter, Manager};
 /// Label of the main webview window.
 const MAIN_WINDOW_LABEL: &str = "main";
 
+use crate::native_ui::{NativeUiLabels, NativeUiLabelsState};
 use crate::NativeUiAction;
 use crate::PendingNativeUiActions as RustPendingNativeUiActions;
 use crate::PendingViewActions;
@@ -106,7 +107,7 @@ pub struct MenuState {
 #[cfg(target_os = "macos")]
 mod menu_handles {
     use std::sync::{Arc, Mutex, OnceLock};
-    use tauri::menu::{CheckMenuItem, MenuItem};
+    use tauri::menu::{CheckMenuItem, MenuItem, PredefinedMenuItem, Submenu};
 
     // Type-erased handle that supports set_enabled (MenuItem) and set_checked
     // (CheckMenuItem). We store MenuItem handles for torrent items (enable/disable)
@@ -117,6 +118,7 @@ mod menu_handles {
     // any transmute or type-coercion unsafety.
     static TORRENT_HANDLES: OnceLock<Mutex<Vec<Arc<dyn EnableDisable>>>> = OnceLock::new();
     static VIEW_HANDLES: OnceLock<Mutex<Vec<Arc<dyn Checkable>>>> = OnceLock::new();
+    static TEXT_HANDLES: OnceLock<Mutex<Vec<Arc<dyn TextSettable>>>> = OnceLock::new();
 
     fn torrent_handles() -> &'static Mutex<Vec<Arc<dyn EnableDisable>>> {
         TORRENT_HANDLES.get_or_init(|| Mutex::new(Vec::new()))
@@ -124,6 +126,10 @@ mod menu_handles {
 
     fn view_handles() -> &'static Mutex<Vec<Arc<dyn Checkable>>> {
         VIEW_HANDLES.get_or_init(|| Mutex::new(Vec::new()))
+    }
+
+    fn text_handles() -> &'static Mutex<Vec<Arc<dyn TextSettable>>> {
+        TEXT_HANDLES.get_or_init(|| Mutex::new(Vec::new()))
     }
 
     /// Supports set_enabled(enabled: bool)
@@ -149,6 +155,25 @@ mod menu_handles {
         }
     }
 
+    pub(super) trait TextSettable: Send + Sync {
+        fn set_text(&self, text: &str);
+    }
+
+    macro_rules! impl_text_settable {
+        ($type:ident) => {
+            impl<R: tauri::Runtime> TextSettable for $type<R> {
+                fn set_text(&self, text: &str) {
+                    let _ = $type::set_text(self, text);
+                }
+            }
+        };
+    }
+
+    impl_text_settable!(MenuItem);
+    impl_text_settable!(CheckMenuItem);
+    impl_text_settable!(PredefinedMenuItem);
+    impl_text_settable!(Submenu);
+
     pub(super) fn clear() {
         let mut torrent = torrent_handles().lock().unwrap_or_else(|e| e.into_inner());
         torrent.clear();
@@ -156,6 +181,10 @@ mod menu_handles {
 
         let mut view = view_handles().lock().unwrap_or_else(|e| e.into_inner());
         view.clear();
+        drop(view);
+
+        let mut text = text_handles().lock().unwrap_or_else(|e| e.into_inner());
+        text.clear();
     }
 
     /// Store a MenuItem handle (cloned as Arc)
@@ -170,6 +199,11 @@ mod menu_handles {
         let arc: Arc<dyn Checkable> = Arc::new(item);
         let mut items = view_handles().lock().unwrap_or_else(|e| e.into_inner());
         items.push(arc);
+    }
+
+    pub(super) fn push_text<T: TextSettable + 'static>(item: T) {
+        let mut items = text_handles().lock().unwrap_or_else(|e| e.into_inner());
+        items.push(Arc::new(item));
     }
 
     /// Apply enable/disable to all stored torrent items
@@ -189,6 +223,13 @@ mod menu_handles {
             if i < states.len() {
                 item.set_checked(states[i]);
             }
+        }
+    }
+
+    pub(super) fn apply_texts(labels: &[&str]) {
+        let items = text_handles().lock().unwrap_or_else(|e| e.into_inner());
+        for (item, label) in items.iter().zip(labels) {
+            item.set_text(label);
         }
     }
 }
@@ -454,6 +495,65 @@ pub fn build_native_menu<R: tauri::Runtime>(
     let help_about = MenuItem::with_id(app, id::HELP_ABOUT, "About Taurent", true, None::<&str>)?;
     let help_menu = SubmenuBuilder::new(app, "Help").item(&help_about).build()?;
 
+    // Store every text-bearing handle in a stable order so locale changes can
+    // update labels without rebuilding menus or disturbing state/accelerators.
+    for item in [
+        app_about.clone(),
+        app_settings.clone(),
+        app_hide.clone(),
+        app_hide_others.clone(),
+        app_unhide.clone(),
+        app_quit.clone(),
+        file_add.clone(),
+        torrent_pause.clone(),
+        torrent_resume.clone(),
+        torrent_delete.clone(),
+        torrent_recheck.clone(),
+        torrent_reannounce.clone(),
+        torrent_force_start.clone(),
+        torrent_set_category.clone(),
+        torrent_set_tags.clone(),
+        torrent_queue_up.clone(),
+        torrent_queue_down.clone(),
+        torrent_move_top.clone(),
+        torrent_move_bottom.clone(),
+        tools_search.clone(),
+        tools_rss.clone(),
+        tools_statistics.clone(),
+        tools_settings.clone(),
+        help_about.clone(),
+    ] {
+        menu_handles::push_text(item);
+    }
+    for item in [
+        view_toggle_sidebar.clone(),
+        view_toggle_details.clone(),
+        view_toggle_in_window_menubar.clone(),
+    ] {
+        menu_handles::push_text(item);
+    }
+    for item in [
+        edit_undo.clone(),
+        edit_redo.clone(),
+        edit_cut.clone(),
+        edit_copy.clone(),
+        edit_paste.clone(),
+        edit_select_all.clone(),
+    ] {
+        menu_handles::push_text(item);
+    }
+    for item in [
+        app_menu.clone(),
+        edit_menu.clone(),
+        file_menu.clone(),
+        torrent_menu.clone(),
+        view_menu.clone(),
+        tools_menu.clone(),
+        help_menu.clone(),
+    ] {
+        menu_handles::push_text(item);
+    }
+
     MenuBuilder::new(app)
         .item(&app_menu)
         .item(&edit_menu)
@@ -505,6 +605,55 @@ pub fn apply_menu_state(_app: &AppHandle, state: &MenuState) {
 pub fn apply_menu_state<R: tauri::Runtime>(_app: &AppHandle<R>, _state: &MenuState) {
     // No-op on non-macOS platforms
 }
+
+#[cfg(target_os = "macos")]
+pub fn apply_native_ui_labels(labels: &NativeUiLabels) {
+    menu_handles::apply_texts(&[
+        &labels.menu_about,
+        &labels.menu_settings,
+        &labels.menu_hide,
+        &labels.menu_hide_others,
+        &labels.menu_show_all,
+        &labels.menu_quit,
+        &labels.menu_add_torrent,
+        &labels.menu_pause,
+        &labels.menu_resume,
+        &labels.menu_delete,
+        &labels.menu_recheck,
+        &labels.menu_reannounce,
+        &labels.menu_force_start,
+        &labels.menu_set_category,
+        &labels.menu_set_tags,
+        &labels.menu_queue_up,
+        &labels.menu_queue_down,
+        &labels.menu_move_top,
+        &labels.menu_move_bottom,
+        &labels.menu_search,
+        &labels.menu_rss,
+        &labels.menu_statistics,
+        &labels.menu_settings,
+        &labels.menu_about,
+        &labels.menu_toggle_sidebar,
+        &labels.menu_toggle_details,
+        &labels.menu_show_menu_bar,
+        &labels.menu_undo,
+        &labels.menu_redo,
+        &labels.menu_cut,
+        &labels.menu_copy,
+        &labels.menu_paste,
+        &labels.menu_select_all,
+        &labels.menu_app,
+        &labels.menu_edit,
+        &labels.menu_file,
+        &labels.menu_torrent,
+        &labels.menu_view,
+        &labels.menu_tools,
+        &labels.menu_help,
+    ]);
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn apply_native_ui_labels(_labels: &NativeUiLabels) {}
 
 // ---------------------------------------------------------------------------
 // Event handling
@@ -626,6 +775,21 @@ pub fn sync_menu_state(app: tauri::AppHandle, state: MenuState) {
         };
         crate::tray::update_tray_state(&app, tray_state, true);
     }
+}
+
+/// Synchronize renderer-authored native menu, tray, and Rust-created window labels.
+#[tauri::command]
+pub fn sync_native_ui_labels(
+    app: tauri::AppHandle,
+    labels: NativeUiLabels,
+    state: tauri::State<'_, NativeUiLabelsState>,
+) -> Result<(), String> {
+    state.replace(labels.clone());
+    apply_native_ui_labels(&labels);
+    if app.try_state::<crate::tray::TrayStateHandle>().is_some() {
+        crate::tray::apply_native_labels(&app, &labels);
+    }
+    Ok(())
 }
 
 /// Exit the application immediately (proper quit, not hide-to-tray).

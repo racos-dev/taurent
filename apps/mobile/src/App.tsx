@@ -20,6 +20,7 @@ import { MobileShell } from './shell/MobileShell';
 import { Toaster } from '@taurent/web-ui/components/shared/Toast/Toaster';
 import { toast } from '@taurent/web-ui/components/shared/Toast/toast';
 import { useOperationNotifications } from '@taurent/web-core/hooks/useOperationNotifications';
+import { LocalizationProvider } from '@taurent/shared/i18n';
 
 const queryClient = createQueryClient();
 
@@ -88,16 +89,18 @@ function AppNotifications() {
 function AppContent() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="catppuccin">
-        <ControlDensityProvider>
-          <ServerManagerProvider>
-            <QBClientProvider>
-              <AppNotifications />
-              <RouterProvider router={router} />
-            </QBClientProvider>
-          </ServerManagerProvider>
-        </ControlDensityProvider>
-      </ThemeProvider>
+      <LocalizationProvider>
+        <ThemeProvider defaultTheme="catppuccin">
+          <ControlDensityProvider>
+            <ServerManagerProvider>
+              <QBClientProvider>
+                <AppNotifications />
+                <RouterProvider router={router} />
+              </QBClientProvider>
+            </ServerManagerProvider>
+          </ControlDensityProvider>
+        </ThemeProvider>
+      </LocalizationProvider>
     </QueryClientProvider>
   );
 }

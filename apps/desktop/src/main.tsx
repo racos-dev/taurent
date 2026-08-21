@@ -13,6 +13,11 @@ await setupTauriLogging(import.meta.env.DEV).catch((err: unknown) => {
 })
 console.info('[debug:main] setupTauriLogging done');
 
+const { initializeLocalization } = await import('@taurent/shared/i18n')
+await initializeLocalization().catch((err: unknown) => {
+  console.error('[startup] Failed to initialize localization:', err)
+})
+
 // Dynamic import to ensure logging is set up before any module evaluation that may log
 console.info('[debug:main] about to dynamic import App');
 const { default: App } = await import('./App.tsx').catch((err: unknown) => {

@@ -1692,6 +1692,10 @@ function createMockBridge(): DesktopBridge {
       recordCall('syncMenuState', [state]);
       return Promise.resolve();
     },
+    syncNativeUiLabels(labels: import('@taurent/bridge/contracts/interfaces').NativeUiLabels) {
+      recordCall('syncNativeUiLabels', [labels]);
+      return Promise.resolve();
+    },
     getPendingNativeUiActions() { return Promise.resolve([]); },
     exitApp() { return Promise.resolve(); },
     getPendingViewActions() { return Promise.resolve([]); },

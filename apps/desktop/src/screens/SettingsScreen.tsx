@@ -7,7 +7,7 @@ import {
 } from '@taurent/web-core/query';
 import { useRemoteSettingsDraft } from '@taurent/web-core/screens';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { RemoteSettingsPanel, RetryButton } from '@taurent/web-ui';
+import { LanguageSettingsPanel, RemoteSettingsPanel, RetryButton } from '@taurent/web-ui';
 import { SkeletonBlock } from '@taurent/web-ui/components/shared/SkeletonBlock/SkeletonBlock';
 import { useQBClient } from '../connection';
 import { usePreferences, useSetPreferences, useToggleSpeedLimitsMode } from '../hooks/settings/useSettings';
@@ -31,12 +31,14 @@ import {
   type RemoteSettingsSectionKey,
 } from '@taurent/shared/settings';
 import { formatUserMessageForContext } from '@taurent/shared/utils/error';
+import { localization, useTaurentTranslation } from '@taurent/shared/i18n';
 
 const REMOTE_SECTION_KEYS = REMOTE_SECTION_NAV.map((nav) => nav.key);
 
 // ─── Component ─────────────────────────────────────────────────────────────
 
 export function SettingsScreen() {
+  const { t } = useTaurentTranslation('settings');
   const queryClient = useQueryClient();
   const { isConnecting, isConnected, isHydrated, sessionGeneration, serverId, error: qbClientError } = useQBClient();
 
@@ -298,7 +300,7 @@ export function SettingsScreen() {
       const dirtyLabels: string[] = [];
       for (const nav of REMOTE_SECTION_NAV) {
         if ((dirtyKeysRef.current[nav.key]?.length ?? 0) > 0) {
-          dirtyLabels.push(nav.label);
+          dirtyLabels.push(localization.t(nav.labelKey, { ns: 'settings' }));
         }
       }
 
@@ -337,20 +339,22 @@ export function SettingsScreen() {
     const remoteItems = REMOTE_SECTION_NAV.map((r) => ({
       id: `remote-${r.key}` as SectionId,
       domain: 'qbittorrent' as const,
-      label: r.label,
+      labelKey: r.labelKey,
+      label: t(r.labelKey),
       icon: r.icon,
       remoteSection: r.key,
     }));
 
     const appItems = APP_NAV_ITEMS.map((item) => ({
       ...item,
+      label: t(item.labelKey),
     }));
 
     return [
       { id: 'app', label: 'App', items: appItems },
       { id: 'qbittorrent', label: 'qBittorrent', items: remoteItems },
     ];
-  }, []);
+  }, [t]);
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
@@ -366,7 +370,7 @@ export function SettingsScreen() {
           <div className="mx-auto max-w-4xl px-4 py-4">
             {/* ── Page header ── */}
             <div className="mb-4">
-              <h1 className="text-lg font-semibold text-text-primary">Settings</h1>
+              <h1 className="text-lg font-semibold text-text-primary">{t('title')}</h1>
               <p className="mt-1 text-sm text-text-secondary">
                 Configure app behavior, appearance, and server connections.
               </p>
@@ -376,7 +380,7 @@ export function SettingsScreen() {
             <div className="space-y-6">
               {/* ── App: App Behavior ── */}
               <section ref={setSectionRef('desktop-window')} id="desktop-window" className="scroll-mt-8">
-                <SectionHeading icon={APP_NAV_ITEMS.find(i => i.id === 'desktop-window')!.icon} label="App Behavior" />
+                <SectionHeading icon={APP_NAV_ITEMS.find(i => i.id === 'desktop-window')!.icon} label={t('appBehavior')} />
                 <WindowBehaviorSettings
                   closeToTray={localSettings.closeToTray}
                   startMinimized={localSettings.startMinimized}
@@ -390,25 +394,30 @@ export function SettingsScreen() {
               </section>
               {/* ── App: Theme ── */}
               <section ref={setSectionRef('desktop-theme')} id="desktop-theme" className="scroll-mt-8">
-                <SectionHeading icon={APP_NAV_ITEMS.find(i => i.id === 'desktop-theme')!.icon} label="Appearance" />
+                <SectionHeading icon={APP_NAV_ITEMS.find(i => i.id === 'desktop-theme')!.icon} label={t('appearance')} />
                 <DesktopThemeSettings />
+              </section>
+
+              <section ref={setSectionRef('desktop-language')} id="desktop-language" className="scroll-mt-8">
+                <SectionHeading icon={APP_NAV_ITEMS.find(i => i.id === 'desktop-language')!.icon} label={t('language')} />
+                <LanguageSettingsPanel />
               </section>
 
               {/* ── App: About ── */}
               <section ref={setSectionRef('desktop-about')} id="desktop-about" className="scroll-mt-8">
-                <SectionHeading icon={APP_NAV_ITEMS.find(i => i.id === 'desktop-about')!.icon} label="About" />
+                <SectionHeading icon={APP_NAV_ITEMS.find(i => i.id === 'desktop-about')!.icon} label={t('about')} />
                 <DesktopAboutSettings />
               </section>
 
               {/* ── App: Servers ── */}
               <section ref={setSectionRef('desktop-servers')} id="desktop-servers" className="scroll-mt-8">
-                <SectionHeading icon={APP_NAV_ITEMS.find(i => i.id === 'desktop-servers')!.icon} label="Servers" />
+                <SectionHeading icon={APP_NAV_ITEMS.find(i => i.id === 'desktop-servers')!.icon} label={t('servers')} />
                 <ServerOverviewSettings />
               </section>
 
               {/* ── App: Path Mappings ── */}
               <section ref={setSectionRef('desktop-path-mappings')} id="desktop-path-mappings" className="scroll-mt-8">
-                <SectionHeading icon={APP_NAV_ITEMS.find(i => i.id === 'desktop-path-mappings')!.icon} label="Path Mappings" />
+                <SectionHeading icon={APP_NAV_ITEMS.find(i => i.id === 'desktop-path-mappings')!.icon} label={t('pathMappings')} />
                 <PathMappingsSettings />
               </section>
 
@@ -459,7 +468,7 @@ export function SettingsScreen() {
                         id={`remote-${nav.key}`}
                         className="scroll-mt-8"
                       >
-                        <SectionHeading icon={nav.icon} label={nav.label} />
+                        <SectionHeading icon={nav.icon} label={t(nav.labelKey)} />
                         {preferences ? (
                           <RemoteSettingsPanel
                             section={nav.key}

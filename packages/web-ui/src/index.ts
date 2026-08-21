@@ -116,6 +116,8 @@ export { Pill } from './components/primitives/Pill';
 export type { PillProps, PillTone } from './components/primitives/Pill';
 export { ThemeSettingsPanel } from './components/settings/ThemeSettingsPanel';
 export type { ThemeSettingsPanelProps } from './components/settings/ThemeSettingsPanel';
+export { LanguageSettingsPanel } from './components/settings/LanguageSettingsPanel';
+export type { LanguageSettingsPanelProps } from './components/settings/LanguageSettingsPanel';
 export { TransferSettingsPanel } from './components/settings/TransferSettingsPanel';
 export type { TransferSettingsPanelProps } from './components/settings/TransferSettingsPanel';
 export { QueueSettingsPanel } from './components/settings/QueueSettingsPanel';

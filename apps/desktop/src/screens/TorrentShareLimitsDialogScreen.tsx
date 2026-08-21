@@ -7,6 +7,7 @@ import { DialogActions, NumberInput, Select } from '@taurent/web-ui';
 import { formatUserMessageForContext } from '@taurent/shared/utils/error';
 import { useQBClient } from '../connection/QBClientProvider';
 import { dismissDialogWindow } from '../windows/dialogs/dialogHostWindow';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 type RatioMode = 'global' | 'unlimited' | 'custom';
 type SeedingMode = 'global' | 'unlimited' | 'custom';
@@ -36,6 +37,7 @@ function seedingToSentinel(mode: SeedingMode, custom: number): number {
 }
 
 export function TorrentShareLimitsDialogScreen() {
+  const { t } = useTaurentTranslation('desktop');
   const [searchParams] = useSearchParams();
   const { serverId, sessionGeneration } = useQBClient();
 
@@ -63,8 +65,8 @@ export function TorrentShareLimitsDialogScreen() {
   }, [hashesParam, initialRatio, initialSeedingTime]);
 
   useEffect(() => {
-    void getCurrentWindow().setTitle('Limit Share Ratio');
-  }, []);
+    void getCurrentWindow().setTitle(t('windows.limitShareRatio'));
+  }, [t]);
 
   async function handleSubmit() {
     setIsSubmitting(true);

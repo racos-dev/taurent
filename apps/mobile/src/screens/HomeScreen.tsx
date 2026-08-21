@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQBClient, useMaindataSelector } from '../connection/QBClientProvider';
 import { useServerManager } from '../connection/ServerManager';
@@ -20,19 +20,21 @@ import { RetryButton, StateCard, Button } from '@taurent/web-ui';
 import { HomeScreenBody, SpeedLimitsModal } from '@taurent/web-ui';
 import type { SortOption } from '@taurent/web-core/screens';
 import { mobileCenteredStateClassName } from '../ui/mobileScreenLayout';
-
-const SORT_OPTIONS: SortOption[] = [
-  { value: 'added_on', label: 'Date Added', defaultOrder: 'desc' },
-  { value: 'name', label: 'Name', defaultOrder: 'asc' },
-  { value: 'size', label: 'Size', defaultOrder: 'desc' },
-  { value: 'progress', label: 'Progress', defaultOrder: 'desc' },
-  { value: 'dlspeed', label: 'Download Speed', defaultOrder: 'desc' },
-  { value: 'upspeed', label: 'Upload Speed', defaultOrder: 'desc' },
-  { value: 'ratio', label: 'Ratio', defaultOrder: 'desc' },
-  { value: 'eta', label: 'ETA', defaultOrder: 'asc' },
-];
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export function HomeScreen() {
+  const { t: torrentT } = useTaurentTranslation('torrents');
+  const { t: authT } = useTaurentTranslation('auth');
+  const sortOptions = useMemo<SortOption[]>(() => [
+    { value: 'added_on', label: torrentT('fields.dateAdded'), defaultOrder: 'desc' },
+    { value: 'name', label: torrentT('fields.name'), defaultOrder: 'asc' },
+    { value: 'size', label: torrentT('fields.size'), defaultOrder: 'desc' },
+    { value: 'progress', label: torrentT('fields.progress'), defaultOrder: 'desc' },
+    { value: 'dlspeed', label: torrentT('fields.downloadSpeed'), defaultOrder: 'desc' },
+    { value: 'upspeed', label: torrentT('fields.uploadSpeed'), defaultOrder: 'desc' },
+    { value: 'ratio', label: torrentT('fields.ratio'), defaultOrder: 'desc' },
+    { value: 'eta', label: torrentT('fields.eta'), defaultOrder: 'asc' },
+  ], [torrentT]);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { isConnected, isConnecting, isHydrated, serverName, error, disconnect, retry } = useQBClient();
@@ -232,8 +234,8 @@ export function HomeScreen() {
     return (
       <div className={mobileCenteredStateClassName({ height: 'full' })}>
         <StateCard
-          title="Initializing"
-          message="Loading your app state."
+          title={authT('loading.initializing')}
+          message={authT('loading.appState')}
           icon={<Icon name="layers" iconSize="xl" />}
         />
       </div>
@@ -244,8 +246,8 @@ export function HomeScreen() {
     return (
       <div className={mobileCenteredStateClassName({ height: 'full' })}>
         <StateCard
-          title="Connecting"
-          message="Reaching your qBittorrent server."
+          title={authT('loading.connecting')}
+          message={authT('loading.reachingServer')}
           icon={<Icon name="layers" iconSize="xl" />}
         />
       </div>
@@ -256,13 +258,13 @@ export function HomeScreen() {
     return (
       <div className={mobileCenteredStateClassName({ height: 'full' })}>
         <StateCard
-          title="Connection problem"
+          title={authT('connectionProblem')}
           message={formatUserMessageForContext(error, 'connection')}
           action={
             <>
               <RetryButton onClick={retry} />
               <Button variant="secondary" onClick={handleSwitchServer}>
-                Switch Server
+                {authT('server.switch')}
               </Button>
             </>
           }
@@ -276,11 +278,11 @@ export function HomeScreen() {
     return (
       <div className={mobileCenteredStateClassName({ height: 'full' })}>
         <StateCard
-          title="Not connected"
-          message="Choose a server to start managing torrents."
+          title={authT('notConnected')}
+          message={authT('chooseServer')}
           action={
             <Button variant="primary" onClick={() => navigate('/servers')}>
-              Go to Login
+              {authT('goToLogin')}
             </Button>
           }
           icon={<Icon name="layers" iconSize="xl" />}
@@ -312,7 +314,7 @@ export function HomeScreen() {
       sortOrder={sortOrder}
       onSortChange={handleSortChange}
       onResetAll={handleResetAll}
-      sortOptions={SORT_OPTIONS}
+      sortOptions={sortOptions}
       showSortMenu={showSortMenu}
       onToggleSortMenu={handleToggleSortMenu}
       showFabMenu={showFabMenu}

@@ -14,6 +14,6 @@
     "declarationDir": "./dist",
     "emitDeclarationOnly": true
   },
-  "include": ["src/types/**/*", "src/schemas/**/*", "src/settings/**/*", "src/theme/**/*", "src/platform/**/*", "src/stores/**/*", "src/components/**/*", "src/icons/**/*", "src/utils/sortTorrents.ts", "src/utils/maindata.ts", "src/utils/logger.ts", "src/utils/server-url.ts", "src/utils/formatters.ts", "src/utils/torrentFilter.ts", "src/utils/deriveTrackerEntries.ts", "src/utils/cn.ts", "src/utils/torrentStatus.ts", "src/utils/perfAudit.ts", "src/utils/error.ts", "src/utils/buildMetadata.ts", "src/index.ts"],
+  "include": ["src/types/**/*", "src/schemas/**/*", "src/settings/**/*", "src/theme/**/*", "src/i18n/**/*", "src/platform/**/*", "src/stores/**/*", "src/components/**/*", "src/icons/**/*", "src/utils/sortTorrents.ts", "src/utils/maindata.ts", "src/utils/logger.ts", "src/utils/server-url.ts", "src/utils/formatters.ts", "src/utils/torrentFilter.ts", "src/utils/deriveTrackerEntries.ts", "src/utils/cn.ts", "src/utils/torrentStatus.ts", "src/utils/perfAudit.ts", "src/utils/error.ts", "src/utils/buildMetadata.ts", "src/index.ts"],
   "exclude": ["node_modules", "dist", "sync", "*.d.ts", "*.js", "**/__tests__/**"]
 }

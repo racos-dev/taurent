@@ -7,6 +7,7 @@ import type {
   ResourceInvalidatedEvent,
   OperationFailedEvent,
   ThemeChangedEvent,
+  LanguageChangedEvent,
 } from '../events';
 import type { MaindataSyncChangedEvent, WorkspaceView, WorkspaceViewRequest } from '../types';
 
@@ -70,6 +71,14 @@ export function createThemeChangedListener(
   callback: (event: ThemeChangedEvent) => void
 ): Promise<TauriUnlistenFn> {
   return listen<ThemeChangedEvent>('theme-changed', (event) => {
+    callback(event.payload);
+  });
+}
+
+export function createLanguageChangedListener(
+  callback: (event: LanguageChangedEvent) => void
+): Promise<TauriUnlistenFn> {
+  return listen<LanguageChangedEvent>('language-changed', (event) => {
     callback(event.payload);
   });
 }
