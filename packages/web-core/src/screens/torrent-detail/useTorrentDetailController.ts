@@ -297,9 +297,14 @@ export function useTorrentDetailController({
     if (!hash || !addPeersMutation || addPeersMutation.isPending) return;
     const peers = parsePeerList(newPeers);
     if (peers.length === 0) return;
-    void addPeersMutation.mutateAsync(peers).then(() => {
-      closeAddPeers();
-    });
+    void addPeersMutation
+      .mutateAsync(peers)
+      .then(() => {
+        closeAddPeers();
+      })
+      .catch((error) => {
+        console.error('Failed to add peers:', error);
+      });
   }, [hash, newPeers, addPeersMutation, closeAddPeers]);
 
   // ─── Dialog helpers ───────────────────────────────────────────────────────
