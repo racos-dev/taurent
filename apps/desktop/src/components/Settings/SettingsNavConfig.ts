@@ -17,6 +17,7 @@ type SettingsDomain = 'app' | 'qbittorrent';
 
 type AppSection =
   | 'desktop-window'
+  | 'desktop-downloads'
   | 'desktop-theme'
   | 'desktop-about'
   | 'desktop-servers'
@@ -56,6 +57,7 @@ export const REMOTE_SECTION_NAV: Array<{
 
 export const APP_NAV_ITEMS: SettingsNavItem[] = [
   { id: 'desktop-window', domain: 'app', label: 'App Behavior', icon: MonitorCog },
+  { id: 'desktop-downloads', domain: 'app', label: 'Downloads', icon: Download },
   { id: 'desktop-theme', domain: 'app', label: 'Theme', icon: Palette },
   { id: 'desktop-about', domain: 'app', label: 'About', icon: Info },
   { id: 'desktop-servers', domain: 'app', label: 'Servers', icon: ServerIcon },

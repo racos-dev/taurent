@@ -51,6 +51,7 @@ test.describe('mobile add torrent flows', () => {
 
     const magnetInput = page.getByPlaceholder('magnet:?xt=urn:btih:...');
     await expect(magnetInput).toBeVisible();
+    await expect(page.getByText('Delete selected .torrent files after adding')).toHaveCount(0);
     // The shared `Input` primitive consumes the mobile density path and
     // renders at `h-11` so the field reaches the comfortable touch-target
     // baseline.
@@ -93,6 +94,21 @@ test.describe('mobile add torrent flows', () => {
     await expect(
       page.getByText('Select torrent files', { exact: true }),
     ).toBeVisible();
+
+    const cleanupSetting = page.locator('label', {
+      hasText: 'Delete selected .torrent files after adding',
+    });
+    const cleanupToggle = cleanupSetting.getByRole('button');
+    await expect(cleanupSetting).toBeVisible();
+    await expect(cleanupToggle).toHaveAttribute('aria-pressed', 'false');
+    await cleanupToggle.click();
+    await expect(cleanupToggle).toHaveAttribute('aria-pressed', 'true');
+
+    await page.getByRole('button', { name: 'Magnet Link' }).click();
+    await expect(page.getByText('Delete selected .torrent files after adding')).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Torrent File' }).click();
+    await expect(cleanupToggle).toHaveAttribute('aria-pressed', 'true');
   });
 
   test('validates invalid magnet input', async ({ page }) => {

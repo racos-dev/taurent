@@ -1999,7 +1999,7 @@ export const REMOTE_SETTINGS_METADATA: {
   delete_torrent_files_afterwards: {
     key: 'delete_torrent_files_afterwards',
     displayLabel: 'Delete .torrent Files Afterwards',
-    helpText: 'Delete .torrent files after adding',
+    helpText: 'Delete server-local .torrent files opened directly by qBittorrent after adding. This does not delete files selected in Taurent.',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'downloads',

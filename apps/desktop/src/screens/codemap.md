@@ -17,7 +17,7 @@ Route-level screen components for the desktop application. Each screen is a full
 
 - **HomeScreen.tsx** — Main torrent list view. Wires `useTorrentWorkspaceListController`, selection store, context menu, and `TorrentTable`.
 - **LoginScreen.tsx** — Server selection and connection screen. Uses `useLoginScreenController` for server selection/delete flows.
-- **AddTorrentScreen.tsx** — Add torrent by magnet URI or file. Unified mode for both sources. Opens as auxiliary window.
+- **AddTorrentScreen.tsx** — Add torrent by magnet URI or file. Unified mode for both sources, and attaches the persisted Taurent source-file cleanup preference to file uploads. The preference is editable beside the file picker. Opens as auxiliary window.
 - **AddServerScreen.tsx** — Add new qBittorrent server. Uses `useAddServerScreenController` with `addServer`, `switchServer`, `connect` for post-add flow.
 - **SettingsScreen.tsx** — Settings panel with remote preferences, local settings, staged/baseline dirty tracking, scroll anchoring, and close confirmation overlay. Uses `isSectionDirty` / `getDirtyFieldKeys` from `@taurent/shared/settings` for dirty detection.
 - **DialogHostScreen.tsx** — Dynamic dialog host that renders the appropriate dialog screen based on the `dialog` search param.

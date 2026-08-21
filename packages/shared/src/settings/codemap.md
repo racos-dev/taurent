@@ -26,6 +26,7 @@ Settings domain layer for remote qBittorrent preferences and mobile-desktop pari
   - Number fields support `mobileEditor` with `NumberEditorMeta` (title, unit, toDisplay/fromDisplay transforms for scaled values like ratio x100).
   - `visibleWhen` predicates for conditional field visibility based on other preference values.
   - Helper functions: `bool()`, `num()`, `str()`, `txt()`, `sel()` for concise field definitions.
+  - The qBittorrent `delete_torrent_files_afterwards` preference lives in Downloads → When Adding a Torrent and is explicitly described as server-local; Taurent device-file cleanup is a separate app preference.
 
 - `parityMap.ts` — Mobile-to-desktop section mapping:
   - `MobileSection` (9 values: app, speed, queue, connection, download, seeding, privacy, webui, advanced).

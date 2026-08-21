@@ -12,7 +12,9 @@ import { SkeletonBlock } from '@taurent/web-ui/components/shared/SkeletonBlock/S
 import { useQBClient } from '../connection';
 import { usePreferences, useSetPreferences, useToggleSpeedLimitsMode } from '../hooks/settings/useSettings';
 import { useDesktopWindowSettings } from '../hooks/settings/useDesktopWindowSettings';
+import { useDeleteAddedTorrentFilesPreference } from '@taurent/web-core/hooks';
 import { WindowBehaviorSettings } from '../components/Settings/WindowBehaviorSettings';
+import { TaurentDownloadsSettings } from '../components/Settings/TaurentDownloadsSettings';
 import { DesktopThemeSettings } from '../components/Settings/DesktopThemeSettings';
 import { DesktopAboutSettings } from '../components/Settings/DesktopAboutSettings';
 import { ServerOverviewSettings } from '../components/Settings/ServerOverviewSettings';
@@ -31,6 +33,7 @@ import {
   type RemoteSettingsSectionKey,
 } from '@taurent/shared/settings';
 import { formatUserMessageForContext } from '@taurent/shared/utils/error';
+import { storage } from '../platform';
 
 const REMOTE_SECTION_KEYS = REMOTE_SECTION_NAV.map((nav) => nav.key);
 
@@ -58,6 +61,7 @@ export function SettingsScreen() {
     loadLocalSettings,
     handleSettingChange,
   } = useDesktopWindowSettings();
+  const localTorrentFilePreference = useDeleteAddedTorrentFilesPreference(storage);
 
   // ─── Scroll anchoring ───────────────────────────────────────────────────
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -386,6 +390,19 @@ export function SettingsScreen() {
                   error={localSettingsError}
                   onRetry={loadLocalSettings}
                   onChange={handleSettingChange}
+                />
+              </section>
+              {/* ── App: Downloads ── */}
+              <section ref={setSectionRef('desktop-downloads')} id="desktop-downloads" className="scroll-mt-8">
+                <SectionHeading icon={APP_NAV_ITEMS.find(i => i.id === 'desktop-downloads')!.icon} label="Downloads" />
+                <TaurentDownloadsSettings
+                  deleteAddedTorrentFiles={localTorrentFilePreference.deleteAddedTorrentFiles}
+                  isLoading={localTorrentFilePreference.isLoading}
+                  error={localTorrentFilePreference.error
+                    ? formatUserMessageForContext(localTorrentFilePreference.error, 'app-settings')
+                    : null}
+                  onRetry={() => void localTorrentFilePreference.reload()}
+                  onChange={(value) => void localTorrentFilePreference.setDeleteAddedTorrentFiles(value)}
                 />
               </section>
               {/* ── App: Theme ── */}

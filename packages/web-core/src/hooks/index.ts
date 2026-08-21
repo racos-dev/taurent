@@ -15,6 +15,7 @@ export * from './useRssMutations';
 export * from './useTransfer';
 export * from './useSettings';
 export * from './useShutdown';
+export * from './useDeleteAddedTorrentFilesPreference';
 
 export { createCategoriesHooks } from './useCategories';
 export type { CategoriesAdapters, CreateCategoriesHooksOptions } from './useCategories';

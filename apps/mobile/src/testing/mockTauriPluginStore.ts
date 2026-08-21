@@ -22,6 +22,12 @@ export class Store {
     this.data = data;
   }
 
+  static async load(label: string, options?: Record<string, unknown>): Promise<Store> {
+    const store = new Store(label, options);
+    await store.load();
+    return store;
+  }
+
   /** Get a value by key. */
   async get<T = unknown>(key: string): Promise<T | null> {
     return (this.data.get(key) as T) ?? null;

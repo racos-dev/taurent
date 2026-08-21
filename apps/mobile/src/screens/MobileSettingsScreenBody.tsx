@@ -88,6 +88,13 @@ interface MobileSettingsScreenBodyProps {
   onManualPaletteChange: (palette: ThemePalette) => void;
   onManualVariantChange: (variant: ThemeVariant) => void;
   onAccentChange: (accent: AccentPreference) => void;
+  localDownloadsSetting: {
+    deleteAddedTorrentFiles: boolean;
+    isLoading: boolean;
+    error: string | null;
+    onChange: (value: boolean) => void;
+    onRetry: () => void;
+  };
   stagedValues: MobileRemoteSnapshots;
   baselineValues: MobileRemoteSnapshots;
   dirtyKeys: Partial<Record<RemoteSettingsSectionKey, string[]>>;
@@ -133,6 +140,7 @@ export function MobileSettingsScreenBody({
   onManualPaletteChange,
   onManualVariantChange,
   onAccentChange,
+  localDownloadsSetting,
   stagedValues,
   baselineValues,
   dirtyKeys,
@@ -187,6 +195,7 @@ export function MobileSettingsScreenBody({
             onManualPaletteChange={onManualPaletteChange}
             onManualVariantChange={onManualVariantChange}
             onAccentChange={onAccentChange}
+            localDownloadsSetting={localDownloadsSetting}
             stagedValues={stagedValues}
             baselineValues={baselineValues}
             dirtyKeys={dirtyKeys}
@@ -439,6 +448,7 @@ function SectionEditor(props: {
   onManualPaletteChange: (palette: ThemePalette) => void;
   onManualVariantChange: (variant: ThemeVariant) => void;
   onAccentChange: (accent: AccentPreference) => void;
+  localDownloadsSetting: MobileSettingsScreenBodyProps['localDownloadsSetting'];
   stagedValues: MobileRemoteSnapshots;
   baselineValues: MobileRemoteSnapshots;
   dirtyKeys: Partial<Record<RemoteSettingsSectionKey, string[]>>;
@@ -448,6 +458,38 @@ function SectionEditor(props: {
   onOpenStatistics: () => void;
 }) {
   const { section } = props;
+
+  const wrapWithLocalDownloadsSetting = (content: React.ReactNode) => {
+    if (section !== 'downloads') return content;
+
+    return (
+      <div className="space-y-5">
+        <SettingsList label="Taurent">
+          <SettingControlRow
+            title="Delete files selected in Taurent after a successful upload"
+            description="Deletes the original .torrent files from this device. Files are kept when the upload fails or qBittorrent reports a rejected batch."
+            control={
+              props.localDownloadsSetting.isLoading ? (
+                <span className="text-sm text-text-muted">Loading…</span>
+              ) : (
+                <ToggleSwitch
+                  checked={props.localDownloadsSetting.deleteAddedTorrentFiles}
+                  onChange={props.localDownloadsSetting.onChange}
+                />
+              )
+            }
+          />
+          {props.localDownloadsSetting.error ? (
+            <div className="px-4 py-3">
+              <p className="text-sm text-error">{props.localDownloadsSetting.error}</p>
+              <RetryButton onClick={props.localDownloadsSetting.onRetry} className="mt-2" />
+            </div>
+          ) : null}
+        </SettingsList>
+        {content}
+      </div>
+    );
+  };
 
   if (section === 'appearance') {
     return (
@@ -467,7 +509,7 @@ function SectionEditor(props: {
   }
 
   if (!props.connection.isConnected) {
-    return (
+    return wrapWithLocalDownloadsSetting(
       <StateCard
         title="Not connected"
         message="Connect to a server before editing qBittorrent settings."
@@ -477,11 +519,13 @@ function SectionEditor(props: {
   }
 
   if (props.isLoading) {
-    return <StateCard title="Loading preferences" message="Pulling settings from qBittorrent." />;
+    return wrapWithLocalDownloadsSetting(
+      <StateCard title="Loading preferences" message="Pulling settings from qBittorrent." />,
+    );
   }
 
   if (props.error || !props.preferences || !props.effectivePreferences) {
-    return (
+    return wrapWithLocalDownloadsSetting(
       <StateCard
         title="Could not load preferences"
         message={props.error ?? 'The server settings payload is unavailable.'}
@@ -497,7 +541,7 @@ function SectionEditor(props: {
     }
   };
 
-  return (
+  return wrapWithLocalDownloadsSetting(
     <RemoteSectionEditor
       section={section}
       effectivePreferences={props.effectivePreferences}
