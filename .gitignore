@@ -61,7 +61,6 @@ apps/desktop/src-tauri/gen/
 .continue/
 
 # Local agent/tooling state
-.agents/
 .claude/
 .codex/
 .hyper/
