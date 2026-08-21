@@ -184,7 +184,7 @@ test('parseToml throws when removes references a non-existent capability', () =>
 [versions."2.0"]
 removes = [{ name = "supports_rss" }]
 `);
-  assert.throws(() => parseToml(tomlPath), /was never adds'd/);
+  assert.throws(() => parseToml(tomlPath), /was never (?:added|adds'd)/);
 });
 
 test('parseToml throws when removes references an already removed capability', () => {
