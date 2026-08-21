@@ -233,16 +233,21 @@ test('buildResolverTestTable accumulates caps monotonically across versions', ()
   const tomlData = parseToml(realTomlPath);
   const caps = collectCapabilities(tomlData);
   const rows = buildResolverTestTable(tomlData, caps);
+  const removedIn = buildRemovedInMap(tomlData);
   const stateVector = (row) => caps.map((cap) => (row.state[cap] ? 1 : 0));
 
   for (let i = 1; i < rows.length; i += 1) {
     const prev = stateVector(rows[i - 1]);
     const curr = stateVector(rows[i]);
     for (let j = 0; j < prev.length; j += 1) {
-      assert.ok(
-        curr[j] >= prev[j],
-        `capability ${caps[j]} regressed at ${rows[i].version}`,
-      );
+      const cap = caps[j];
+      const removedAtVersion = removedIn.get(cap)?.has(rows[i].version) ?? false;
+      if (!removedAtVersion) {
+        assert.ok(
+          curr[j] >= prev[j],
+          `capability ${cap} regressed at ${rows[i].version}`,
+        );
+      }
     }
   }
 
