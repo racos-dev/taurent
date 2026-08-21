@@ -232,9 +232,9 @@ export interface QBClientBridge {
    * the async listener registration resolves (mirrors the
    * `addMaindataSyncListener` pattern).
    */
-  addWorkspaceViewListener(handler: (event: WorkspaceView) => () => void): () => void;
-  /** Fetch RSS items from /api/v2/rss/items */
-  getRssItems(): Promise<RSSItemsResponse>;
+   addWorkspaceViewListener(handler: (event: WorkspaceView) => void): () => void;
+   /** Fetch RSS items from /api/v2/rss/items */
+   getRssItems(): Promise<RSSItemsResponse>;
   /** Fetch RSS rules from /api/v2/rss/rules */
   getRssRules(): Promise<RSSRulesResponse>;
   /** Add an RSS feed. `path` is the destination folder path (empty string = root). */
