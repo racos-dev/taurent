@@ -147,8 +147,8 @@ function readConfigFromStorage(defaultTheme: string): ThemeConfig {
 
       return {
         mode: savedMode as ThemeMode,
-        systemPalette: savedSystemPalette as ThemePalette ?? 'catppuccin',
-        manualPalette: savedManualPalette as ThemePalette ?? 'catppuccin',
+        systemPalette: (savedSystemPalette ?? 'catppuccin') as ThemePalette,
+        manualPalette: (savedManualPalette ?? 'catppuccin') as ThemePalette,
         manualVariant: savedManualVariant ?? getSystemScheme(),
         accent: savedAccent && /^#[0-9a-f]{6}$/i.test(savedAccent) ? savedAccent as AccentPreference : null,
       };
