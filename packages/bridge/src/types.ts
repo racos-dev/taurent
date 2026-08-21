@@ -239,6 +239,8 @@ export interface TorrentListParams {
 export interface AddTorrentOptions {
   urls?: string;
   torrentFiles?: string[];
+  /** Taurent-local behavior; never forwarded to the qBittorrent Web API. */
+  deleteSourceFilesAfterAdd?: boolean;
   savepath?: string;
   category?: string;
   tags?: string;

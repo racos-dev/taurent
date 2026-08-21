@@ -8,6 +8,7 @@ import { usePreferences, useSetPreferences, useToggleSpeedLimitsMode } from '../
 import type { RemoteSettingsSectionKey } from '@taurent/shared/settings';
 import { formatUserMessageForContext } from '@taurent/shared/utils/error';
 import { useTheme } from '@taurent/web-ui/theme';
+import { useDeleteAddedTorrentFilesPreference } from '@taurent/web-core/hooks';
 import {
   findRemoteSettingsSectionForField,
   useRemoteSettingsDraft,
@@ -19,6 +20,7 @@ import { useNavigate } from 'react-router-dom';
 import { Icon } from '../ui/Icon';
 import { mobileCenteredStateClassName } from '../ui/mobileScreenLayout';
 import { MobileSettingsScreenBody } from './MobileSettingsScreenBody';
+import { storage } from '../platform';
 
 const MOBILE_REMOTE_SECTION_KEYS: RemoteSettingsSectionKey[] = [
   'downloads',
@@ -36,6 +38,7 @@ export function SettingsScreen() {
   const { preferences, isLoading, error, refetch } = usePreferences();
   const setPreferencesMutation = useSetPreferences();
   const { config, setMode, setSystemPalette, setManualPalette, setManualVariant, setAccent } = useTheme();
+  const localTorrentFilePreference = useDeleteAddedTorrentFilesPreference(storage);
 
   const { toggleSpeedLimitsMode } = useToggleSpeedLimitsMode();
   const openServerPicker = useCallback(() => navigate('/manage-servers'), [navigate]);
@@ -147,6 +150,15 @@ export function SettingsScreen() {
         onManualPaletteChange={setManualPalette}
         onManualVariantChange={setManualVariant}
         onAccentChange={setAccent}
+        localDownloadsSetting={{
+          deleteAddedTorrentFiles: localTorrentFilePreference.deleteAddedTorrentFiles,
+          isLoading: localTorrentFilePreference.isLoading,
+          error: localTorrentFilePreference.error
+            ? formatUserMessageForContext(localTorrentFilePreference.error, 'app-settings')
+            : null,
+          onChange: (value) => void localTorrentFilePreference.setDeleteAddedTorrentFiles(value),
+          onRetry: () => void localTorrentFilePreference.reload(),
+        }}
         stagedValues={remoteDraft.stagedValues}
         baselineValues={remoteDraft.baselineValues}
         dirtyKeys={remoteDraft.dirtyKeys}

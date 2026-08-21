@@ -114,6 +114,12 @@ test.describe('desktop add torrent flows', () => {
     await expect(page.getByText('linux-alpha.torrent')).toBeVisible();
     await expect(page.getByText('linux-beta.torrent')).toBeVisible();
 
+    const deleteSourceFiles = page.getByRole('checkbox', {
+      name: 'Delete selected .torrent files after adding',
+    });
+    await expect(deleteSourceFiles).not.toBeChecked();
+    await deleteSourceFiles.check();
+
     await page.getByPlaceholder('Default download path').fill('/data/phase-6');
     await page.getByTestId('category-select').click();
     await page.getByRole('option', { name: 'videos' }).click();
@@ -149,6 +155,7 @@ test.describe('desktop add torrent flows', () => {
       paused: true,
       dl_limit: 512 * 1024,
       up_limit: 128 * 1024,
+      deleteSourceFilesAfterAdd: true,
     });
   });
 });

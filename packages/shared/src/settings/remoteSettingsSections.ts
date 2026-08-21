@@ -247,10 +247,15 @@ export const REMOTE_SETTINGS_SECTIONS: Record<
         ],
         { label: 'Torrent stop condition', group: 'adding' },
       ),
+      bool(
+        'delete_torrent_files_afterwards',
+        'Delete server-local .torrent files afterwards',
+        'Applies only when qBittorrent itself opens a .torrent file path. Files selected in Taurent are uploaded and are not affected.',
+        { group: 'adding' },
+      ),
 
       // Duplicate handling
       bool('merge_trackers', 'Merge trackers to existing torrent', undefined, { group: 'duplicate' }),
-      bool('delete_torrent_files_afterwards', 'Delete .torrent files afterwards', undefined, { group: 'duplicate' }),
 
       // Disk
       bool('preallocate_all', 'Pre-allocate disk space for all files', undefined, { group: 'disk' }),

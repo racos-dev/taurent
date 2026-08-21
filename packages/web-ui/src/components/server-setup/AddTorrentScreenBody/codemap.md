@@ -6,7 +6,7 @@ Full add-torrent form with magnet link/file upload modes, destination settings, 
 
 ## Design
 
-`React.memo` component with `variant: 'desktop' | 'mobile'`. Mobile shows collapsible sections (Source, Destination, Advanced Options) with toggle switches. Desktop shows a unified dense form with all options visible, including rate limits, content layout, stop condition, and tag input. Uses `Select`, `Input`, `NumberInput`, `Checkbox`, `DialogActions`. Density-aware via `BUTTON_CONTROL_SIZE_CLASSES` and `HEADER_ICON_BUTTON_SIZE_CLASSES` from `controlSizing`.
+`React.memo` component with `variant: 'desktop' | 'mobile'`. Mobile shows source, destination, and advanced sections with toggle switches. Desktop shows a unified dense form with all options visible, including rate limits, content layout, stop condition, and tag input. The file-source area exposes Taurent's persisted post-upload source-file deletion preference; mobile hides it in magnet mode. Uses `Select`, `Input`, `NumberInput`, `Checkbox`, `DialogActions`. Density-aware via `BUTTON_CONTROL_SIZE_CLASSES` and `HEADER_ICON_BUTTON_SIZE_CLASSES` from `controlSizing`.
 
 ## Flow
 

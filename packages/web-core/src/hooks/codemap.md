@@ -11,6 +11,7 @@ Core shared React Query hooks for data fetching, mutations, and lightweight deri
 - **Mutation hooks**: `useTorrentMutations.ts` (pause, resume, delete, recheck, reannounce, forceStart, setCategory, addTags, removeTags, addTrackers), `useCategoryMutations.ts`, `useTagMutations.ts`, `usePreferencesMutations.ts`, `useRssMutations.ts`
 - **Notification hooks**: `useOperationNotifications.ts` (subscribes to bridge `OperationFailedEvent` and routes failures to a configurable notify callback)
 - **Transfer and session hooks**: `useTransfer.ts` (transfer info, speed limits, ban peers), `useShutdown.ts`
+- **Local preference hooks**: `useDeleteAddedTorrentFilesPreference.ts` persists the default-off Taurent setting that removes selected source `.torrent` files only after a successful upload.
 - **Filter hooks**: `useFiltersFormState.ts` (shared filter form state for category/tag add/delete), `useFilterSummary.ts` (active filter summary derivation)
 - **Maindata-derived hooks**: `useTorrents.ts` (reads from accumulated maindata sync state with client-side filter/sort), `useTrackerEntries.ts` (tracker rows from maindata), `useServerStatistics.ts` (server statistics from server_state)
 - **Factory hooks**:

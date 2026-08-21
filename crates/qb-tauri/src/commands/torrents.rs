@@ -74,6 +74,7 @@ pub struct OperationResponse {
 pub struct AddTorrentOptions {
     pub urls: Option<String>,
     pub torrent_files: Option<Vec<String>>,
+    pub delete_source_files_after_add: Option<bool>,
     pub savepath: Option<String>,
     pub category: Option<String>,
     pub tags: Option<String>,
@@ -103,6 +104,55 @@ pub struct AddTorrentOptions {
     pub stop_condition: Option<String>,
     #[serde(rename = "addToTop")]
     pub add_to_top: Option<bool>,
+}
+
+fn add_response_allows_source_deletion(
+    response: &serde_json::Value,
+    expected_file_count: usize,
+) -> bool {
+    let Some(result) = response.as_object() else {
+        // Older qBittorrent versions return an empty body or "Ok." on success.
+        return true;
+    };
+
+    let failure_count = result
+        .get("failure_count")
+        .and_then(serde_json::Value::as_u64);
+    let success_count = result
+        .get("success_count")
+        .and_then(serde_json::Value::as_u64);
+
+    match (success_count, failure_count) {
+        (Some(success), Some(0)) => success >= expected_file_count as u64,
+        (Some(_), Some(_)) => false,
+        _ => true,
+    }
+}
+
+fn delete_uploaded_torrent_sources(file_paths: &[String]) {
+    for file_path in file_paths {
+        let path = std::path::Path::new(file_path);
+        let is_torrent_file = path
+            .extension()
+            .and_then(|extension| extension.to_str())
+            .is_some_and(|extension| extension.eq_ignore_ascii_case("torrent"));
+
+        if !is_torrent_file {
+            log::warn!(
+                "Skipping source deletion for non-.torrent path: {}",
+                file_path
+            );
+            continue;
+        }
+
+        if let Err(error) = std::fs::remove_file(path) {
+            log::warn!(
+                "Torrent was added, but its source file could not be deleted '{}': {}",
+                file_path,
+                error
+            );
+        }
+    }
 }
 
 // ============================================================================
@@ -331,7 +381,13 @@ pub async fn add_torrent_options(
                 form = form.part("torrents", part);
             }
 
-            let _ = crate::client::qb_post_multipart(&state, path, form).await?;
+            let response = crate::client::qb_post_multipart(&state, path, form).await?;
+
+            if options.delete_source_files_after_add.unwrap_or(false)
+                && add_response_allows_source_deletion(&response, file_paths.len())
+            {
+                delete_uploaded_torrent_sources(file_paths);
+            }
 
             emit_resource_invalidated(&app, gen, server_id.clone(), "torrents".to_string());
 
@@ -1795,4 +1851,54 @@ pub async fn export_torrent(
         server_id,
         success: true,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{add_response_allows_source_deletion, delete_uploaded_torrent_sources};
+    use serde_json::json;
+
+    #[test]
+    fn source_deletion_accepts_legacy_success_responses() {
+        assert!(add_response_allows_source_deletion(&json!(null), 1));
+        assert!(add_response_allows_source_deletion(&json!("Ok."), 1));
+    }
+
+    #[test]
+    fn source_deletion_requires_all_structured_adds_to_succeed() {
+        assert!(add_response_allows_source_deletion(
+            &json!({"success_count": 2, "failure_count": 0}),
+            2,
+        ));
+        assert!(!add_response_allows_source_deletion(
+            &json!({"success_count": 1, "failure_count": 1}),
+            2,
+        ));
+        assert!(!add_response_allows_source_deletion(
+            &json!({"success_count": 1, "failure_count": 0}),
+            2,
+        ));
+    }
+
+    #[test]
+    fn source_deletion_only_removes_torrent_files() {
+        let test_dir = std::env::temp_dir().join(format!(
+            "taurent-delete-source-test-{}",
+            uuid::Uuid::new_v4()
+        ));
+        std::fs::create_dir_all(&test_dir).expect("create test directory");
+        let torrent_path = test_dir.join("accepted.TORRENT");
+        let unrelated_path = test_dir.join("keep.txt");
+        std::fs::write(&torrent_path, b"torrent").expect("write torrent fixture");
+        std::fs::write(&unrelated_path, b"keep").expect("write unrelated fixture");
+
+        delete_uploaded_torrent_sources(&[
+            torrent_path.to_string_lossy().into_owned(),
+            unrelated_path.to_string_lossy().into_owned(),
+        ]);
+
+        assert!(!torrent_path.exists());
+        assert!(unrelated_path.exists());
+        std::fs::remove_dir_all(test_dir).expect("remove test directory");
+    }
 }
