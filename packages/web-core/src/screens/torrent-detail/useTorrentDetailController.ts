@@ -474,7 +474,11 @@ export function useTorrentDetailController({
   const handleBanPeer = useCallback(
     async (peerKey: string) => {
       if (!banPeersMutation || banPeersMutation.isPending) return;
-      await banPeersMutation.mutateAsync([peerKey]);
+      try {
+        await banPeersMutation.mutateAsync([peerKey]);
+      } catch (err) {
+        console.error('Ban peer failed:', err);
+      }
     },
     [banPeersMutation]
   );
