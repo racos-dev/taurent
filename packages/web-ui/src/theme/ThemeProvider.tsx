@@ -286,6 +286,10 @@ export function ThemeProvider({ children, defaultTheme = 'catppuccin' }: ThemePr
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
+      const currentThemeClass = resolveThemeClass(parseThemeId(document.documentElement.className));
+      if (currentThemeClass !== themeClass) {
+        applyThemeClass(themeClass);
+      }
       return;
     }
     applyThemeClass(themeClass);
