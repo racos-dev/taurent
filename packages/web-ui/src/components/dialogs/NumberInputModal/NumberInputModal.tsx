@@ -3,6 +3,7 @@ import { Dialog } from '../Dialog';
 import { NumberInput } from '../../primitives/NumberInput';
 import { DialogActions } from '../DialogActions';
 import type { NumberInputModalProps } from './types';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export const NumberInputModal = React.memo<NumberInputModalProps>(({
   title,
@@ -13,9 +14,12 @@ export const NumberInputModal = React.memo<NumberInputModalProps>(({
   unit,
   unitMode,
   unitDefault,
-  submitLabel = 'Set',
-  cancelLabel = 'Cancel',
+  submitLabel,
+  cancelLabel,
 }) => {
+  const { t } = useTaurentTranslation('common');
+  const resolvedSubmitLabel = submitLabel ?? t('actions.set');
+  const resolvedCancelLabel = cancelLabel ?? t('actions.cancel');
   const [textValue, setTextValue] = useState(String(currentValue));
   const [unitValue, setUnitValue] = useState(currentValue);
   const submitValue = unitMode ? unitValue : Number.parseInt(textValue, 10) || 0;
@@ -30,9 +34,9 @@ export const NumberInputModal = React.memo<NumberInputModalProps>(({
       footer={
         <DialogActions
           actions={[
-            { label: cancelLabel, onClick: onCancel },
+            { label: resolvedCancelLabel, onClick: onCancel },
             {
-              label: submitLabel,
+              label: resolvedSubmitLabel,
               onClick: () => onSubmit(submitValue),
               variant: 'primary',
             },

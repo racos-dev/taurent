@@ -4,9 +4,9 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 import { emit } from '@tauri-apps/api/event';
 import { BridgeAdapter } from '@taurent/bridge/adapters/desktop'
 import { DialogActions, NumberInput, Select } from '@taurent/web-ui';
-import { formatUserMessageForContext } from '@taurent/shared/utils/error';
 import { useQBClient } from '../connection/QBClientProvider';
 import { dismissDialogWindow } from '../windows/dialogs/dialogHostWindow';
+import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 
 type RatioMode = 'global' | 'unlimited' | 'custom';
 type SeedingMode = 'global' | 'unlimited' | 'custom';
@@ -36,6 +36,10 @@ function seedingToSentinel(mode: SeedingMode, custom: number): number {
 }
 
 export function TorrentShareLimitsDialogScreen() {
+  const { t } = useTaurentTranslation('desktop');
+  const { t: tTorrent } = useTaurentTranslation('torrents');
+  const { t: tCommon } = useTaurentTranslation('common');
+  const formatError = useLocalizedErrorFormatter();
   const [searchParams] = useSearchParams();
   const { serverId, sessionGeneration } = useQBClient();
 
@@ -63,8 +67,8 @@ export function TorrentShareLimitsDialogScreen() {
   }, [hashesParam, initialRatio, initialSeedingTime]);
 
   useEffect(() => {
-    void getCurrentWindow().setTitle('Limit Share Ratio');
-  }, []);
+    void getCurrentWindow().setTitle(t('windows.limitShareRatio'));
+  }, [t]);
 
   async function handleSubmit() {
     setIsSubmitting(true);
@@ -80,7 +84,7 @@ export function TorrentShareLimitsDialogScreen() {
       });
       await dismissDialogWindow();
     } catch (err) {
-      setError(formatUserMessageForContext(err, 'torrent-action'));
+      setError(formatError(err, 'torrent-action'));
       setIsSubmitting(false);
     }
   }
@@ -94,21 +98,21 @@ export function TorrentShareLimitsDialogScreen() {
       {/* scrollable body */}
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-5">
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-text-secondary">Limit Share Ratio</label>
-          <p className="text-xs text-text-secondary">Set per-torrent ratio and seeding time limits.</p>
+          <label className="text-xs font-medium text-text-secondary">{tTorrent('dialogs.shareLimits.title')}</label>
+          <p className="text-xs text-text-secondary">{tTorrent('dialogs.shareLimits.description')}</p>
         </div>
 
         <div className="flex flex-col gap-4 rounded-md border border-border-subtle p-4">
           <div className="flex flex-col gap-2">
             <Select
               dataTestid="ratio-limit-select"
-              label="Ratio Limit"
+              label={tTorrent('dialogs.shareLimits.ratioLimit')}
               value={ratioMode}
               onChange={(value) => setRatioMode(value as RatioMode)}
               options={[
-                { value: 'global', label: 'Global setting' },
-                { value: 'unlimited', label: 'Unlimited' },
-                { value: 'custom', label: 'Custom ratio' },
+                { value: 'global', label: tTorrent('dialogs.shareLimits.globalSetting') },
+                { value: 'unlimited', label: tCommon('values.unlimited') },
+                { value: 'custom', label: tTorrent('dialogs.shareLimits.customRatio') },
               ]}
             />
             {ratioMode === 'custom' && (
@@ -118,7 +122,7 @@ export function TorrentShareLimitsDialogScreen() {
                 value={ratioCustom}
                 onChange={(e) => setRatioCustom(Number.parseFloat(e.target.value) || 0)}
                 className="w-full"
-                placeholder="e.g. 2.0"
+                placeholder={tTorrent('dialogs.shareLimits.ratioExample')}
               />
             )}
           </div>
@@ -126,13 +130,13 @@ export function TorrentShareLimitsDialogScreen() {
           <div className="flex flex-col gap-2">
             <Select
               dataTestid="seeding-time-limit-select"
-              label="Seeding Time Limit"
+              label={tTorrent('dialogs.shareLimits.seedingTimeLimit')}
               value={seedingMode}
               onChange={(value) => setSeedingMode(value as SeedingMode)}
               options={[
-                { value: 'global', label: 'Global setting' },
-                { value: 'unlimited', label: 'Unlimited' },
-                { value: 'custom', label: 'Custom (minutes)' },
+                { value: 'global', label: tTorrent('dialogs.shareLimits.globalSetting') },
+                { value: 'unlimited', label: tCommon('values.unlimited') },
+                { value: 'custom', label: tTorrent('dialogs.shareLimits.customMinutes') },
               ]}
             />
             {seedingMode === 'custom' && (
@@ -141,7 +145,7 @@ export function TorrentShareLimitsDialogScreen() {
                 value={seedingCustom}
                 onChange={(e) => setSeedingCustom(Number.parseInt(e.target.value, 10) || 0)}
                 className="w-full"
-                placeholder="e.g. 1440 (24h)"
+                placeholder={tTorrent('dialogs.shareLimits.minutesExample')}
               />
             )}
           </div>
@@ -158,9 +162,9 @@ export function TorrentShareLimitsDialogScreen() {
       <div className="shrink-0 px-5 pb-4 pt-4">
         <DialogActions
           actions={[
-            { label: 'Cancel', onClick: handleCancel, disabled: isSubmitting },
+            { label: tCommon('actions.cancel'), onClick: handleCancel, disabled: isSubmitting },
             {
-              label: isSubmitting ? 'Saving...' : 'Set',
+              label: isSubmitting ? tTorrent('dialogs.saving') : tCommon('actions.set'),
               onClick: () => void handleSubmit(),
               variant: 'primary',
               disabled: isSubmitting,

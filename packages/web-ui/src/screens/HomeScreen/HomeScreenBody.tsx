@@ -25,6 +25,7 @@ import {
   filledVariantClasses,
   GHOST_DISABLED_CLASSES,
 } from '../../components/primitives/buttonStyles';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 // ─── StatItem ──────────────────────────────────────────────────────────────────
 
@@ -103,6 +104,7 @@ interface FilterSummaryBarProps {
 }
 
 const FilterSummaryBar = React.memo<FilterSummaryBarProps>(({ items, resultCount, onReset }) => {
+  const { t } = useTaurentTranslation('torrents');
   if (items.length === 0) return null;
 
   return (
@@ -115,10 +117,10 @@ const FilterSummaryBar = React.memo<FilterSummaryBarProps>(({ items, resultCount
         </div>
         <div className="flex items-center gap-2 whitespace-nowrap">
           <span className="text-xs text-text-secondary">
-            {resultCount} result{resultCount === 1 ? '' : 's'}
+            {t('workspace.results', { count: resultCount })}
           </span>
           <button onClick={onReset} className="text-xs font-medium text-primary enabled:hover:text-primary-hover enabled:active:text-primary-hover">
-            Reset
+            {t('workspace.reset')}
           </button>
         </div>
       </div>
@@ -347,16 +349,17 @@ const EmptyState = React.memo<EmptyStateProps>(({
   onClearFilters,
   onAddTorrent,
 }) => {
+  const { t } = useTaurentTranslation('torrents');
   const isFiltered = hasActiveFilters;
 
   return (
     <div className="pb-28 pt-2">
       <StateCard
         className="mx-2 mt-16"
-        title={isFiltered ? 'No matches' : 'No torrents yet'}
+        title={isFiltered ? t('workspace.noMatches') : t('empty')}
         message={isFiltered
-          ? 'Try clearing your filters.'
-          : 'Add a magnet link or a torrent file to get started.'}
+          ? t('workspace.tryClearingFilters')
+          : t('workspace.emptyMessage')}
         action={
           isFiltered ? (
             <Button
@@ -365,7 +368,7 @@ const EmptyState = React.memo<EmptyStateProps>(({
               onClick={onClearFilters}
               className="border-primary bg-surface text-primary enabled:hover:bg-surface-interactive enabled:active:bg-surface-interactive"
             >
-              Clear filters
+              {t('workspace.clearFilters')}
             </Button>
           ) : (
             <Button
@@ -373,7 +376,7 @@ const EmptyState = React.memo<EmptyStateProps>(({
               size="sm"
               onClick={onAddTorrent}
             >
-              Add torrent
+              {t('workspace.addTorrent')}
             </Button>
           )
         }
@@ -401,7 +404,9 @@ const SelectionBar = React.memo<SelectionBarProps>(({
   onClear,
   primaryActions,
   secondaryActions,
-}) => (
+}) => {
+  const { t } = useTaurentTranslation('torrents');
+  return (
   <div
     className="fixed inset-x-0 z-30 px-2"
     style={{ bottom: 'var(--mobile-tab-bar-safe-height, 0px)', paddingBottom: '1rem' }}
@@ -409,7 +414,7 @@ const SelectionBar = React.memo<SelectionBarProps>(({
     <div className="overflow-hidden rounded-sm border border-border bg-surface-elevated shadow-lg">
       <div className="flex items-center justify-between border-b border-border px-3 py-2">
         <span className="text-xs text-text-secondary">
-          {selectedCount} selected
+          {t('workspace.selectedShort', { count: selectedCount })}
         </span>
         <button
           type="button"
@@ -420,7 +425,7 @@ const SelectionBar = React.memo<SelectionBarProps>(({
             GHOST_DISABLED_CLASSES,
           )}
         >
-          Clear
+          {t('workspace.clearSelection')}
         </button>
       </div>
 
@@ -455,7 +460,8 @@ const SelectionBar = React.memo<SelectionBarProps>(({
       />
     </div>
   </div>
-));
+  );
+});
 
 SelectionBar.displayName = 'SelectionBar';
 
@@ -473,7 +479,9 @@ const HomeScreenFab = React.memo<HomeScreenFabProps>(({
   onToggleMenu,
   onAddFile,
   onAddMagnet,
-}) => (
+}) => {
+  const { t } = useTaurentTranslation('torrents');
+  return (
   <div
     className="fixed right-0 z-20"
     style={{ bottom: 'var(--mobile-tab-bar-safe-height, 0px)', paddingBottom: '1rem', paddingRight: '1rem' }}
@@ -490,7 +498,7 @@ const HomeScreenFab = React.memo<HomeScreenFabProps>(({
             }}
             className="rounded-full shadow-lg transition-transform active:scale-95"
           >
-            Torrent File
+            {t('workspace.torrentFile')}
           </Button>
           <Button
             variant="secondary"
@@ -501,7 +509,7 @@ const HomeScreenFab = React.memo<HomeScreenFabProps>(({
             }}
             className="rounded-full shadow-lg transition-transform active:scale-95"
           >
-            Magnet Link
+            {t('workspace.magnetLink')}
           </Button>
         </>
       ) : null}
@@ -517,13 +525,14 @@ const HomeScreenFab = React.memo<HomeScreenFabProps>(({
             'enabled:active:opacity-90',
           ),
         )}
-        title="Add Torrent"
+        title={t('add')}
       >
         <Icon name={showMenu ? 'x' : 'plus'} iconSize="lg" />
       </button>
     </div>
   </div>
-));
+  );
+});
 
 HomeScreenFab.displayName = 'HomeScreenFab';
 
@@ -606,6 +615,8 @@ export const HomeScreenBody = React.memo<HomeScreenProps>(({
   altSpeedActive,
   isTogglingAltSpeed,
 }) => {
+  const { t } = useTaurentTranslation('torrents');
+  const { t: tCommon } = useTaurentTranslation('common');
   const hasActiveFilters = Boolean(filter || category || tag || tracker || searchInput);
 
   // ── Alt speed long-press ────────────────────────────────────────────────
@@ -711,12 +722,12 @@ export const HomeScreenBody = React.memo<HomeScreenProps>(({
             <div className="min-w-0 flex-1">
               <h1 className="text-lg font-bold text-text-primary">
                 {selectionMode
-                  ? `${selectedHashes.size} Selected`
+                  ? t('workspace.selectedTitle', { count: selectedHashes.size })
                   : isMobile
                     ? serverName
-                      ? `${serverName} torrents`
-                      : 'Torrents'
-                    : 'Torrents'}
+                      ? t('workspace.serverTorrents', { name: serverName })
+                      : t('title')
+                    : t('title')}
               </h1>
               {!selectionMode && !isMobile && serverName ? (
                 <p className="mt-1 truncate text-xs text-text-muted">{serverName}</p>
@@ -728,7 +739,7 @@ export const HomeScreenBody = React.memo<HomeScreenProps>(({
                 {isMobile ? (
                   <>
                     <IconButton
-                      title="Search"
+                      title={t('workspace.search')}
                       isActive={showSearchBar || Boolean(searchInput)}
                       onClick={onToggleSearchBar}
                     >
@@ -736,7 +747,7 @@ export const HomeScreenBody = React.memo<HomeScreenProps>(({
                     </IconButton>
                     <div className="relative">
                       <IconButton
-                        title="Sort"
+                        title={t('workspace.sort')}
                         isActive={showSortMenu}
                         onClick={onToggleSortMenu}
                       >
@@ -753,7 +764,7 @@ export const HomeScreenBody = React.memo<HomeScreenProps>(({
                       />
                     </div>
                     <IconButton
-                      title="Filters"
+                      title={t('workspace.filters')}
                       isActive={Boolean(filter || category || tag || tracker)}
                       onClick={onOpenFilters}
                     >
@@ -762,13 +773,15 @@ export const HomeScreenBody = React.memo<HomeScreenProps>(({
                   </>
                 ) : null}
                 {!isMobile && (
-                  <IconButton title="Settings" onClick={onOpenSettings}>
+                  <IconButton title={t('workspace.settings')} onClick={onOpenSettings}>
                     <Icon name="settings" iconSize="md" />
                   </IconButton>
                 )}
                 {isMobile && onToggleAltSpeedLimits && (
                   <IconButton
-                    title={`Alternative speed limits: ${altSpeedActive ? 'ON' : 'OFF'}`}
+                    title={t('workspace.alternativeSpeedLimits', {
+                      state: t(altSpeedActive ? 'workspace.on' : 'workspace.off'),
+                    })}
                     onClick={handleAltSpeedClick}
                     disabled={isTogglingAltSpeed}
                     isActive={altSpeedActive}
@@ -789,7 +802,7 @@ export const HomeScreenBody = React.memo<HomeScreenProps>(({
                     onClick={onSwitchServer}
                     className="px-2 text-text-secondary"
                   >
-                    Switch
+                    {t('workspace.switchServer')}
                   </Button>
                 ) : null}
                 {!isMobile ? (
@@ -799,7 +812,7 @@ export const HomeScreenBody = React.memo<HomeScreenProps>(({
                     onClick={onLogout}
                     className="px-2 text-error enabled:hover:bg-error/10 enabled:active:bg-error/10"
                   >
-                    Logout
+                    {t('workspace.logout')}
                   </Button>
                 ) : null}
               </div>
@@ -811,7 +824,7 @@ export const HomeScreenBody = React.memo<HomeScreenProps>(({
                   onClick={handleToggleAll}
                   className="bg-surface text-primary enabled:hover:bg-surface-interactive enabled:active:bg-surface-interactive"
                 >
-                  {allSelected ? 'Deselect All' : 'Select All'}
+                  {t(allSelected ? 'workspace.deselectAll' : 'workspace.selectAll')}
                 </Button>
                 <Button
                   variant="secondary"
@@ -819,7 +832,7 @@ export const HomeScreenBody = React.memo<HomeScreenProps>(({
                   onClick={onClearSelection}
                   className="text-text-secondary enabled:hover:bg-surface-interactive enabled:active:bg-surface-interactive"
                 >
-                  Cancel
+                  {tCommon('actions.cancel')}
                 </Button>
               </div>
             )}
@@ -836,7 +849,7 @@ export const HomeScreenBody = React.memo<HomeScreenProps>(({
                     onClick={handleToggleAll}
                     className="bg-surface text-primary enabled:hover:bg-surface-interactive enabled:active:bg-surface-interactive"
                   >
-                    {allSelected ? 'Deselect All' : 'Select All'}
+                    {t(allSelected ? 'workspace.deselectAll' : 'workspace.selectAll')}
                   </Button>
                   <Button
                     variant="secondary"
@@ -844,13 +857,13 @@ export const HomeScreenBody = React.memo<HomeScreenProps>(({
                     onClick={onClearSelection}
                     className="text-text-secondary enabled:hover:bg-surface-interactive enabled:active:bg-surface-interactive"
                   >
-                    Cancel
+                    {tCommon('actions.cancel')}
                   </Button>
                 </>
               ) : (
                 <>
                   <IconButton
-                    title="Search"
+                    title={t('workspace.search')}
                     isActive={showSearchBar || Boolean(searchInput)}
                     onClick={onToggleSearchBar}
                   >
@@ -859,7 +872,7 @@ export const HomeScreenBody = React.memo<HomeScreenProps>(({
 
                   <div className="relative">
                     <IconButton
-                      title="Sort"
+                      title={t('workspace.sort')}
                       isActive={showSortMenu}
                       onClick={onToggleSortMenu}
                     >
@@ -877,7 +890,7 @@ export const HomeScreenBody = React.memo<HomeScreenProps>(({
                   </div>
 
                   <IconButton
-                    title="Filters"
+                    title={t('workspace.filters')}
                     isActive={Boolean(filter || category || tag || tracker)}
                     onClick={onOpenFilters}
                   >
@@ -894,7 +907,7 @@ export const HomeScreenBody = React.memo<HomeScreenProps>(({
               value={searchInput}
               onChange={onSearchInputChange}
               onClear={() => onSearchInputChange('')}
-              placeholder="Search torrents"
+              placeholder={t('search')}
             />
           )}
         </div>
@@ -992,12 +1005,12 @@ export const HomeScreenBody = React.memo<HomeScreenProps>(({
       {/* ── Speed Limit Modal ──────────────────────────────────────────────── */}
       {speedLimitModal ? (
         <NumberInputModal
-          title={speedLimitModal.type === 'download' ? 'Set Download Speed Limit' : 'Set Upload Speed Limit'}
-          subtitle={`${selectedHashes.size} selected torrent${selectedHashes.size === 1 ? '' : 's'}`}
+          title={t(speedLimitModal.type === 'download' ? 'workspace.downloadSpeedLimit' : 'workspace.uploadSpeedLimit')}
+          subtitle={t('workspace.selectedForLimit', { count: selectedHashes.size })}
           currentValue={0}
           unitMode="bytes-per-second"
           unitDefault="kb"
-          unit="Use 0 for unlimited speed."
+          unit={t('workspace.unlimitedSpeedHelp')}
           onSubmit={(value) => {
             void onApplySpeedLimit(speedLimitModal.type, value);
           }}

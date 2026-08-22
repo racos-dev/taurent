@@ -20,6 +20,7 @@
     "./settings": "./src/settings/index.ts",
     "./theme/*": "./src/theme/*",
     "./icons": "./src/icons/index.ts",
+    "./i18n": "./src/i18n/index.ts",
     "./platform/*": "./src/platform/*",
     "./tailwind.preset": "./tailwind.preset.mts"
   },
@@ -40,7 +41,9 @@
   },
   "dependencies": {
     "clsx": "^2.1.1",
+    "i18next": "^26.4.0",
     "lucide-react": "^1.25.0",
+    "react-i18next": "^17.0.12",
     "tailwind-merge": "^3.6.0",
     "zod": "^4.4.3",
     "zustand": "^5.0.14"

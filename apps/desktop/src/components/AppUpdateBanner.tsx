@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { BridgeAdapter } from '@taurent/bridge/adapters/desktop';
 import type { AppUpdateInfo, AppUpdateProgress } from '@taurent/bridge/contracts';
 import { Button, ProgressBar, useExternalLinkHandler } from '@taurent/web-ui';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 const RELEASE_URL = 'https://github.com/racos-dev/taurent/releases/latest';
 
@@ -11,7 +12,7 @@ type UpdateBannerState =
   | { status: 'available'; update: AppUpdateInfo }
   | { status: 'installing'; update: AppUpdateInfo; downloaded: number; contentLength: number | null }
   | { status: 'installed'; update: AppUpdateInfo }
-  | { status: 'error'; update: AppUpdateInfo; message: string };
+  | { status: 'error'; update: AppUpdateInfo };
 
 let startupCheckCompleted = false;
 
@@ -25,6 +26,8 @@ function isWindowsRuntime(): boolean {
 }
 
 export function AppUpdateBanner() {
+  const { t } = useTaurentTranslation('settings');
+  const { t: tCommon } = useTaurentTranslation('common');
   const [state, setState] = useState<UpdateBannerState>({ status: 'hidden' });
 
   useEffect(() => {
@@ -63,9 +66,8 @@ export function AppUpdateBanner() {
         setState({ status: 'installing', update, downloaded: event.downloaded, contentLength: event.contentLength });
       });
       setState({ status: 'installed', update });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Update install failed.';
-      setState({ status: 'error', update, message });
+    } catch {
+      setState({ status: 'error', update });
     }
   }, []);
 
@@ -83,29 +85,29 @@ export function AppUpdateBanner() {
     if (state.status === 'hidden') return null;
     if (state.status === 'installed') {
       return {
-        title: 'Update installed',
-        body: 'Relaunch Taurent to finish updating.',
+        title: t('aboutSettings.installedTitle'),
+        body: t('aboutSettings.installedBody'),
       };
     }
     if (state.status === 'installing') {
       return {
-        title: `Installing Taurent v${state.update.version}`,
-        body: state.contentLength ? 'Downloading update package.' : 'Downloading update package...',
+        title: t('aboutSettings.installingTitle', { version: state.update.version }),
+        body: state.contentLength ? t('aboutSettings.downloading') : t('aboutSettings.downloadingUnknown'),
       };
     }
     if (state.status === 'error') {
       return {
-        title: 'Update failed',
-        body: state.message,
+        title: t('aboutSettings.failedTitle'),
+        body: t('aboutSettings.installFailed'),
       };
     }
     return {
-      title: `Taurent v${state.update.version} is available`,
+      title: t('aboutSettings.availableTitle', { version: state.update.version }),
       body: isWindowsRuntime()
-        ? 'Install when ready. On Windows, the app may close immediately during installation.'
-        : 'Install when ready, or view the release notes first.',
+        ? t('aboutSettings.readyWindows')
+        : t('aboutSettings.ready'),
     };
-  }, [state]);
+  }, [state, t]);
 
   if (state.status === 'hidden' || !copy) return null;
 
@@ -128,15 +130,15 @@ export function AppUpdateBanner() {
         <div className="flex flex-wrap justify-end gap-2">
           {state.status === 'available' || state.status === 'error' ? (
             <>
-              <Button variant="ghost" size="sm" onClick={handleRelease}>View release</Button>
-              <Button variant="secondary" size="sm" onClick={() => setState({ status: 'hidden' })}>Later</Button>
-              <Button variant="primary" size="sm" onClick={() => void handleInstall(state.update)}>Update</Button>
+              <Button variant="ghost" size="sm" onClick={handleRelease}>{t('aboutSettings.viewRelease')}</Button>
+              <Button variant="secondary" size="sm" onClick={() => setState({ status: 'hidden' })}>{tCommon('actions.later')}</Button>
+              <Button variant="primary" size="sm" onClick={() => void handleInstall(state.update)}>{t('aboutSettings.update')}</Button>
             </>
           ) : null}
           {state.status === 'installed' ? (
             <>
-              <Button variant="secondary" size="sm" onClick={() => setState({ status: 'hidden' })}>Later</Button>
-              <Button variant="primary" size="sm" onClick={() => void BridgeAdapter.relaunchApp()}>Relaunch</Button>
+              <Button variant="secondary" size="sm" onClick={() => setState({ status: 'hidden' })}>{tCommon('actions.later')}</Button>
+              <Button variant="primary" size="sm" onClick={() => void BridgeAdapter.relaunchApp()}>{t('aboutSettings.relaunch')}</Button>
             </>
           ) : null}
         </div>

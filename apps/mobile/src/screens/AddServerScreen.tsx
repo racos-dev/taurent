@@ -10,14 +10,20 @@ import {
   mobileScreenHeaderInnerClassName,
   mobileScreenRootClassName,
 } from '../ui/mobileScreenLayout';
+import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 
 export function AddServerScreen() {
+  const { t } = useTaurentTranslation('auth');
+  const formatError = useLocalizedErrorFormatter();
+  const { t: commonT } = useTaurentTranslation('common');
   const navigate = useNavigate();
   const { addServer, switchServer, loading } = useServerManager();
 
   const controller = useAddServerScreenController({
     addServer,
     bridgeServers: BridgeAdapter.servers,
+    formatError: (error) => formatError(error, 'add-server'),
+    requiredFieldsMessage: t('form.requiredFields'),
     onSuccess: async (serverId) => {
       await switchServer(serverId);
       navigate('/', { replace: true });
@@ -41,7 +47,7 @@ export function AddServerScreen() {
     return (
       <div className={mobileCenteredStateClassName()}>
         <StateCard
-          title="Loading..."
+          title={t('loading.servers')}
           icon={<Icon name="server" iconSize="lg" />}
           className="max-w-sm"
         />
@@ -59,9 +65,9 @@ export function AddServerScreen() {
             onClick={handleCancel}
             disabled={controller.isSubmitting}
           >
-            Cancel
+            {commonT('actions.cancel')}
           </Button>
-          <h1 className="text-sm font-semibold text-text-primary">Add Server</h1>
+          <h1 className="text-sm font-semibold text-text-primary">{t('server.add')}</h1>
           <div className="w-14" />
         </div>
       </header>
@@ -70,8 +76,8 @@ export function AddServerScreen() {
         <div className="mx-auto w-full max-w-lg px-2 pb-[calc(2rem+var(--sab))]">
           {/* Page description */}
           <div className="mb-4 text-center">
-            <h2 className="text-sm font-semibold text-text-primary">Connect to qBittorrent</h2>
-            <p className="mt-1 text-xs text-text-secondary">Enter your server details below</p>
+            <h2 className="text-sm font-semibold text-text-primary">{t('form.connectTitle')}</h2>
+            <p className="mt-1 text-xs text-text-secondary">{t('form.detailsBelow')}</p>
           </div>
 
           {/* Polished form card */}

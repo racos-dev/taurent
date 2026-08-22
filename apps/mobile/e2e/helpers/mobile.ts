@@ -37,6 +37,7 @@ export async function gotoMobile(
     scenario?: string;
     appScenario?: AppScenario;
     searchParams?: Record<string, string>;
+    language?: 'system' | 'en' | 'ro';
   } = {},
 ) {
   const {
@@ -44,6 +45,7 @@ export async function gotoMobile(
     scenario = 'empty',
     appScenario = 'connected',
     searchParams = {},
+    language = 'en',
   } = options;
 
   const [rawPathname, rawSearch = ''] = path.split('?');
@@ -55,9 +57,10 @@ export async function gotoMobile(
     query.set(key, value);
   }
 
-  await page.addInitScript(() => {
+  await page.addInitScript((initialLanguage) => {
     window.localStorage.setItem('taurent:perf-audit', '1');
-  });
+    window.localStorage.setItem('taurent_language_preference', initialLanguage);
+  }, language);
 
   await page.goto(`${normalizedPath}?${query.toString()}`);
   await page.waitForFunction(() => window.__TAURENT_AUTOMATION__ != null);

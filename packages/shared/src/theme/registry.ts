@@ -12,8 +12,8 @@ import type { ThemePalette, ThemeVariant } from './types';
 
 export interface ThemePaletteMetadata {
   palette: ThemePalette;
-  label: string;
-  description: string;
+  labelKey: `theme.palettes.${ThemePalette}.label`;
+  descriptionKey: `theme.palettes.${ThemePalette}.description`;
   /** Palette only supports dark variant and will ignore system/manual variant selection */
   darkOnly: boolean;
   /** Ordered list of variants this palette supports */
@@ -27,64 +27,64 @@ export interface ThemePaletteMetadata {
 export const THEME_OPTIONS: ThemePaletteMetadata[] = [
   {
     palette: 'catppuccin',
-    label: 'Catppuccin',
-    description: 'Soothing pastel theme',
+    labelKey: 'theme.palettes.catppuccin.label',
+    descriptionKey: 'theme.palettes.catppuccin.description',
     darkOnly: false,
     variants: ['light', 'dark'],
   },
   {
     palette: 'solarized',
-    label: 'Solarized',
-    description: 'Classic precision color scheme',
+    labelKey: 'theme.palettes.solarized.label',
+    descriptionKey: 'theme.palettes.solarized.description',
     darkOnly: false,
     variants: ['light', 'dark'],
   },
   {
     palette: 'gruvbox',
-    label: 'Gruvbox',
-    description: 'Retro groove colors',
+    labelKey: 'theme.palettes.gruvbox.label',
+    descriptionKey: 'theme.palettes.gruvbox.description',
     darkOnly: false,
     variants: ['light', 'dark'],
   },
   {
     palette: 'midnight',
-    label: 'Midnight',
-    description: 'Pure black with blue accent',
+    labelKey: 'theme.palettes.midnight.label',
+    descriptionKey: 'theme.palettes.midnight.description',
     darkOnly: true,
     variants: ['dark'],
   },
   {
     palette: 'nord',
-    label: 'Nord',
-    description: 'Arctic north-bluish',
+    labelKey: 'theme.palettes.nord.label',
+    descriptionKey: 'theme.palettes.nord.description',
     darkOnly: true,
     variants: ['dark'],
   },
   {
     palette: 'dracula',
-    label: 'Dracula',
-    description: 'Dark with vibrant colors',
+    labelKey: 'theme.palettes.dracula.label',
+    descriptionKey: 'theme.palettes.dracula.description',
     darkOnly: true,
     variants: ['dark'],
   },
   {
     palette: 'tokyonight',
-    label: 'Tokyo Night',
-    description: 'Dark blue urban theme',
+    labelKey: 'theme.palettes.tokyonight.label',
+    descriptionKey: 'theme.palettes.tokyonight.description',
     darkOnly: true,
     variants: ['dark'],
   },
   {
     palette: 'monokai',
-    label: 'Monokai',
-    description: 'Classic vibrant theme',
+    labelKey: 'theme.palettes.monokai.label',
+    descriptionKey: 'theme.palettes.monokai.description',
     darkOnly: true,
     variants: ['dark'],
   },
   {
     palette: 'onedark',
-    label: 'One Dark',
-    description: 'Atom editor inspired',
+    labelKey: 'theme.palettes.onedark.label',
+    descriptionKey: 'theme.palettes.onedark.description',
     darkOnly: true,
     variants: ['dark'],
   },

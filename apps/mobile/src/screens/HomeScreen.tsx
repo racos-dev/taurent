@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQBClient, useMaindataSelector } from '../connection/QBClientProvider';
 import { useServerManager } from '../connection/ServerManager';
@@ -13,26 +13,28 @@ import {
 } from '@taurent/web-ui';
 import { isTorrentFilterType } from '@taurent/shared';
 import type { SortField } from '@taurent/shared';
-import { formatUserMessageForContext } from '@taurent/shared/utils/error';
 import { toast } from '@taurent/web-ui/components/shared/Toast/toast';
 import { Icon } from '../ui/Icon';
 import { RetryButton, StateCard, Button } from '@taurent/web-ui';
 import { HomeScreenBody, SpeedLimitsModal } from '@taurent/web-ui';
 import type { SortOption } from '@taurent/web-core/screens';
 import { mobileCenteredStateClassName } from '../ui/mobileScreenLayout';
-
-const SORT_OPTIONS: SortOption[] = [
-  { value: 'added_on', label: 'Date Added', defaultOrder: 'desc' },
-  { value: 'name', label: 'Name', defaultOrder: 'asc' },
-  { value: 'size', label: 'Size', defaultOrder: 'desc' },
-  { value: 'progress', label: 'Progress', defaultOrder: 'desc' },
-  { value: 'dlspeed', label: 'Download Speed', defaultOrder: 'desc' },
-  { value: 'upspeed', label: 'Upload Speed', defaultOrder: 'desc' },
-  { value: 'ratio', label: 'Ratio', defaultOrder: 'desc' },
-  { value: 'eta', label: 'ETA', defaultOrder: 'asc' },
-];
+import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 
 export function HomeScreen() {
+  const { t: torrentT } = useTaurentTranslation('torrents');
+  const { t: authT } = useTaurentTranslation('auth');
+  const formatError = useLocalizedErrorFormatter();
+  const sortOptions = useMemo<SortOption[]>(() => [
+    { value: 'added_on', label: torrentT('fields.dateAdded'), defaultOrder: 'desc' },
+    { value: 'name', label: torrentT('fields.name'), defaultOrder: 'asc' },
+    { value: 'size', label: torrentT('fields.size'), defaultOrder: 'desc' },
+    { value: 'progress', label: torrentT('fields.progress'), defaultOrder: 'desc' },
+    { value: 'dlspeed', label: torrentT('fields.downloadSpeed'), defaultOrder: 'desc' },
+    { value: 'upspeed', label: torrentT('fields.uploadSpeed'), defaultOrder: 'desc' },
+    { value: 'ratio', label: torrentT('fields.ratio'), defaultOrder: 'desc' },
+    { value: 'eta', label: torrentT('fields.eta'), defaultOrder: 'asc' },
+  ], [torrentT]);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { isConnected, isConnecting, isHydrated, serverName, error, disconnect, retry } = useQBClient();
@@ -85,7 +87,8 @@ export function HomeScreen() {
     torrentActions,
     homeController.selectedHashList,
     homeController.isBatchActionPending,
-    homeController.openDeleteDialog
+    homeController.openDeleteDialog,
+    torrentT,
   );
 
   const secondaryBatchActions = buildSecondaryBatchActions(
@@ -95,7 +98,8 @@ export function HomeScreen() {
     () => homeController.openSpeedLimitModal('download'),
     () => homeController.openSpeedLimitModal('upload'),
     homeController.openCategoryDialog,
-    homeController.openTagsDialog
+    homeController.openTagsDialog,
+    torrentT,
   );
 
   // ── Alt speed limits toggle ────────────────────────────────────────────────────
@@ -107,13 +111,15 @@ export function HomeScreen() {
     const willBeEnabled = !useAltSpeeds;
     toggleSpeedLimitsMode()
       .then(() => {
-        const message = willBeEnabled ? 'Alternative speed limits enabled' : 'Alternative speed limits disabled';
-        toast.success(message, { description: 'Long press to edit limits' });
+        const message = torrentT(willBeEnabled
+          ? 'workspace.alternativeLimitsEnabled'
+          : 'workspace.alternativeLimitsDisabled');
+        toast.success(message, { description: torrentT('workspace.longPressToEditLimits') });
       })
       .catch((err) => {
-        toast.error(formatUserMessageForContext(err, 'speed-limits'));
+        toast.error(formatError(err, 'speed-limits'));
       });
-  }, [toggleSpeedLimitsMode, useAltSpeeds]);
+  }, [formatError, toggleSpeedLimitsMode, torrentT, useAltSpeeds]);
 
   // ── Categories / tags from sync state ─────────────────────────────────────────
   const categories = useMaindataSelector((s) => s.categories ?? null);
@@ -219,21 +225,21 @@ export function HomeScreen() {
       [prefKey2]: ulBytes,
     })
       .then(() => {
-        toast.success('Speed limits updated');
+        toast.success(torrentT('workspace.speedLimitsUpdated'));
         setShowSpeedLimitsModal(false);
       })
       .catch((err) => {
-        toast.error(formatUserMessageForContext(err, 'speed-limits'));
+        toast.error(formatError(err, 'speed-limits'));
       });
-  }, [setPreferencesMutation, useAltSpeeds]);
+  }, [formatError, setPreferencesMutation, torrentT, useAltSpeeds]);
 
   // ── Error / loading early returns ───────────────────────────────────────────
   if (!isHydrated) {
     return (
       <div className={mobileCenteredStateClassName({ height: 'full' })}>
         <StateCard
-          title="Initializing"
-          message="Loading your app state."
+          title={authT('loading.initializing')}
+          message={authT('loading.appState')}
           icon={<Icon name="layers" iconSize="xl" />}
         />
       </div>
@@ -244,8 +250,8 @@ export function HomeScreen() {
     return (
       <div className={mobileCenteredStateClassName({ height: 'full' })}>
         <StateCard
-          title="Connecting"
-          message="Reaching your qBittorrent server."
+          title={authT('loading.connecting')}
+          message={authT('loading.reachingServer')}
           icon={<Icon name="layers" iconSize="xl" />}
         />
       </div>
@@ -256,13 +262,13 @@ export function HomeScreen() {
     return (
       <div className={mobileCenteredStateClassName({ height: 'full' })}>
         <StateCard
-          title="Connection problem"
-          message={formatUserMessageForContext(error, 'connection')}
+          title={authT('connectionProblem')}
+          message={formatError(error, 'connection')}
           action={
             <>
               <RetryButton onClick={retry} />
               <Button variant="secondary" onClick={handleSwitchServer}>
-                Switch Server
+                {authT('server.switch')}
               </Button>
             </>
           }
@@ -276,11 +282,11 @@ export function HomeScreen() {
     return (
       <div className={mobileCenteredStateClassName({ height: 'full' })}>
         <StateCard
-          title="Not connected"
-          message="Choose a server to start managing torrents."
+          title={authT('notConnected')}
+          message={authT('chooseServer')}
           action={
             <Button variant="primary" onClick={() => navigate('/servers')}>
-              Go to Login
+              {authT('goToLogin')}
             </Button>
           }
           icon={<Icon name="layers" iconSize="xl" />}
@@ -312,7 +318,7 @@ export function HomeScreen() {
       sortOrder={sortOrder}
       onSortChange={handleSortChange}
       onResetAll={handleResetAll}
-      sortOptions={SORT_OPTIONS}
+      sortOptions={sortOptions}
       showSortMenu={showSortMenu}
       onToggleSortMenu={handleToggleSortMenu}
       showFabMenu={showFabMenu}

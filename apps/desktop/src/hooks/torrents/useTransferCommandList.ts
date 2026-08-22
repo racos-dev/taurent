@@ -39,6 +39,7 @@ import { openSettingsWindow } from '../../windows/settings/settingsWindow';
 import { dirname } from '../../utils/pathMapping';
 import { toast } from '@taurent/web-ui/components/shared/Toast/toast';
 import { formatUserMessageForContext } from '@taurent/shared/utils/error';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 const adapters = createTorrentActionsAdapters(BridgeAdapter);
 
@@ -98,6 +99,7 @@ export function useTransferCommandList(
   options: UseTransferCommandListOptions = {}
 ): UseTransferCommandListReturn {
   const { explicitHashes } = options;
+  const { t } = useTaurentTranslation('desktop');
   const { isConnected, serverId, sessionGeneration } = useQBClient();
 
   const actions = useTorrentActionController({
@@ -140,7 +142,7 @@ export function useTransferCommandList(
   const canPause = hasService && hasSelection && hasRunnableSelection;
   const pauseCmd: TransferCommand = {
     id: 'pause',
-    label: 'Pause',
+    label: t('menu.pause'),
     icon: Pause,
     shortcut: 'Ctrl+S',
     enabled: canPause,
@@ -164,7 +166,7 @@ export function useTransferCommandList(
   const canResume = hasService && hasSelection && (hasPausedSelection || hasForcedRunningSelection);
   const resumeCmd: TransferCommand = {
     id: 'resume',
-    label: 'Resume',
+    label: t('menu.resume'),
     icon: Play,
     shortcut: 'Enter',
     enabled: canResume,
@@ -182,7 +184,7 @@ export function useTransferCommandList(
   const canRemove = hasService && hasSelection;
   const deleteCmd: TransferCommand = {
     id: 'delete',
-    label: 'Delete',
+    label: t('menu.delete'),
     icon: Trash2,
     shortcut: 'Delete',
     destructive: true,
@@ -199,7 +201,7 @@ export function useTransferCommandList(
   const canForceStart = hasService && hasSelection && hasNonForcedSelection;
   const forceStartCmd: TransferCommand = {
     id: 'force-start',
-    label: 'Force Start',
+    label: t('menu.forceStart'),
     icon: Rocket,
     enabled: canForceStart,
     onClick: () => {
@@ -211,7 +213,7 @@ export function useTransferCommandList(
   const canRecheck = hasService && hasSelection;
   const recheckCmd: TransferCommand = {
     id: 'recheck',
-    label: 'Recheck',
+    label: t('menu.recheck'),
     icon: RefreshCw,
     enabled: canRecheck,
     onClick: () => {
@@ -225,7 +227,7 @@ export function useTransferCommandList(
   const canReannounce = hasService && hasSelection;
   const reannounceCmd: TransferCommand = {
     id: 'reannounce',
-    label: 'Reannounce',
+    label: t('menu.reannounce'),
     icon: RefreshCw,
     enabled: canReannounce,
     onClick: () => {
@@ -237,7 +239,7 @@ export function useTransferCommandList(
   const canQueueUp = hasService && hasSelection && Boolean(actions.increasePriority);
   const queueUpCmd: TransferCommand = {
     id: 'queue-up',
-    label: 'Queue Up',
+    label: t('menu.queueUp'),
     icon: ArrowUp,
     enabled: canQueueUp,
     onClick: () => {
@@ -249,7 +251,7 @@ export function useTransferCommandList(
   const canQueueDown = hasService && hasSelection && Boolean(actions.decreasePriority);
   const queueDownCmd: TransferCommand = {
     id: 'queue-down',
-    label: 'Queue Down',
+    label: t('menu.queueDown'),
     icon: ArrowDown,
     enabled: canQueueDown,
     onClick: () => {
@@ -263,7 +265,7 @@ export function useTransferCommandList(
   const canMoveTop = hasService && hasSelection && Boolean(actions.topPriority);
   const moveTopCmd: TransferCommand = {
     id: 'move-top',
-    label: 'Move to Top',
+    label: t('menu.moveTop'),
     icon: ArrowUpToLine,
     shortcut: 'Alt+ArrowUp',
     enabled: canMoveTop,
@@ -276,7 +278,7 @@ export function useTransferCommandList(
   const canMoveBottom = hasService && hasSelection && Boolean(actions.bottomPriority);
   const moveBottomCmd: TransferCommand = {
     id: 'move-bottom',
-    label: 'Move to Bottom',
+    label: t('menu.moveBottom'),
     icon: ArrowDownToLine,
     shortcut: 'Alt+ArrowDown',
     enabled: canMoveBottom,
@@ -288,7 +290,7 @@ export function useTransferCommandList(
 
   const copyHashCmd: TransferCommand = {
     id: 'copy-hash',
-    label: 'Copy Hash',
+    label: t('menu.copyHash'),
     icon: Hash,
     enabled: canCopyTarget && isConnected,
     onClick: () => {
@@ -299,7 +301,7 @@ export function useTransferCommandList(
 
   const copyNameCmd: TransferCommand = {
     id: 'copy-name',
-    label: 'Copy Name',
+    label: t('menu.copyName'),
     icon: Type,
     enabled: canCopyTarget && isConnected,
     onClick: () => {
@@ -310,7 +312,7 @@ export function useTransferCommandList(
 
   const copyMagnetCmd: TransferCommand = {
     id: 'copy-magnet',
-    label: 'Copy Magnet URI',
+    label: t('menu.copyMagnet'),
     icon: Link2,
     enabled: canCopyTarget && Boolean(targetTorrent?.magnet_uri) && isConnected,
     onClick: () => {
@@ -322,7 +324,7 @@ export function useTransferCommandList(
   const canOpenFolder = hasService && isSingleSelection;
   const openFolderCmd: TransferCommand = {
     id: 'open-folder',
-    label: 'Open Folder',
+    label: t('menu.openFolder'),
     icon: FolderOpen,
     enabled: canOpenFolder,
     onClick: () => {
@@ -354,7 +356,7 @@ export function useTransferCommandList(
   const canSetCategory = hasService && hasSelection;
   const setCategoryCmd: TransferCommand = {
     id: 'set-category',
-    label: 'Set Category…',
+    label: t('menu.setCategory'),
     icon: FolderOpen,
     enabled: canSetCategory,
     onClick: () => {
@@ -366,7 +368,7 @@ export function useTransferCommandList(
   const canSetTags = hasService && hasSelection;
   const setTagsCmd: TransferCommand = {
     id: 'set-tags',
-    label: 'Set Tags…',
+    label: t('menu.setTags'),
     icon: Tag,
     enabled: canSetTags,
     onClick: () => {

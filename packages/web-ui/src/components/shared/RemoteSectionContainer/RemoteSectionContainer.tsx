@@ -5,6 +5,7 @@ import { RetryButton } from '../RetryButton';
 import { SettingsCard } from '../../settings/SettingsCard';
 import { StatusPanel } from '../StatusPanel';
 import type { RemoteSectionContainerProps } from './types';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export const RemoteSectionContainer = React.memo<RemoteSectionContainerProps>(({
   isLoading,
@@ -19,70 +20,71 @@ export const RemoteSectionContainer = React.memo<RemoteSectionContainerProps>(({
   onOpenServerOverview,
   children,
 }) => {
+  const { t } = useTaurentTranslation('settings');
   const noServerDescription = hasSavedServers
-    ? 'Select an active server in the main app to load remote preferences here.'
-    : 'Add a qBittorrent server in the main app to unlock remote preferences here.';
+    ? t('remoteStatus.selectActiveServer')
+    : t('remoteStatus.addServerFirst');
 
   return (
     <div className="max-w-3xl space-y-3">
       {!hasActiveServer ? (
         <SettingsCard
-          title="No active server"
+          title={t('remoteStatus.noActiveServer')}
           description={noServerDescription}
         >
           <div className="mt-3">
             <Button variant="outline" onClick={onOpenServerOverview}>
-              Review saved servers
+              {t('remoteStatus.reviewServers')}
             </Button>
           </div>
         </SettingsCard>
       ) : isLoading ? (
         <StatusPanel
-          title="Loading remote preferences"
-          description={`Fetching settings from ${currentServerName ?? 'the active server'}…`}
+          title={t('remoteStatus.loading')}
+          description={t('remoteStatus.fetchingFrom', { name: currentServerName ?? t('remoteStatus.activeServer') })}
         />
       ) : connectionError ? (
         <SettingsCard
-          title="Connection failed"
-          description="Could not reach the active server."
+          title={t('remoteStatus.connectionFailed')}
+          description={t('remoteStatus.couldNotReach')}
         >
           <div className="rounded-sm border border-error bg-error-20 px-3 py-3 text-sm text-error">
             {connectionError}
           </div>
           <div className="mt-4 flex flex-wrap gap-3">
-            <RetryButton onClick={onRetry} label="Retry server connection" />
+            <RetryButton onClick={onRetry} label={t('remoteStatus.retryConnection')} />
             <Button variant="ghost" onClick={onOpenServerOverview}>
-              Review saved servers
+              {t('remoteStatus.reviewServers')}
             </Button>
           </div>
         </SettingsCard>
       ) : error ? (
         <SettingsCard
-          title="Failed to load remote preferences"
-          description="Could not fetch preferences from the server."
+          title={t('remoteStatus.loadFailed')}
+          description={t('remoteStatus.couldNotFetch')}
         >
           <div className="rounded-sm border border-error bg-error-20 px-3 py-3 text-sm text-error">
             {formatUserMessageForContext(error, 'settings-load')}
           </div>
           <div className="mt-4">
-            <RetryButton onClick={onRetry} label="Retry remote load" />
+            <RetryButton onClick={onRetry} label={t('remoteStatus.retryLoad')} />
           </div>
         </SettingsCard>
       ) : !preferences ? (
         <SettingsCard
-          title="Remote preferences not ready"
-          description="Waiting for the active server to finish connecting."
+          title={t('remoteStatus.notReady')}
+          description={t('remoteStatus.waiting')}
         >
           <div className="mt-3">
-            <RetryButton onClick={onRetry} label="Retry remote load" />
+            <RetryButton onClick={onRetry} label={t('remoteStatus.retryLoad')} />
           </div>
         </SettingsCard>
       ) : (
         <>
           {saveError ? (
             <SettingsCard
-              title="Remote save failed"
-              description="The last preference write to the server failed."
+              title={t('remoteStatus.saveFailed')}
+              description={t('remoteStatus.writeFailed')}
             >
               <div className="rounded-sm border border-error bg-error-20 px-3 py-3 text-sm text-error">
                 {formatUserMessageForContext(saveError, 'settings-save')}

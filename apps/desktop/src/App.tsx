@@ -25,6 +25,7 @@ import { ExternalLinkProvider } from '@taurent/web-ui';
 import { useOperationNotifications } from '@taurent/web-core/hooks/useOperationNotifications';
 import { notifyNative } from '@taurent/bridge/desktop/notification';
 import { LazyContentFallback, type LazyContentKind } from './components/LazyContentFallback';
+import { LocalizationProvider } from './i18n/LocalizationProvider';
 
 // Lazy-load auxiliary windows and heavier non-initial routes
 const AppShell = lazy(() => import('./layouts/AppShell/AppShell').then(m => ({ default: m.AppShell })));
@@ -55,12 +56,19 @@ function ProtectedLayout() {
   );
 }
 
+const AUX_WINDOW_IDS = {
+  settings: 'settings',
+  statistics: 'statistics',
+  addTorrent: 'add-torrent',
+  dialogHost: 'dialog-host',
+} as const;
+
 const router = createBrowserRouter([
   // Auxiliary window routes (outside AppShell)
   {
     path: '/settings-window',
     element: (
-      <AuxWindowLayout label="settings" closeOnSessionLoss={false}>
+      <AuxWindowLayout label={AUX_WINDOW_IDS.settings} closeOnSessionLoss={false}>
         <LazyContent kind="settings">
           <SettingsLayout />
         </LazyContent>
@@ -70,7 +78,7 @@ const router = createBrowserRouter([
   {
     path: '/statistics-window',
     element: (
-      <DialogWindowLayout label="statistics">
+      <DialogWindowLayout label={AUX_WINDOW_IDS.statistics}>
         <LazyContent kind="statistics">
           <StatisticsLayout />
         </LazyContent>
@@ -80,7 +88,7 @@ const router = createBrowserRouter([
   {
     path: '/add-torrent-window',
     element: (
-      <DialogWindowLayout label="add-torrent">
+      <DialogWindowLayout label={AUX_WINDOW_IDS.addTorrent}>
         <LazyContent kind="add-torrent">
           <AddTorrentScreen variant="aux" />
         </LazyContent>
@@ -90,7 +98,7 @@ const router = createBrowserRouter([
   {
     path: '/dialog-host-window',
     element: (
-      <DialogWindowLayout label="dialog-host">
+      <DialogWindowLayout label={AUX_WINDOW_IDS.dialogHost}>
         <LazyContent kind="dialog">
           <DialogHostScreen />
         </LazyContent>
@@ -173,16 +181,18 @@ function AppContent() {
 
   return (
     <ExternalLinkProvider onNavigate={url => void openUrl(url)}>
-      <SearchFocusProvider>
-        <ThemeProvider defaultTheme="catppuccin">
-          <ServerManagerProvider>
-            <QBClientProvider>
-              <AppNotifications />
-              <RouterProvider router={router} />
-            </QBClientProvider>
-          </ServerManagerProvider>
-        </ThemeProvider>
-      </SearchFocusProvider>
+      <LocalizationProvider>
+        <SearchFocusProvider>
+          <ThemeProvider defaultTheme="catppuccin">
+            <ServerManagerProvider>
+              <QBClientProvider>
+                <AppNotifications />
+                <RouterProvider router={router} />
+              </QBClientProvider>
+            </ServerManagerProvider>
+          </ThemeProvider>
+        </SearchFocusProvider>
+      </LocalizationProvider>
     </ExternalLinkProvider>
   );
 }

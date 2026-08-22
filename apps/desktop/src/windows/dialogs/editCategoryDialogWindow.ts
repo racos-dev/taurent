@@ -2,7 +2,7 @@ import { openDialogHostWindow } from './dialogHostWindow';
 
 export const EDIT_CATEGORY_DIALOG_WINDOW_CONFIG = {
   route: '/edit-category-dialog-window',
-  title: 'Edit Category',
+  titleKey: 'windows.editCategory',
   width: 400,
   height: 260,
   minWidth: 400,

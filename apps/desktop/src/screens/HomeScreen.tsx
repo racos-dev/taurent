@@ -5,7 +5,8 @@ import { Button, RetryButton, Spinner, StateSurface, StateCard } from '@taurent/
 import { TorrentContextMenu } from '../components/TorrentContextMenu';
 import { Filter } from '@taurent/shared';
 import { measure, mark } from '@taurent/shared/utils/perfAudit';
-import { classifyError, formatUserMessageForContext } from '@taurent/shared/utils/error';
+import { classifyError } from '@taurent/shared/utils/error';
+import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 
 import { type SortField } from '@taurent/shared/stores';
 import { useShellStore, useTorrentSelectionStore } from '@/stores';
@@ -14,6 +15,9 @@ import { useLiveTorrentByHash } from '../hooks/torrents/useLiveTorrentByHash';
 import type { Torrent } from '@taurent/shared';
 
 export function HomeScreen() {
+  const { t } = useTaurentTranslation('torrents');
+  const { t: tAuth } = useTaurentTranslation('auth');
+  const formatError = useLocalizedErrorFormatter();
   const { isConnected, isConnecting, isHydrated, error: providerError, retry } = useQBClient();
 
   // Workspace controller — provides sortedTorrents, filter/sort state and setters.
@@ -139,19 +143,19 @@ export function HomeScreen() {
 
   if (!isHydrated) {
     return (
-      <StateSurface tone="loading" title="Loading..." />
+      <StateSurface tone="loading" title={tAuth('loading.initializing')} />
     );
   }
 
   if (isConnecting) {
     return (
-      <StateSurface tone="loading" title="Connecting..." message="Establishing connection to server." />
+      <StateSurface tone="loading" title={tAuth('loading.connecting')} message={tAuth('loading.reachingServer')} />
     );
   }
 
   if (providerError) {
     const category = classifyError(providerError);
-    const errorMessage = formatUserMessageForContext(providerError, 'connection');
+    const errorMessage = formatError(providerError, 'connection');
 
     const retryButton = category === 'auth' ? null : (
       <RetryButton onClick={() => retry()} />
@@ -160,7 +164,7 @@ export function HomeScreen() {
     return (
       <StateSurface
         tone="error"
-        title="Connection Error"
+        title={tAuth('connectionProblem')}
         message={errorMessage}
         actions={retryButton}
       />
@@ -171,11 +175,11 @@ export function HomeScreen() {
     return (
       <StateSurface
         tone="offline"
-        title="Not Connected"
-        message="Connect to a qBittorrent server to get started."
+        title={tAuth('notConnected')}
+        message={tAuth('chooseServer')}
         actions={
           <Button onClick={() => { window.location.href = '/login'; }}>
-            Connect
+            {tAuth('form.connect')}
           </Button>
         }
       />
@@ -206,20 +210,20 @@ export function HomeScreen() {
           />
         ) : hasActiveFilters ? (
               <StateCard
-                title="No torrents match filters"
-                message="Try adjusting or clearing your filters."
+                title={t('workspace.noFilterMatches')}
+                message={t('workspace.adjustOrClearFilters')}
                 icon={<Filter className="h-5 w-5" />}
                 action={
                   <button
                     onClick={() => clearFilters()}
                     className="text-primary text-xs hover:underline"
                   >
-                    Clear Filters
+                    {t('workspace.clearFilters')}
                   </button>
                 }
               />
             ) : (
-              <StateCard title="No torrents found" message="Add a torrent to get started." />
+              <StateCard title={t('workspace.noTorrentsFound')} message={t('workspace.addToStart')} />
             )}
       </div>
 

@@ -2,7 +2,7 @@ import { openDialogHostWindow } from './dialogHostWindow';
 
 export const TORRENT_NUMERIC_DIALOG_WINDOW_CONFIG = {
   route: '/torrent-numeric-dialog-window',
-  title: 'Torrent Limit',
+  titleKey: 'windows.torrentLimit',
   width: 400,
   height: 220,
   minWidth: 400,

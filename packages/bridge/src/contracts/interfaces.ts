@@ -322,6 +322,8 @@ export interface DesktopBridge extends SessionLifecycleBridge {
   setPathMappings(serverId: string, mappings: PathMapping[]): Promise<void>;
   /** Sync dynamic enabled/disabled state to the native macOS app menu. */
   syncMenuState(state: NativeMenuState): Promise<void>;
+  /** Replace all native desktop labels without rebuilding menu structures. */
+  syncNativeUiLabels(labels: NativeUiLabels): Promise<void>;
   /** Exit the application (proper quit, not hide-to-tray). */
   exitApp(): Promise<void>;
   /**
@@ -390,6 +392,56 @@ export interface NativeMenuState {
   tray_alt_speed_active: boolean;
   /** Whether the qBittorrent session is connected. */
   tray_connected: boolean;
+}
+
+/** Renderer-authored labels for native desktop menus, tray, and Rust-opened windows. */
+export interface NativeUiLabels {
+  menu_app: string;
+  menu_about: string;
+  menu_add_torrent: string;
+  menu_copy: string;
+  menu_cut: string;
+  menu_delete: string;
+  menu_edit: string;
+  menu_file: string;
+  menu_force_start: string;
+  menu_help: string;
+  menu_hide: string;
+  menu_hide_others: string;
+  menu_move_bottom: string;
+  menu_move_top: string;
+  menu_paste: string;
+  menu_pause: string;
+  menu_queue_down: string;
+  menu_queue_up: string;
+  menu_quit: string;
+  menu_reannounce: string;
+  menu_recheck: string;
+  menu_redo: string;
+  menu_resume: string;
+  menu_rss: string;
+  menu_search: string;
+  menu_select_all: string;
+  menu_set_category: string;
+  menu_set_tags: string;
+  menu_settings: string;
+  menu_show_all: string;
+  menu_show_menu_bar: string;
+  menu_statistics: string;
+  menu_toggle_details: string;
+  menu_toggle_sidebar: string;
+  menu_tools: string;
+  menu_torrent: string;
+  menu_undo: string;
+  menu_view: string;
+  tray_add_torrent: string;
+  tray_alternative_speed: string;
+  tray_global_speed_limits: string;
+  tray_hide: string;
+  tray_quit: string;
+  tray_show: string;
+  window_add_torrent: string;
+  window_global_speed_limits: string;
 }
 
 /// Serializable UI-open actions that can arrive while `main` is absent and are

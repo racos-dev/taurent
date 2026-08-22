@@ -1,11 +1,12 @@
 import { createWindowLifecycle, openAuxWindow } from '../auxWindowManager';
 
+// i18n-audit-ignore: stable Tauri window identifier, not display copy
 const STATISTICS_WINDOW_LABEL = 'statistics';
 
 const lc = createWindowLifecycle({
   label: STATISTICS_WINDOW_LABEL,
   route: '/statistics-window',
-  title: 'Statistics',
+  titleKey: 'windows.statistics',
   width: 480,
   height: 520,
   minWidth: 400,

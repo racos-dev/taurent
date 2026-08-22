@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { cn } from '@taurent/shared';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 import { getThemeOptions } from '@taurent/shared/theme/registry';
 import { normalizeAccent } from '@taurent/shared/theme/accent';
 import type { ThemePalette } from '@taurent/shared';
@@ -22,6 +23,7 @@ export const ThemeSettingsPanel = React.memo<ThemeSettingsPanelProps>(({
   onManualVariantChange,
   onAccentChange,
 }) => {
+  const { t } = useTaurentTranslation('settings');
   const activeThemePalette = mode === 'system' ? systemPalette : manualPalette;
   const showAccentControl = activeThemePalette === 'midnight';
 
@@ -39,7 +41,7 @@ export const ThemeSettingsPanel = React.memo<ThemeSettingsPanelProps>(({
                 : 'text-text-secondary hover:bg-surface-interactive'
             )}
           >
-            System
+            {t('themeSettings.system')}
           </button>
           <button
             type="button"
@@ -51,19 +53,24 @@ export const ThemeSettingsPanel = React.memo<ThemeSettingsPanelProps>(({
                 : 'text-text-secondary hover:bg-surface-interactive'
             )}
           >
-            Manual
+            {t('themeSettings.manual')}
           </button>
         </div>
       </div>
 
       <div className="rounded-sm border border-border bg-surface px-2 py-2 text-xs text-text-secondary">
         {mode === 'system'
-          ? 'Follow the device light or dark setting while keeping your preferred palette family.'
-          : 'Lock the app to one palette and choose the exact light or dark variant when available.'}
+          ? t('themeSettings.systemDescription')
+          : t('themeSettings.manualDescription')}
       </div>
 
       <div className="space-y-2">
-        {themeOptions.map((palette: { palette: ThemePalette; label: string; description: string; darkOnly: boolean }) => {
+        {themeOptions.map((palette: {
+          palette: ThemePalette;
+          labelKey: `theme.palettes.${ThemePalette}.label`;
+          descriptionKey: `theme.palettes.${ThemePalette}.description`;
+          darkOnly: boolean;
+        }) => {
           const isSelected = activeThemePalette === palette.palette;
           const showVariants = mode === 'manual' && isSelected && !palette.darkOnly;
 
@@ -98,10 +105,10 @@ export const ThemeSettingsPanel = React.memo<ThemeSettingsPanelProps>(({
                     <span className={cn('h-2 w-2 rounded-full', isSelected ? 'bg-current' : 'bg-transparent')} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-medium text-text-primary">{palette.label}</div>
-                    <div className="mt-1 text-xs text-text-secondary">{palette.description}</div>
+                    <div className="text-sm font-medium text-text-primary">{t(palette.labelKey)}</div>
+                    <div className="mt-1 text-xs text-text-secondary">{t(palette.descriptionKey)}</div>
                   </div>
-                  {palette.darkOnly ? <Pill>Dark only</Pill> : null}
+                  {palette.darkOnly ? <Pill>{t('themeSettings.darkOnly')}</Pill> : null}
                 </div>
               </button>
 
@@ -120,7 +127,7 @@ export const ThemeSettingsPanel = React.memo<ThemeSettingsPanelProps>(({
                         : 'border border-border bg-surface text-text-secondary hover:bg-surface-interactive'
                     )}
                   >
-                    Light
+                    {t('themeSettings.light')}
                   </button>
                   <button
                     type="button"
@@ -135,7 +142,7 @@ export const ThemeSettingsPanel = React.memo<ThemeSettingsPanelProps>(({
                         : 'border border-border bg-surface text-text-secondary hover:bg-surface-interactive'
                     )}
                   >
-                    Dark
+                    {t('themeSettings.dark')}
                   </button>
                 </div>
               ) : null}
@@ -164,6 +171,7 @@ const MidnightAccentControl = React.memo<MidnightAccentControlProps>(({
   accent,
   onAccentChange,
 }) => {
+  const { t } = useTaurentTranslation('settings');
   const [inputValue, setInputValue] = useState(accent ?? '');
 
   // Resync inputValue when accent prop changes from external theme sync
@@ -200,7 +208,7 @@ const MidnightAccentControl = React.memo<MidnightAccentControlProps>(({
   return (
     <div className="rounded-sm border border-border bg-surface px-3 py-2">
       <div className="flex items-center gap-2">
-        <div className="text-sm font-medium text-text-primary">Midnight accent</div>
+        <div className="text-sm font-medium text-text-primary">{t('themeSettings.midnightAccent')}</div>
         {accent ? (
           <span
             className="inline-block h-3 w-3 rounded-full border border-border"
@@ -210,7 +218,7 @@ const MidnightAccentControl = React.memo<MidnightAccentControlProps>(({
         ) : null}
       </div>
       <div className="mt-1 text-xs text-text-secondary">
-        Choose a custom accent color for the Midnight palette, or reset to the default blue.
+        {t('themeSettings.midnightAccentDescription')}
       </div>
       <div className="mt-2 flex items-center gap-2">
         <div className="relative flex-1">
@@ -218,6 +226,7 @@ const MidnightAccentControl = React.memo<MidnightAccentControlProps>(({
             type="text"
             value={inputValue}
             onChange={(e) => handleTextChange(e.target.value)}
+            // i18n-audit-ignore: hexadecimal color example is intentionally verbatim
             placeholder="#3b82f6"
             spellCheck={false}
             autoComplete="off"
@@ -232,7 +241,7 @@ const MidnightAccentControl = React.memo<MidnightAccentControlProps>(({
         </div>
         <label
           className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-sm border border-border bg-surface transition-colors hover:bg-surface-interactive"
-          aria-label="Pick accent color"
+          aria-label={t('themeSettings.pickAccent')}
         >
           <input
             type="color"
@@ -251,12 +260,12 @@ const MidnightAccentControl = React.memo<MidnightAccentControlProps>(({
             onClick={handleReset}
             className="rounded-sm border border-border bg-surface px-3 py-2 text-xs font-medium text-text-secondary transition-colors hover:bg-surface-interactive"
           >
-            Reset
+            {t('themeSettings.resetAccent')}
           </button>
         ) : null}
       </div>
       {inputValue && !isValid && inputValue.trim() !== '' ? (
-        <p className="mt-1 text-xs text-error">Enter a valid hex color like #ff6600</p>
+        <p className="mt-1 text-xs text-error">{t('themeSettings.invalidAccent')}</p>
       ) : null}
     </div>
   );

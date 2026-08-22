@@ -8,6 +8,7 @@ import type {
   ResourceInvalidatedEvent,
   SessionChangedEvent,
   ThemeChangedEvent,
+  LanguageChangedEvent,
 } from '@taurent/bridge/events';
 import type { MaindataSyncChangedEvent, WorkspaceView } from '@taurent/bridge/types';
 
@@ -74,6 +75,7 @@ const sessionListeners = new Set<(event: SessionChangedEvent) => void>();
 const resourceInvalidatedListeners = new Set<(event: ResourceInvalidatedEvent) => void>();
 const operationFailedListeners = new Set<(event: OperationFailedEvent) => void>();
 const themeChangedListeners = new Set<(event: ThemeChangedEvent) => void>();
+const languageChangedListeners = new Set<(event: LanguageChangedEvent) => void>();
 const maindataSyncChangedListeners = new Set<(event: MaindataSyncChangedEvent) => void>();
 const workspaceViewChangedListeners = new Set<(event: WorkspaceView) => void>();
 
@@ -108,6 +110,22 @@ export function emitThemeChanged(event: ThemeChangedEvent) {
   emitToListeners(themeChangedListeners, event);
 }
 
+export function emitLanguageChanged(event: LanguageChangedEvent) {
+  emitToListeners(languageChangedListeners, event);
+}
+
+declare global {
+  interface Window {
+    __TAURENT_TAURI_TRANSPORT__?: {
+      emitLanguageChanged: (event: LanguageChangedEvent) => void;
+    };
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.__TAURENT_TAURI_TRANSPORT__ = { emitLanguageChanged };
+}
+
 export function emitMaindataSyncChanged(event: MaindataSyncChangedEvent) {
   emitToListeners(maindataSyncChangedListeners, event);
 }
@@ -127,6 +145,7 @@ export const createOperationFailedListener = createListenerRegistrar(operationFa
 
 // Theme changed listener factory
 export const createThemeChangedListener = createListenerRegistrar(themeChangedListeners);
+export const createLanguageChangedListener = createListenerRegistrar(languageChangedListeners);
 
 // Maindata sync changed listener factory
 export const createMaindataSyncChangedListener = createListenerRegistrar(maindataSyncChangedListeners);

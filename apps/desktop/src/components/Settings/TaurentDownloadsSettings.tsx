@@ -1,5 +1,6 @@
 import { RetryButton, SettingToggle } from '@taurent/web-ui';
 import { SkeletonBlock } from '@taurent/web-ui/components/shared/SkeletonBlock/SkeletonBlock';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 interface TaurentDownloadsSettingsProps {
   deleteAddedTorrentFiles: boolean;
@@ -16,9 +17,11 @@ export function TaurentDownloadsSettings({
   onRetry,
   onChange,
 }: TaurentDownloadsSettingsProps) {
+  const { t } = useTaurentTranslation('settings');
+
   if (isLoading) {
     return (
-      <div className="rounded-sm border border-border bg-surface p-4" role="status" aria-label="Loading Taurent download settings">
+      <div className="rounded-sm border border-border bg-surface p-4" role="status" aria-label={t('localDownloads.loadingAria')}>
         <SkeletonBlock height="2rem" background="bg-surface-interactive" />
       </div>
     );
@@ -28,17 +31,17 @@ export function TaurentDownloadsSettings({
     <div className="space-y-2">
       {error ? (
         <div className="rounded-sm border border-error bg-error-20 p-3">
-          <p className="text-sm font-medium text-error">Taurent download settings unavailable</p>
+          <p className="text-sm font-medium text-error">{t('localDownloads.unavailable')}</p>
           <p className="mt-1 text-xs text-text-secondary">{error}</p>
           <RetryButton onClick={onRetry} className="mt-2" />
         </div>
       ) : null}
 
       <div className="rounded-sm border border-border bg-surface px-2 py-2">
-        <p className="mb-2 text-xs font-medium text-text-muted">After adding a torrent</p>
+        <p className="mb-2 text-xs font-medium text-text-muted">{t('localDownloads.afterAdding')}</p>
         <SettingToggle
-          label="Delete files selected in Taurent after a successful upload"
-          description="Deletes the original .torrent files from this device. Files are kept when the upload fails or qBittorrent reports a rejected batch."
+          label={t('localDownloads.deleteAfterUpload')}
+          description={t('localDownloads.deleteAfterUploadDescription')}
           value={deleteAddedTorrentFiles}
           onChange={onChange}
         />

@@ -1,0 +1,30 @@
+import type { EnglishCatalogs } from '../en';
+import type { CatalogShape } from '../shape';
+
+export const romanianSearch = {
+  title: 'Căutare', unknownResult: 'Necunoscut', add: 'Adaugă', seeders: 'Surse', leechers: 'Clienți',
+  size: 'Dimensiune', name: 'Nume', seedersValue: 'Surse: {{count}}', leechersValue: 'Clienți: {{count}}',
+  version: 'v{{version}}', sort: 'Sortare', sortBy: 'Sortează rezultatele după',
+  descendingDescription: 'Sortează descrescător (valorile mari primele)',
+  ascendingDescription: 'Sortează crescător (valorile mici primele)', descending: 'Descrescător', ascending: 'Crescător',
+  enabled: 'Activată', disabled: 'Dezactivată', remove: 'Elimină',
+  checking: 'Se verifică funcția de căutare…',
+  checkingMessage: 'Așteaptă cât timp verificăm dacă serverul acceptă căutarea.',
+  unsupported: 'Căutarea nu este disponibilă',
+  unsupportedMessage: 'Serverul qBittorrent nu acceptă extensii de căutare sau acestea au fost dezactivate.',
+  unavailable: 'Căutarea nu este disponibilă', unavailableMessage: 'Conectează-te la un server pentru a căuta.',
+  placeholder: 'Caută torrente…', searching: 'Se caută…', search: 'Caută', stop: 'Oprește',
+  searchFailed: 'Căutarea nu a putut fi finalizată.', pluginsFailed: 'Extensiile de căutare nu au putut fi încărcate.',
+  hidePlugins: 'Ascunde extensiile', managePlugins: 'Gestionează extensiile',
+  pluginsAvailable_one: '{{count}} extensie disponibilă', pluginsAvailable_few: '{{count}} extensii disponibile',
+  pluginsAvailable_other: '{{count}} de extensii disponibile', pluginsTitle: 'Extensii de căutare', install: 'Instalează',
+  updateAll: 'Actualizează toate', noPlugins: 'Nu este instalată nicio extensie de căutare',
+  noResults: 'Încă nu există rezultate', resultsSoFar_one: 'S-a găsit {{count}} rezultat până acum',
+  resultsSoFar_few: 'S-au găsit {{count}} rezultate până acum',
+  resultsSoFar_other: 'S-au găsit {{count}} de rezultate până acum',
+  queryHint: 'Introdu o expresie și selectează Caută pentru a găsi torrente',
+  resultsFound_one: '{{count}} rezultat găsit', resultsFound_few: '{{count}} rezultate găsite',
+  resultsFound_other: '{{count}} de rezultate găsite', uninstallTitle: 'Dezinstalează extensia',
+  uninstallMessage: 'Sigur vrei să dezinstalezi „{{name}}”? Acțiunea nu poate fi anulată.',
+  uninstall: 'Dezinstalează',
+} satisfies CatalogShape<EnglishCatalogs['search']>;

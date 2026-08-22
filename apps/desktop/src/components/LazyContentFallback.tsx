@@ -1,5 +1,6 @@
 import { SkeletonBlock } from '@taurent/web-ui/components/shared/SkeletonBlock/SkeletonBlock';
 import type { ReactNode } from 'react';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export type LazyContentKind =
   | 'settings'
@@ -12,6 +13,13 @@ export type LazyContentKind =
   | 'torrent-list'
   | 'auth'
   | 'filters';
+
+const LAZY_CONTENT_LABEL_KEYS = {
+  settings: 'labels.settings', statistics: 'labels.statistics', dialog: 'labels.dialog',
+  'add-torrent': 'labels.addTorrent', search: 'labels.searchContent', rss: 'labels.rss',
+  'app-shell': 'labels.appShell', 'torrent-list': 'labels.torrentList',
+  auth: 'labels.authentication', filters: 'labels.filters',
+} as const satisfies Record<LazyContentKind, `labels.${string}`>;
 
 const CARD_ROWS = ['first', 'second', 'third'] as const;
 const NAV_ROWS = ['one', 'two', 'three', 'four', 'five', 'six'] as const;
@@ -337,8 +345,14 @@ function getFallbackContent(kind: LazyContentKind): ReactNode {
 }
 
 export function LazyContentFallback({ kind }: { kind: LazyContentKind }): ReactNode {
+  const { t } = useTaurentTranslation('common');
+  const contentKey = LAZY_CONTENT_LABEL_KEYS[kind];
   return (
-    <div className="h-full bg-background text-text-primary" role="status" aria-label={`Loading ${kind}`}>
+    <div
+      className="h-full bg-background text-text-primary"
+      role="status"
+      aria-label={t('accessibility.loadingContent', { content: t(contentKey) })}
+    >
       {getFallbackContent(kind)}
     </div>
   );

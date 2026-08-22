@@ -1,11 +1,12 @@
 import { createWindowLifecycle, openAuxWindow } from '../auxWindowManager';
 
+// i18n-audit-ignore: stable Tauri window identifier, not display copy
 const ADD_TORRENT_WINDOW_LABEL = 'add-torrent';
 
 const lc = createWindowLifecycle({
   label: ADD_TORRENT_WINDOW_LABEL,
   route: '/add-torrent-window',
-  title: 'Add Torrent',
+  titleKey: 'windows.addTorrent',
   width: 700,
   height: 680,
   minWidth: 700,

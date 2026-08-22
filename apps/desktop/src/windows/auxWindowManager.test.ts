@@ -67,7 +67,7 @@ describe('openAuxWindow', () => {
     await openAuxWindow({
       label: 'cold-window-test',
       route: '/cold-window-test',
-      title: 'Cold window test',
+      titleKey: 'windows.dialog',
       width: 600,
       height: 400,
     });

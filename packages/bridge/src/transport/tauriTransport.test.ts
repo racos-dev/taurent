@@ -19,6 +19,7 @@ import {
   createSessionEventListener,
   createTauriTransport,
   createThemeChangedListener,
+  createLanguageChangedListener,
   invokeWrap,
   tauriInvoke,
 } from './tauriTransport';
@@ -79,6 +80,7 @@ describe('tauriTransport', () => {
     ['resource-invalidated', createResourceInvalidatedListener, { resource: 'tags' }],
     ['operation-failed', createOperationFailedListener, { operation: 'pause' }],
     ['theme-changed', createThemeChangedListener, { theme: 'dark' }],
+    ['language-changed', createLanguageChangedListener, { preference: 'ro', resolved_locale: 'ro' }],
   ])('registers %s listeners and forwards payloads', async (eventName, factory, payload) => {
     const unlisten = vi.fn();
     let handler: ((event: { payload: unknown }) => void) | undefined;

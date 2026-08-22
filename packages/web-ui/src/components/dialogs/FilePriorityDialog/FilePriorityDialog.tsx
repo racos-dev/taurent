@@ -3,13 +3,14 @@ import { cn, FilePriority } from '@taurent/shared';
 import { Dialog } from '../Dialog';
 import { DialogActions } from '../DialogActions';
 import type { FilePriorityDialogProps } from './types';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 const PRIORITIES = [
-  { value: FilePriority.DoNotDownload, label: 'Do Not Download' },
-  { value: FilePriority.Normal, label: 'Normal' },
-  { value: FilePriority.High, label: 'High' },
-  { value: FilePriority.Maximal, label: 'Maximal' },
-];
+  { value: FilePriority.DoNotDownload, labelKey: 'filePriority.skip' },
+  { value: FilePriority.Normal, labelKey: 'filePriority.normal' },
+  { value: FilePriority.High, labelKey: 'filePriority.high' },
+  { value: FilePriority.Maximal, labelKey: 'filePriority.maximal' },
+] as const;
 
 export const FilePriorityDialog = React.memo<FilePriorityDialogProps>(({
   fileName,
@@ -18,6 +19,8 @@ export const FilePriorityDialog = React.memo<FilePriorityDialogProps>(({
   onCancel,
   isPending,
 }) => {
+  const { t } = useTaurentTranslation('dialogs');
+  const { t: tCommon } = useTaurentTranslation('common');
   return (
     <Dialog
       isOpen={true}
@@ -25,7 +28,7 @@ export const FilePriorityDialog = React.memo<FilePriorityDialogProps>(({
       maxWidth="sm"
       footer={
         <DialogActions
-          actions={[{ label: 'Cancel', onClick: onCancel, disabled: isPending }]}
+          actions={[{ label: tCommon('actions.cancel'), onClick: onCancel, disabled: isPending }]}
           actionClassName="w-full"
         />
       }
@@ -33,7 +36,7 @@ export const FilePriorityDialog = React.memo<FilePriorityDialogProps>(({
       <div className="shrink-0 border-b border-border py-2">
         <div className="flex items-start justify-between">
           <div>
-            <h3 className="text-xs font-medium text-text-primary">File Priority</h3>
+            <h3 className="text-xs font-medium text-text-primary">{t('filePriority.title')}</h3>
             <p className="mt-1 truncate text-xs text-text-secondary" title={fileName}>{fileName}</p>
           </div>
         </div>
@@ -51,7 +54,7 @@ export const FilePriorityDialog = React.memo<FilePriorityDialogProps>(({
                 : 'text-text-primary hover:bg-surface-interactive'
             )}
           >
-            {item.label}
+            {t(item.labelKey)}
           </button>
         ))}
       </div>

@@ -24,6 +24,7 @@
 //   });
 
 import { useMemo, useState, useCallback } from 'react';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 import { getThemeMetadata } from '@taurent/shared/theme/registry';
 import type { ThemePalette, ThemeVariant, AccentPreference } from '@taurent/shared/theme/types';
 import type { Server } from '@taurent/shared/types/server';
@@ -148,13 +149,6 @@ export interface SettingsScreenControllerResult {
 
 // ─── Implementation ─────────────────────────────────────────────────────────
 
-function formatPaletteSummary(palette: ThemePalette, variant: 'light' | 'dark') {
-  const paletteMeta = getThemeMetadata(palette);
-  if (!paletteMeta) return 'Theme';
-  if (paletteMeta.darkOnly) return paletteMeta.label;
-  return `${paletteMeta.label} · ${variant === 'light' ? 'Light' : 'Dark'}`;
-}
-
 export function useSettingsScreenController({
   serverState,
   servers,
@@ -168,6 +162,7 @@ export function useSettingsScreenController({
   onNavigateToHome,
   toggleSpeedLimitsMode,
 }: SettingsScreenControllerOptions): SettingsScreenControllerResult {
+  const { t } = useTaurentTranslation('settings');
   // ─── Section expand state ────────────────────────────────
   const [expandedSections, setExpandedSections] = useState<Record<SectionKey, boolean>>({
     server: false,
@@ -239,9 +234,9 @@ export function useSettingsScreenController({
   const handleRemoveServer = useCallback(
     (id: string, name: string) => {
       setConfirmDialog({
-        title: `Remove ${name}?`,
-        message: 'This deletes the saved server entry and its stored session data on this device.',
-        confirmLabel: 'Remove server',
+        title: t('screen.removeServerTitle', { name }),
+        message: t('screen.removeServerMessage'),
+        confirmLabel: t('screen.removeServerAction'),
         tone: 'danger',
         onConfirm: async () => {
           await removeServer(id);
@@ -252,7 +247,7 @@ export function useSettingsScreenController({
         },
       });
     },
-    [removeServer, serverState.isConnected, serverState.serverId, disconnect, onNavigateToLogin]
+    [removeServer, serverState.isConnected, serverState.serverId, disconnect, onNavigateToLogin, t]
   );
 
   const handleSwitchServer = useCallback(
@@ -288,14 +283,14 @@ export function useSettingsScreenController({
       const isDownload = prefKey === 'dl_limit' || prefKey === 'alt_dl_limit';
       const isUpload = prefKey === 'up_limit' || prefKey === 'alt_up_limit';
 
-      let title = 'Speed Limit';
-      if (isDownload) title = 'Download Limit';
-      if (isUpload) title = 'Upload Limit';
+      let title = t('screen.speedLimit');
+      if (isDownload) title = t('screen.downloadLimit');
+      if (isUpload) title = t('screen.uploadLimit');
 
       setInputModal({
         title,
         currentValue,
-        unit: 'Use 0 for unlimited speed.',
+        unit: t('screen.unlimitedSpeedHint'),
         unitMode: 'bytes-per-second',
         unitDefault: 'kb',
         onSubmit: (value) => {
@@ -303,35 +298,44 @@ export function useSettingsScreenController({
         },
       });
     },
-    [updatePreference]
+    [t, updatePreference]
   );
 
   // ─── Theme summary ────────────────────────────────────────
   const themeSummary = useMemo(() => {
     const effectivePalette = config.mode === 'system' ? config.systemPalette : config.manualPalette;
+    const palette = config.mode === 'system' ? config.systemPalette : config.manualPalette;
+    const paletteMeta = getThemeMetadata(palette);
+    const paletteLabel = paletteMeta ? t(paletteMeta.labelKey) : t('theme');
 
     let summary: string;
     if (config.mode === 'system') {
-      summary = `System · ${getThemeMetadata(config.systemPalette)?.label ?? 'Theme'}`;
+      summary = t('themeSettings.summarySystem', { palette: paletteLabel });
     } else {
-      summary = `Manual · ${formatPaletteSummary(config.manualPalette, config.manualVariant)}`;
+      const resolvedPalette = paletteMeta?.darkOnly
+        ? paletteLabel
+        : t('themeSettings.summaryVariant', {
+            palette: paletteLabel,
+            variant: t(config.manualVariant === 'light' ? 'themeSettings.light' : 'themeSettings.dark'),
+          });
+      summary = t('themeSettings.summaryManual', { palette: resolvedPalette });
     }
 
     if (effectivePalette === 'midnight' && config.accent) {
-      summary += ` · Custom accent`;
+      summary += ` · ${t('themeSettings.customAccent')}`;
     }
 
     return summary;
-  }, [config.mode, config.systemPalette, config.manualPalette, config.manualVariant, config.accent]);
+  }, [config.mode, config.systemPalette, config.manualPalette, config.manualVariant, config.accent, t]);
 
   // ─── Section summaries ────────────────────────────────────
   const sectionSummaries: Record<SectionSummaryKey, string> = {
-    speed: 'Download and upload speed limits',
-    connection: 'Listening port and network preferences',
-    downloads: 'Save path, paused starts, and folder rules',
-    bittorrent: 'Queueing, seeding ratios, and protocol options',
-    webui: 'Remote interface port and access control',
-    advanced: 'Connection limits and network tuning',
+    speed: t('screen.speedSummary'),
+    connection: t('screen.connectionSummary'),
+    downloads: t('screen.downloadsSummary'),
+    bittorrent: t('screen.bittorrentSummary'),
+    webui: t('screen.webuiSummary'),
+    advanced: t('screen.advancedSummary'),
   };
 
   return {

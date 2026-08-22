@@ -24,8 +24,10 @@ import { usePreferences } from '../../hooks';
 
 import { Search } from '@taurent/shared';
 import { Input } from '@taurent/web-ui';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export function MainToolbar() {
+  const { t } = useTaurentTranslation('desktop');
   const { addTorrent, openSettings } = useDesktopCommands();
   const { commands } = useTransferCommandList();
   const navigate = useNavigate();
@@ -59,15 +61,15 @@ export function MainToolbar() {
 
   const currentPath = location.pathname;
   const navItems = [
-    { label: 'Transfers', path: '/' },
-    { label: 'Search', path: '/search' },
-    { label: 'RSS', path: '/rss' },
+    { label: t('toolbar.transfers'), path: '/' },
+    { label: t('toolbar.search'), path: '/search' },
+    { label: t('toolbar.rss'), path: '/rss' },
   ];
 
   return (
     <div
       role="toolbar"
-      aria-label="Main toolbar"
+      aria-label={t('toolbar.main')}
       data-testid="main-toolbar"
       className="flex h-9 items-center gap-1 border-b border-border bg-surface px-1"
     >
@@ -75,7 +77,7 @@ export function MainToolbar() {
       <div className="flex items-center">
         <ToolbarButton
           icon={Plus}
-          tooltip="Add torrent"
+          tooltip={t('toolbar.addTorrent')}
           dataTestId="toolbar-add"
           onClick={addTorrent}
         />
@@ -84,7 +86,7 @@ export function MainToolbar() {
 
         <ToolbarButton
           icon={Trash2}
-          tooltip="Remove selected"
+          tooltip={t('toolbar.removeSelected')}
           shortcut={deleteCmd?.shortcut}
           dataTestId="toolbar-remove"
           disabled={!deleteCmd?.enabled}
@@ -92,7 +94,7 @@ export function MainToolbar() {
         />
         <ToolbarButton
           icon={Play}
-          tooltip="Resume selected"
+          tooltip={t('toolbar.resumeSelected')}
           shortcut={resumeCmd?.shortcut}
           dataTestId="toolbar-resume"
           disabled={!resumeCmd?.enabled}
@@ -100,7 +102,7 @@ export function MainToolbar() {
         />
         <ToolbarButton
           icon={Pause}
-          tooltip="Pause selected"
+          tooltip={t('toolbar.pauseSelected')}
           shortcut={pauseCmd?.shortcut}
           dataTestId="toolbar-pause"
           disabled={!pauseCmd?.enabled}
@@ -108,7 +110,7 @@ export function MainToolbar() {
         />
         <ToolbarButton
           icon={Rocket}
-          tooltip="Force start selected"
+          tooltip={t('toolbar.forceStartSelected')}
           dataTestId="toolbar-force-start"
           disabled={!forceStartCmd?.enabled}
           onClick={forceStartCmd?.onClick}
@@ -118,21 +120,21 @@ export function MainToolbar() {
           <>
             <ToolbarButton
               icon={ArrowUp}
-              tooltip="Queue up"
+              tooltip={t('toolbar.queueUp')}
               dataTestId="toolbar-queue-up"
               disabled={!queueUpCmd?.enabled}
               onClick={queueUpCmd?.onClick}
             />
             <ToolbarButton
               icon={ArrowDown}
-              tooltip="Queue down"
+              tooltip={t('toolbar.queueDown')}
               dataTestId="toolbar-queue-down"
               disabled={!queueDownCmd?.enabled}
               onClick={queueDownCmd?.onClick}
             />
             <ToolbarButton
               icon={ArrowUpToLine}
-              tooltip="Move to top"
+              tooltip={t('toolbar.moveTop')}
               shortcut={moveTopCmd?.shortcut}
               dataTestId="toolbar-move-top"
               disabled={!moveTopCmd?.enabled}
@@ -140,7 +142,7 @@ export function MainToolbar() {
             />
             <ToolbarButton
               icon={ArrowDownToLine}
-              tooltip="Move to bottom"
+              tooltip={t('toolbar.moveBottom')}
               shortcut={moveBottomCmd?.shortcut}
               dataTestId="toolbar-move-bottom"
               disabled={!moveBottomCmd?.enabled}
@@ -153,15 +155,15 @@ export function MainToolbar() {
 
         <ToolbarButton
           icon={PanelLeft}
-          tooltip={sidebarVisible ? 'Hide sidebar' : 'Show sidebar'}
-          ariaLabel="Toggle sidebar"
+          tooltip={t(sidebarVisible ? 'toolbar.hideSidebar' : 'toolbar.showSidebar')}
+          ariaLabel={t('toolbar.toggleSidebar')}
           dataTestId="toolbar-toggle-sidebar"
           onClick={toggleSidebar}
         />
 
         <ToolbarButton
           icon={Settings}
-          tooltip="Settings"
+          tooltip={t('toolbar.settings')}
           dataTestId="toolbar-settings"
           onClick={openSettings}
         />
@@ -169,7 +171,7 @@ export function MainToolbar() {
         {isMacPlatform && (
           <ToolbarButton
             icon={PanelTop}
-            tooltip={inWindowMenuBarVisible ? 'Hide Menu Bar' : 'Show Menu Bar'}
+            tooltip={t(inWindowMenuBarVisible ? 'toolbar.hideMenuBar' : 'toolbar.showMenuBar')}
             dataTestId="toolbar-toggle-menubar"
             onClick={toggleInWindowMenuBarVisible}
           />
@@ -187,7 +189,7 @@ export function MainToolbar() {
         clearable
         icon={<Search size={ICON_SIZES.sm} />}
         className="w-40"
-        placeholder="Filter torrents..."
+        placeholder={t('toolbar.filterPlaceholder')}
         value={searchQuery}
         onChange={(value) => setSearchFilter(value)}
         data-testid="toolbar-search-input"

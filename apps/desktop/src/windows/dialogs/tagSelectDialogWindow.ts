@@ -2,7 +2,7 @@ import { openDialogHostWindow } from './dialogHostWindow';
 
 export const TAG_SELECT_DIALOG_WINDOW_CONFIG = {
   route: '/tag-select-dialog-window',
-  title: 'Add Tags',
+  titleKey: 'windows.tags',
   width: 300,
   height: 400,
   minWidth: 300,

@@ -7,10 +7,12 @@ import { createServerStatisticsHook } from '@taurent/web-core/hooks';
 import { ScreenHeader, StatisticsScreenBody, type ServerStatistics } from '@taurent/web-ui';
 import { useNavigate } from 'react-router-dom';
 import { mobileScreenRootClassName } from '../ui/mobileScreenLayout';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 const useServerStatistics = createServerStatisticsHook(useMaindataState);
 
 export function StatisticsScreen() {
+  const { t } = useTaurentTranslation('statistics');
   const navigate = useNavigate();
   const { isConnected } = useQBClient();
   const { statistics, isLoading } = useServerStatistics();
@@ -18,8 +20,8 @@ export function StatisticsScreen() {
   return (
     <div className={mobileScreenRootClassName({ height: 'full' })}>
       <ScreenHeader
-        title="Statistics"
-        subtitle="qBittorrent server statistics"
+        title={t('title')}
+        subtitle={t('subtitle')}
         variant="mobile"
         onBack={() => navigate('/settings')}
       />

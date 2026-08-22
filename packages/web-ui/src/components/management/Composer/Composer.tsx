@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from '../../primitives/Button';
 import { Input } from '../../primitives/Input';
 import type { ComposerProps } from './types';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export const Composer = React.memo<ComposerProps>(({
   value,
@@ -10,9 +11,12 @@ export const Composer = React.memo<ComposerProps>(({
   onCancel,
   placeholder,
   isPending,
-  submitLabel = 'Add',
-  cancelLabel = 'Cancel',
+  submitLabel,
+  cancelLabel,
 }) => {
+  const { t } = useTaurentTranslation('management');
+  const resolvedSubmitLabel = submitLabel ?? t('add');
+  const resolvedCancelLabel = cancelLabel ?? t('cancel');
   return (
     <div className="flex flex-col gap-2 px-2 py-2">
       <Input
@@ -35,7 +39,7 @@ export const Composer = React.memo<ComposerProps>(({
           onClick={onCancel}
           className="flex-1"
         >
-          {cancelLabel}
+          {resolvedCancelLabel}
         </Button>
         <Button
           type="button"
@@ -45,7 +49,7 @@ export const Composer = React.memo<ComposerProps>(({
           disabled={!value.trim() || isPending}
           className="flex-1"
         >
-          {isPending ? 'Adding...' : submitLabel}
+          {isPending ? t('adding') : resolvedSubmitLabel}
         </Button>
       </div>
     </div>

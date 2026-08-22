@@ -3,6 +3,7 @@ import { Globe, ICON_SIZES } from '@taurent/shared';
 import { FilterListItem } from '../FilterListItem';
 import { StateCard } from '../../shared/StateCard';
 import type { FilterTrackerSectionProps } from './types';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export const FilterTrackerSection = React.memo<FilterTrackerSectionProps>(({
   trackerEntries,
@@ -10,6 +11,7 @@ export const FilterTrackerSection = React.memo<FilterTrackerSectionProps>(({
   onTrackerChange,
   icon,
 }) => {
+  const { t } = useTaurentTranslation('management');
   const renderIcon = (): React.ReactNode => {
     if (icon) return icon;
     return <Globe size={ICON_SIZES.md} />;
@@ -19,7 +21,7 @@ export const FilterTrackerSection = React.memo<FilterTrackerSectionProps>(({
     <div className="flex flex-col gap-1">
       {/* "All Trackers" row */}
       <FilterListItem
-        label="All Trackers"
+        label={t('allTrackers')}
         icon={renderIcon()}
         isSelected={selectedTracker === null}
         onPress={() => onTrackerChange(null)}
@@ -28,7 +30,7 @@ export const FilterTrackerSection = React.memo<FilterTrackerSectionProps>(({
       {/* Empty state or tracker list */}
       {trackerEntries.length === 0 ? (
         <StateCard
-          title="No trackers yet"
+          title={t('noTrackersYet')}
           icon={<Globe size={ICON_SIZES.lg} />}
           className="py-3 px-3"
         />
@@ -41,7 +43,7 @@ export const FilterTrackerSection = React.memo<FilterTrackerSectionProps>(({
             isSelected={selectedTracker === trackerUrl}
             isChild={true}
             onPress={() => onTrackerChange(trackerUrl)}
-            summary={`${count} torrent${count === 1 ? '' : 's'}`}
+            summary={t('trackerTorrents', { count })}
           />
         ))
       )}

@@ -11,12 +11,13 @@ import {
 import type { ColumnDefinition } from '@/stores';
 import { cn } from '@taurent/shared';
 import { useContextMenu, ContextMenuPanel } from '@taurent/web-ui';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export type ColumnMoveDirection = 'start' | 'left' | 'right' | 'end';
 
 interface HeaderContextMenuProps {
-  activeColumn: ColumnDefinition | null;
-  allColumns: ColumnDefinition[];
+  activeColumn: (ColumnDefinition & { label: string }) | null;
+  allColumns: (ColumnDefinition & { label: string })[];
   columnVisibility: Record<string, boolean>;
   visibleColumnIds: string[];
   x: number;
@@ -43,6 +44,7 @@ export function HeaderContextMenu({
   onRestoreDefaults,
   onToggleColumn,
 }: HeaderContextMenuProps) {
+  const { t } = useTaurentTranslation('desktop');
   const { panelRef, panelPosition, isOpen, handlePanelBlur } = useContextMenu({
     x,
     y,
@@ -76,7 +78,7 @@ export function HeaderContextMenu({
             className="flex w-full items-center gap-3 rounded-md px-2 py-1 text-left text-sm text-text-primary transition-colors hover:bg-surface-interactive"
           >
             <Columns3 className="h-4 w-4 text-text-muted" />
-            <span>Resize to fit</span>
+            <span>{t('table.resizeToFit')}</span>
           </button>
           <button
             type="button"
@@ -88,7 +90,7 @@ export function HeaderContextMenu({
             className="flex w-full items-center gap-3 rounded-md px-2 py-1 text-left text-sm text-text-primary transition-colors hover:bg-surface-interactive"
           >
             <Columns3 className="h-4 w-4 text-text-muted" />
-            <span>Resize all to fit</span>
+            <span>{t('table.resizeAllToFit')}</span>
           </button>
         </div>
       ) : null}
@@ -98,7 +100,7 @@ export function HeaderContextMenu({
         <div className="border-b border-border px-2 py-1">
           <div className="grid grid-cols-2 gap-1">
             <HeaderMenuButton
-              label="Move first"
+              label={t('table.moveFirst')}
               icon={ChevronsLeft}
               disabled={activeVisibleIndex <= 0}
               onClick={() => {
@@ -107,7 +109,7 @@ export function HeaderContextMenu({
               }}
             />
             <HeaderMenuButton
-              label="Move left"
+              label={t('table.moveLeft')}
               icon={ChevronLeft}
               disabled={activeVisibleIndex <= 0}
               onClick={() => {
@@ -116,7 +118,7 @@ export function HeaderContextMenu({
               }}
             />
             <HeaderMenuButton
-              label="Move right"
+              label={t('table.moveRight')}
               icon={ChevronRight}
               disabled={activeVisibleIndex < 0 || activeVisibleIndex >= visibleColumnCount - 1}
               onClick={() => {
@@ -125,7 +127,7 @@ export function HeaderContextMenu({
               }}
             />
             <HeaderMenuButton
-              label="Move last"
+              label={t('table.moveLast')}
               icon={ChevronsRight}
               disabled={activeVisibleIndex < 0 || activeVisibleIndex >= visibleColumnCount - 1}
               onClick={() => {
@@ -184,7 +186,7 @@ export function HeaderContextMenu({
           className="flex w-full items-center gap-3 rounded-md px-2 py-1 text-left text-sm text-text-primary transition-colors hover:bg-surface-interactive"
         >
           <RotateCcw className="h-4 w-4 text-text-muted" />
-          <span>Restore defaults</span>
+          <span>{t('table.restoreDefaults')}</span>
         </button>
       </div>
     </ContextMenuPanel>

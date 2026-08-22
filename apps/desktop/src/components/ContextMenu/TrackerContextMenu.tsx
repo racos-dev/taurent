@@ -2,6 +2,7 @@ import { Trash2 } from '@taurent/shared';
 import { ContextMenu } from '@taurent/web-ui';
 import type { ContextMenuItem as TContextMenuItem } from '@taurent/web-ui';
 import { TorrentBulkMenuItems } from './TorrentBulkMenuItems';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 interface TrackerContextMenuProps {
   x: number;
@@ -28,9 +29,10 @@ export function TrackerContextMenu({
   onPauseTorrents,
   onRemoveTorrents,
 }: TrackerContextMenuProps) {
+  const { t } = useTaurentTranslation('torrents');
   const items: TContextMenuItem[] = [
     { kind: 'separator', id: 'sep-header', label: hostname },
-    { kind: 'item', id: 'remove-tracker', label: 'Remove tracker', icon: Trash2, disabled: !canEditTrackers, onClick: () => { onClose(); onRemoveTracker(); }, destructive: true },
+    { kind: 'item', id: 'remove-tracker', label: t('sidebar.removeTracker'), icon: Trash2, disabled: !canEditTrackers, onClick: () => { onClose(); onRemoveTracker(); }, destructive: true },
     ...(hashes.length > 0
       ? (
           [

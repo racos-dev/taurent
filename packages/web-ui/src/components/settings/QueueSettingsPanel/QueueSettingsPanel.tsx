@@ -6,6 +6,7 @@ import { Button } from '../../primitives/Button';
 import { NumberInputModal } from '../../dialogs/NumberInputModal';
 import type { QueueSettingsPanelProps } from './types';
 import { cn } from '@taurent/shared';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 type QueuePreferenceValue = boolean | number;
 type MobileQueueNumberKey =
@@ -26,6 +27,7 @@ export const QueueSettingsPanel = React.memo<QueueSettingsPanelProps>(({
   onSave,
   isSaving,
 }) => {
+  const { t } = useTaurentTranslation('settings');
   const queueingEnabled = (preferences?.queueing_enabled as boolean) ?? false;
   const maxActiveDownloads = (preferences?.max_active_downloads as number) ?? 0;
   const maxActiveUploads = (preferences?.max_active_uploads as number) ?? 0;
@@ -73,7 +75,7 @@ export const QueueSettingsPanel = React.memo<QueueSettingsPanelProps>(({
             <div className="grid gap-4 md:grid-cols-3">
               <div>
                 <label className="mb-1 block text-xs font-medium text-text-secondary">
-                  Max active downloads
+                  {t('queue.maxDownloads')}
                 </label>
                 <NumberInput
                   value={stagedMaxActiveDownloads}
@@ -87,7 +89,7 @@ export const QueueSettingsPanel = React.memo<QueueSettingsPanelProps>(({
               </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-text-secondary">
-                  Max active uploads
+                  {t('queue.maxUploads')}
                 </label>
                 <NumberInput
                   value={stagedMaxActiveUploads}
@@ -101,7 +103,7 @@ export const QueueSettingsPanel = React.memo<QueueSettingsPanelProps>(({
               </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-text-secondary">
-                  Max active torrents
+                  {t('queue.maxTorrents')}
                 </label>
                 <NumberInput
                   value={stagedMaxActiveTorrents}
@@ -117,9 +119,9 @@ export const QueueSettingsPanel = React.memo<QueueSettingsPanelProps>(({
 
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-xs font-medium text-text-primary">Ignore slow torrents</div>
+                <div className="text-xs font-medium text-text-primary">{t('queue.ignoreSlow')}</div>
                 <div className="mt-1 text-xs text-text-secondary">
-                  Do not count slow torrents in queue limits.
+                  {t('queue.ignoreSlowDescription')}
                 </div>
               </div>
               <ToggleSwitch checked={stagedDontCountSlowTorrents} onChange={setStagedDontCountSlowTorrents} />
@@ -127,7 +129,9 @@ export const QueueSettingsPanel = React.memo<QueueSettingsPanelProps>(({
           </>
         )}
 
-        <Button variant="primary" size="sm" className="w-full" loading={isSaving} onClick={handleSave}>{isSaving ? 'Saving Queue Settings...' : 'Save Queue Settings'}</Button>
+        <Button variant="primary" size="sm" className="w-full" loading={isSaving} onClick={handleSave}>
+          {t(isSaving ? 'queue.saving' : 'queue.save')}
+        </Button>
       </div>
     );
   }
@@ -136,8 +140,8 @@ export const QueueSettingsPanel = React.memo<QueueSettingsPanelProps>(({
   return (
     <>
       <SettingsRow
-        title="Enable queueing"
-        description="Limit how many torrents stay active at once"
+        title={t('queue.enable')}
+        description={t('queue.enableDescription')}
         right={
           <ToggleSwitch
             checked={queueingEnabled}
@@ -149,35 +153,35 @@ export const QueueSettingsPanel = React.memo<QueueSettingsPanelProps>(({
       {queueingEnabled && (
         <>
           <SettingsRow
-            title="Max active downloads"
+            title={t('queue.maxDownloads')}
             value={maxActiveDownloads}
             onPress={() => setMobileModal({
               key: 'max_active_downloads',
-              title: 'Max active downloads',
+              title: t('queue.maxDownloads'),
               currentValue: maxActiveDownloads,
             })}
           />
           <SettingsRow
-            title="Max active uploads"
+            title={t('queue.maxUploads')}
             value={maxActiveUploads}
             onPress={() => setMobileModal({
               key: 'max_active_uploads',
-              title: 'Max active uploads',
+              title: t('queue.maxUploads'),
               currentValue: maxActiveUploads,
             })}
           />
           <SettingsRow
-            title="Max active torrents"
+            title={t('queue.maxTorrents')}
             value={maxActiveTorrents}
             onPress={() => setMobileModal({
               key: 'max_active_torrents',
-              title: 'Max active torrents',
+              title: t('queue.maxTorrents'),
               currentValue: maxActiveTorrents,
             })}
           />
           <SettingsRow
-            title="Ignore slow torrents"
-            description="Do not count slow torrents toward the active limits"
+            title={t('queue.ignoreSlow')}
+            description={t('queue.ignoreSlowActiveDescription')}
             right={
               <ToggleSwitch
                 checked={dontCountSlowTorrents}

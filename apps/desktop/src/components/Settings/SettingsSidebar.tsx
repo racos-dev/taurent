@@ -1,6 +1,7 @@
 import React, { type ComponentType } from 'react';
 import { cn } from '@taurent/shared';
 import type { SettingsNavGroup, SectionId } from './SettingsNavConfig';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 interface SettingsSidebarProps {
   navigationGroups: SettingsNavGroup[];
@@ -55,10 +56,11 @@ export const SettingsSidebar = React.memo<SettingsSidebarProps>(({
   onSelectSection,
   dirtySections,
 }) => {
+  const { t } = useTaurentTranslation('settings');
   return (
     <aside className="flex w-52 shrink-0 flex-col border-r border-border bg-surface">
       <div className="border-b border-border px-3 py-2">
-        <h1 className="text-sm font-semibold text-text-primary">Settings</h1>
+        <h1 className="text-sm font-semibold text-text-primary">{t('title')}</h1>
       </div>
 
       <nav className="flex-1 overflow-auto px-2 py-2">

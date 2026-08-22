@@ -18,6 +18,13 @@ import { useState, useCallback, useMemo } from 'react';
 import { formatUserMessageForContext } from '@taurent/shared/utils/error';
 import { validateUrl } from './normalizeUrl';
 
+export type AddServerValidationError =
+  | 'nameRequired'
+  | 'urlRequired'
+  | 'urlHostnameMissing'
+  | 'invalidUrl'
+  | 'usernameRequired';
+
 // ─── Input types ─────────────────────────────────────────────────────────────
 
 export interface AddServerScreenControllerOptions {
@@ -36,6 +43,10 @@ export interface AddServerScreenControllerOptions {
   bridgeServers: {
     normalizeServerUrl(input: { url: string; defaultScheme?: string }): Promise<{ normalized: string }>;
   };
+  /** Resolve an operation failure for the active UI locale. */
+  formatError?: (error: unknown) => string;
+  /** Active-locale copy used for the submit-level required-fields summary. */
+  requiredFieldsMessage?: string;
 }
 
 // ─── Output types ────────────────────────────────────────────────────────────
@@ -59,9 +70,9 @@ export interface AddServerScreenControllerResult {
 
   // ─── Validation ────────────────────────────────────────────
   validationErrors: {
-    name?: string | null;
-    url?: string | null;
-    username?: string | null;
+    name?: AddServerValidationError | null;
+    url?: AddServerValidationError | null;
+    username?: AddServerValidationError | null;
   };
   urlSuggestion: string | null;
 
@@ -80,6 +91,8 @@ export function useAddServerScreenController({
   addServer,
   onSuccess,
   bridgeServers,
+  formatError = (error) => formatUserMessageForContext(error, 'add-server'),
+  requiredFieldsMessage = 'Please fill in all required fields',
 }: AddServerScreenControllerOptions): AddServerScreenControllerResult {
   // ─── Form fields ───────────────────────────────────────────
   const [name, setNameState] = useState('');
@@ -91,16 +104,17 @@ export function useAddServerScreenController({
   const [useApiKey, setUseApiKeyState] = useState(false);
 
   // ─── Error state ──────────────────────────────────────────
-  const [error, setError] = useState<string | null>(null);
+  const [rawError, setRawError] = useState<unknown | null>(null);
+  const [hasRequiredFieldsError, setHasRequiredFieldsError] = useState(false);
 
   // ─── Submit state ─────────────────────────────────────────
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // ─── Validation state ─────────────────────────────────────
   const [validationErrors, setValidationErrors] = useState<{
-    name?: string | null;
-    url?: string | null;
-    username?: string | null;
+    name?: AddServerValidationError | null;
+    url?: AddServerValidationError | null;
+    username?: AddServerValidationError | null;
   }>({});
 
   // ─── Field setters with validation ───────────────────────
@@ -109,7 +123,7 @@ export function useAddServerScreenController({
     const trimmed = value.trim();
     setValidationErrors((prev) => ({
       ...prev,
-      name: trimmed.length === 0 ? 'Name is required' : null,
+      name: trimmed.length === 0 ? 'nameRequired' : null,
     }));
   }, []);
 
@@ -128,7 +142,7 @@ export function useAddServerScreenController({
     const trimmed = value.trim();
     setValidationErrors((prev) => ({
       ...prev,
-      username: trimmed.length === 0 ? 'Username is required' : null,
+      username: trimmed.length === 0 ? 'usernameRequired' : null,
     }));
   }, []);
 
@@ -162,15 +176,20 @@ export function useAddServerScreenController({
       !validationErrors.name && !validationErrors.url && !validationErrors.username;
     return hasName && hasUrl && hasUsername && hasApiKey && hasNoErrors;
   }, [name, url, username, apiKey, useApiKey, validationErrors]);
+  const error = hasRequiredFieldsError
+    ? requiredFieldsMessage
+    : rawError === null ? null : formatError(rawError);
 
   // ─── Submit ───────────────────────────────────────────────
   const handleSubmit = useCallback(async () => {
     if (!isFormValid) {
-      setError('Please fill in all required fields');
+      setHasRequiredFieldsError(true);
+      setRawError(null);
       return;
     }
 
-    setError(null);
+    setHasRequiredFieldsError(false);
+    setRawError(null);
     setIsSubmitting(true);
 
     try {
@@ -195,7 +214,7 @@ export function useAddServerScreenController({
       );
       await onSuccess(newServer.id);
     } catch (err) {
-      setError(formatUserMessageForContext(err, 'add-server'));
+      setRawError(err);
     } finally {
       setIsSubmitting(false);
     }

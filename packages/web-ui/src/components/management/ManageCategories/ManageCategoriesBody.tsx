@@ -10,6 +10,7 @@ import {
   surfaceVariantClasses,
   GHOST_DISABLED_CLASSES,
 } from '../../primitives/buttonStyles';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export const ManageCategoriesBody = React.memo<ManageCategoriesBodyProps>(({
   variant = 'desktop',
@@ -24,12 +25,13 @@ export const ManageCategoriesBody = React.memo<ManageCategoriesBodyProps>(({
   isRemoving = false,
   mutationError = null,
 }) => {
+  const { t } = useTaurentTranslation('management');
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryPath, setNewCategoryPath] = useState('');
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [editSavePath, setEditSavePath] = useState('');
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
-  const [createError, setCreateError] = useState<string | null>(null);
+  const [hasDuplicateName, setHasDuplicateName] = useState(false);
 
   const categoryList = categories ? Object.values(categories) : [];
 
@@ -55,10 +57,10 @@ export const ManageCategoriesBody = React.memo<ManageCategoriesBodyProps>(({
     const trimmedName = newCategoryName.trim();
     if (!trimmedName) return;
     if (categoryList.some((c) => c.name === trimmedName)) {
-      setCreateError('A category with this name already exists');
+      setHasDuplicateName(true);
       return;
     }
-    setCreateError(null);
+    setHasDuplicateName(false);
     onCreateCategory(trimmedName, newCategoryPath.trim());
     setNewCategoryName('');
     setNewCategoryPath('');
@@ -78,23 +80,23 @@ export const ManageCategoriesBody = React.memo<ManageCategoriesBodyProps>(({
           {/* Add Category Section */}
           <div className="p-3 bg-surface rounded-sm border border-border">
             <label className="block text-sm font-medium text-text-secondary mb-2">
-              Add New Category
+              {t('addNewCategory')}
             </label>
             <div className="space-y-3">
               <Input
                 value={newCategoryName}
-                onChange={(v) => { setNewCategoryName(v); setCreateError(null); }}
-                placeholder="Category name"
+                onChange={(v) => { setNewCategoryName(v); setHasDuplicateName(false); }}
+                placeholder={t('categoryName')}
                 className="w-full"
               />
               <Input
                 value={newCategoryPath}
-                onChange={(v) => { setNewCategoryPath(v); setCreateError(null); }}
-                placeholder="Save path (optional)"
+                onChange={(v) => { setNewCategoryPath(v); setHasDuplicateName(false); }}
+                placeholder={t('optionalSavePath')}
                 className="w-full"
               />
-              {createError && (
-                <p className="text-xs text-error">{createError}</p>
+              {hasDuplicateName && (
+                <p className="text-xs text-error">{t('duplicateCategory')}</p>
               )}
               <MutationErrorBanner error={mutationError} />
               <button
@@ -111,7 +113,7 @@ export const ManageCategoriesBody = React.memo<ManageCategoriesBodyProps>(({
                 )}
               >
                 <Plus size={ICON_SIZES.md} />
-                Add Category
+                {t('addCategory')}
               </button>
             </div>
           </div>
@@ -120,7 +122,7 @@ export const ManageCategoriesBody = React.memo<ManageCategoriesBodyProps>(({
           <div className="bg-surface rounded-sm border border-border overflow-hidden">
             <div className="px-4 py-3 border-b border-border flex items-center justify-between">
               <span className="text-sm font-medium text-text-secondary">
-                Categories ({categoryList.length})
+                {t('categoriesCount', { count: categoryList.length })}
               </span>
               <button
                 onClick={refetch}
@@ -133,11 +135,11 @@ export const ManageCategoriesBody = React.memo<ManageCategoriesBodyProps>(({
 
             {isLoading ? (
               <div className="p-8 text-center text-text-secondary">
-                Loading categories...
+                {t('loadingCategories')}
               </div>
             ) : categoryList.length === 0 ? (
               <div className="p-8 text-center text-text-secondary">
-                No categories defined
+                {t('noCategoriesDefined')}
               </div>
             ) : (
               <div className="divide-y divide-border">
@@ -154,7 +156,7 @@ export const ManageCategoriesBody = React.memo<ManageCategoriesBodyProps>(({
                         <Input
                           value={editSavePath}
                           onChange={setEditSavePath}
-                          placeholder="Save path"
+                          placeholder={t('savePath')}
                           className="w-full"
                           autoFocus
                         />
@@ -172,7 +174,7 @@ export const ManageCategoriesBody = React.memo<ManageCategoriesBodyProps>(({
                             )}
                           >
                             <X size={ICON_SIZES.md} />
-                            Cancel
+                            {t('cancel')}
                           </button>
                           <button
                             onClick={handleSaveEdit}
@@ -188,7 +190,7 @@ export const ManageCategoriesBody = React.memo<ManageCategoriesBodyProps>(({
                             )}
                           >
                             <Check size={ICON_SIZES.md} />
-                            Save
+                            {t('save')}
                           </button>
                         </div>
                       </div>
@@ -230,9 +232,9 @@ export const ManageCategoriesBody = React.memo<ManageCategoriesBodyProps>(({
 
         {categoryToDelete && (
           <ConfirmDialog
-            title="Delete Category"
-            message={`Are you sure you want to delete the category "${categoryToDelete}"? Torrents in this category will become uncategorized.`}
-            confirmLabel="Delete"
+            title={t('deleteCategoryHeading')}
+            message={t('deleteCategoryConfirm', { name: categoryToDelete })}
+            confirmLabel={t('deleteAction')}
             onConfirm={handleDeleteConfirm}
             onCancel={() => setCategoryToDelete(null)}
             tone="danger"
@@ -250,18 +252,18 @@ export const ManageCategoriesBody = React.memo<ManageCategoriesBodyProps>(({
           <div className="max-w-2xl space-y-6">
             {/* Add Category Section */}
             <div className="bg-surface p-4 rounded-sm border border-border">
-              <h2 className="text-sm font-medium text-text-secondary mb-3">Add New Category</h2>
+              <h2 className="text-sm font-medium text-text-secondary mb-3">{t('addNewCategory')}</h2>
               <div className="flex gap-2">
                 <Input
                   value={newCategoryName}
-                  onChange={(v) => { setNewCategoryName(v); setCreateError(null); }}
-                  placeholder="Category name"
+                  onChange={(v) => { setNewCategoryName(v); setHasDuplicateName(false); }}
+                  placeholder={t('categoryName')}
                   className="flex-1"
                 />
                 <Input
                   value={newCategoryPath}
-                  onChange={(v) => { setNewCategoryPath(v); setCreateError(null); }}
-                  placeholder="Save path (optional)"
+                  onChange={(v) => { setNewCategoryPath(v); setHasDuplicateName(false); }}
+                  placeholder={t('optionalSavePath')}
                   className="flex-1"
                 />
                 <Button
@@ -269,11 +271,11 @@ export const ManageCategoriesBody = React.memo<ManageCategoriesBodyProps>(({
                   disabled={!newCategoryName.trim() || isCreating}
                 >
                   <Plus size={ICON_SIZES.md} className="mr-1" />
-                  Add
+                  {t('add')}
                 </Button>
               </div>
-              {createError && (
-                <p className="text-xs text-error mt-1">{createError}</p>
+              {hasDuplicateName && (
+                <p className="text-xs text-error mt-1">{t('duplicateCategory')}</p>
               )}
               <MutationErrorBanner error={mutationError} />
             </div>
@@ -282,7 +284,7 @@ export const ManageCategoriesBody = React.memo<ManageCategoriesBodyProps>(({
             <div className="bg-surface rounded-sm border border-border overflow-hidden">
               <div className="px-4 py-3 border-b border-border flex items-center justify-between">
                 <h2 className="text-sm font-medium text-text-secondary">
-                  Categories ({categoryList.length})
+                  {t('categoriesCount', { count: categoryList.length })}
                 </h2>
                 <button
                   onClick={refetch}
@@ -295,11 +297,11 @@ export const ManageCategoriesBody = React.memo<ManageCategoriesBodyProps>(({
 
               {isLoading ? (
                 <div className="p-8 text-center text-text-secondary">
-                  Loading categories...
+                  {t('loadingCategories')}
                 </div>
               ) : categoryList.length === 0 ? (
                 <div className="p-8 text-center text-text-secondary">
-                  No categories defined
+                  {t('noCategoriesDefined')}
                 </div>
               ) : (
                 <div className="divide-y divide-border">
@@ -317,7 +319,7 @@ export const ManageCategoriesBody = React.memo<ManageCategoriesBodyProps>(({
                               value={editSavePath}
                               onChange={setEditSavePath}
                               className="flex-1 mt-1"
-                              placeholder="Save path"
+                              placeholder={t('savePath')}
                               autoFocus
                             />
                           </div>
@@ -382,9 +384,9 @@ export const ManageCategoriesBody = React.memo<ManageCategoriesBodyProps>(({
 
       {categoryToDelete && (
         <ConfirmDialog
-          title="Delete Category"
-          message={`Are you sure you want to delete the category "${categoryToDelete}"? Torrents in this category will become uncategorized.`}
-          confirmLabel="Delete"
+          title={t('deleteCategoryHeading')}
+          message={t('deleteCategoryConfirm', { name: categoryToDelete })}
+          confirmLabel={t('deleteAction')}
           onConfirm={handleDeleteConfirm}
           onCancel={() => setCategoryToDelete(null)}
           tone="danger"

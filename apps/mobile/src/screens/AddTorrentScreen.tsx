@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { pickTorrentFiles, storage } from '../platform';
 import { useCategories } from '../hooks/useCategories';
@@ -8,12 +8,14 @@ import { usePreferences } from '../hooks/useSettings';
 import { AddTorrentScreenBody, ScreenHeader } from '@taurent/web-ui';
 import { useAddTorrentScreenController } from '@taurent/web-core';
 import { useDeleteAddedTorrentFilesPreference } from '@taurent/web-core/hooks';
-import { formatUserMessageForContext } from '@taurent/shared/utils/error';
 import { mobileScreenRootClassName } from '../ui/mobileScreenLayout';
+import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 
 type AddTorrentMode = 'magnet' | 'file';
 
 export function AddTorrentScreen() {
+  const { t } = useTaurentTranslation('torrents');
+  const formatError = useLocalizedErrorFormatter();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const mode: AddTorrentMode = searchParams.get('mode') === 'file' ? 'file' : 'magnet';
@@ -27,13 +29,13 @@ export function AddTorrentScreen() {
     setDeleteAddedTorrentFiles,
   } = useDeleteAddedTorrentFilesPreference(storage);
 
-  const addByFilesWithLocalCleanup = (
-    files: string[],
-    options?: Parameters<typeof addByFiles>[1],
-  ) => addByFiles(files, {
-    ...options,
-    deleteSourceFilesAfterAdd: deleteAddedTorrentFiles,
-  });
+  const addByFilesWithLocalCleanup = useCallback(
+    (files: string[], options?: Parameters<typeof addByFiles>[1]) => addByFiles(files, {
+      ...options,
+      deleteSourceFilesAfterAdd: deleteAddedTorrentFiles,
+    }),
+    [addByFiles, deleteAddedTorrentFiles],
+  );
 
   // Controller owns form state and submit orchestration.
   // Mobile provides string paths since pickTorrentFiles returns string paths.
@@ -44,6 +46,12 @@ export function AddTorrentScreen() {
     onSubmitSuccess: () => navigate(-1),
     onSubmitError: () => {
       // Error surfaced via controller.error
+    },
+    formatError: (error) => formatError(error, 'add-torrent'),
+    validationMessages: {
+      magnetRequired: t('addForm.magnetRequired'),
+      invalidMagnet: t('addForm.invalidMagnet'),
+      fileRequired: t('addForm.fileRequired'),
     },
   });
 
@@ -73,7 +81,7 @@ export function AddTorrentScreen() {
       }
       controller.setSelectedFiles(torrentFiles);
     } catch (err) {
-      controller.setError(formatUserMessageForContext(err, 'file-picker'));
+      controller.setError(formatError(err, 'file-picker'));
     }
   };
 
@@ -83,8 +91,8 @@ export function AddTorrentScreen() {
   return (
     <div className={mobileScreenRootClassName()}>
       <ScreenHeader
-        title="Add Torrent"
-        subtitle={mode === 'magnet' ? 'Paste a magnet link' : 'Select torrent files'}
+        title={t('add')}
+        subtitle={t(mode === 'magnet' ? 'addForm.pasteMagnet' : 'addForm.selectTorrentFiles')}
         variant="mobile"
         onBack={() => navigate('/')}
       />
@@ -126,7 +134,7 @@ export function AddTorrentScreen() {
           onSubmit={() => {
             if (!controller.validate()) return;
             if (!controller.savePath.trim()) {
-              controller.setError('Please enter a save path');
+              controller.setError(t('addForm.savePathRequired'));
               return;
             }
             void controller.handleSubmit();

@@ -10,9 +10,10 @@ import { Button } from '../../primitives/Button';
 import { IconButton } from '../../primitives/IconButton';
 import { Spinner } from '../../shared/Spinner';
 import type { FilterTagSectionProps } from './types';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export const FilterTagSection = React.memo<FilterTagSectionProps>(({
-  title = 'Tags',
+  title,
   tags,
   selectedTag,
   onTagChange,
@@ -31,6 +32,8 @@ export const FilterTagSection = React.memo<FilterTagSectionProps>(({
   icon,
   onLongPressItem,
 }) => {
+  const { t } = useTaurentTranslation('management');
+  const sectionTitle = title ?? t('tags');
   const [confirmDialog, setConfirmDialog] = useState<{ tagName: string } | null>(null);
 
   const handleDeletePress = useCallback((tagName: string) => {
@@ -57,7 +60,7 @@ export const FilterTagSection = React.memo<FilterTagSectionProps>(({
       {/* Header */}
       <div className="flex items-center justify-between mb-1">
         <h2 className="text-xs font-medium text-text-secondary">
-          {title}
+          {sectionTitle}
         </h2>
         <div className="flex items-center gap-1">
           {onRefresh && (
@@ -65,7 +68,7 @@ export const FilterTagSection = React.memo<FilterTagSectionProps>(({
               onClick={onRefresh}
               loading={isLoading}
               disabled={isLoading}
-              title="Refresh tags"
+              title={t('refreshTags')}
               variant="ghost"
             >
               <Spinner variant="icon" size="sm" />
@@ -73,7 +76,7 @@ export const FilterTagSection = React.memo<FilterTagSectionProps>(({
           )}
           <IconButton
             onClick={() => onShowAddForm(!showAddForm)}
-            title={showAddForm ? 'Close add tag form' : 'Add tag'}
+            title={showAddForm ? t('closeAddTag') : t('addTag')}
             variant="ghost"
             isActive={showAddForm}
           >
@@ -91,7 +94,7 @@ export const FilterTagSection = React.memo<FilterTagSectionProps>(({
               size="sm"
               value={newTagName}
               onChange={onNewTagNameChange}
-              placeholder="New tag name"
+              placeholder={t('newTagName')}
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && newTagName.trim()) onSubmitAdd();
@@ -111,14 +114,14 @@ export const FilterTagSection = React.memo<FilterTagSectionProps>(({
               size="sm"
               variant="primary"
             >
-              Add
+              {t('add')}
             </Button>
             <IconButton
               onClick={() => {
                 onCancelAdd();
                 onShowAddForm(false);
               }}
-              title="Cancel add tag"
+              title={t('cancelAddTag')}
               variant="ghost"
             >
               <X size={ICON_SIZES.sm} className="text-text-secondary" />
@@ -139,7 +142,7 @@ export const FilterTagSection = React.memo<FilterTagSectionProps>(({
               : 'hover:bg-surface-interactive active:bg-surface-interactive text-text-primary'
           )}
         >
-          All Tags
+          {t('allTags')}
         </button>
 
         {/* Individual tag items */}
@@ -163,7 +166,7 @@ export const FilterTagSection = React.memo<FilterTagSectionProps>(({
             <IconButton
               onClick={() => handleDeletePress(tag)}
               disabled={isDeleting}
-              title={`Delete ${tag}`}
+              title={t('deleteNamed', { name: tag })}
               tone="danger"
               variant="ghost"
               className="opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 focus-visible:opacity-100"
@@ -175,11 +178,11 @@ export const FilterTagSection = React.memo<FilterTagSectionProps>(({
 
         {/* Loading / empty states */}
         {isLoading && (
-          <span className="px-2 py-1 text-text-muted text-xs">Loading tags...</span>
+          <span className="px-2 py-1 text-text-muted text-xs">{t('loadingTags')}</span>
         )}
 
         {!isLoading && tags.length === 0 && !showAddForm && (
-          <StateCard title="No tags" className="py-2 px-3" />
+          <StateCard title={t('noTags')} className="py-2 px-3" />
         )}
       </div>
     </>
@@ -189,7 +192,7 @@ export const FilterTagSection = React.memo<FilterTagSectionProps>(({
     <>
       {/* "All Tags" list item */}
       <FilterListItem
-        label="All Tags"
+        label={t('allTags')}
         icon={icon}
         isSelected={selectedTag === null}
         onPress={() => onTagChange?.(null)}
@@ -198,7 +201,7 @@ export const FilterTagSection = React.memo<FilterTagSectionProps>(({
       {/* Tag list items or empty state */}
       {tags.length === 0 && !showAddForm ? (
         <StateCard
-          title={isLoading ? 'Loading tags...' : 'No tags yet'}
+          title={isLoading ? t('loadingTags') : t('noTagsYet')}
           icon={icon}
           className="py-3 px-3"
         />
@@ -218,7 +221,7 @@ export const FilterTagSection = React.memo<FilterTagSectionProps>(({
             <IconButton
               onClick={() => handleDeletePress(tag)}
               disabled={isDeleting}
-              title={`Delete ${tag}`}
+              title={t('deleteNamed', { name: tag })}
               tone="danger"
               variant="ghost"
             >
@@ -237,7 +240,7 @@ export const FilterTagSection = React.memo<FilterTagSectionProps>(({
             onCancelAdd();
             onShowAddForm(false);
           }}
-          placeholder="Tag name"
+          placeholder={t('tagName')}
           isPending={isAdding}
         />
       ) : (
@@ -249,7 +252,7 @@ export const FilterTagSection = React.memo<FilterTagSectionProps>(({
             className="justify-start text-primary"
           >
             <Plus size={ICON_SIZES.md} />
-            Add Tag
+            {t('addTag')}
           </Button>
         </div>
       )}
@@ -263,9 +266,9 @@ export const FilterTagSection = React.memo<FilterTagSectionProps>(({
       {/* Delete confirmation dialog */}
       {confirmDialog && (
         <ConfirmDialog
-          title={`Delete "${confirmDialog.tagName}"?`}
-          message="This action cannot be undone."
-          confirmLabel="Delete"
+          title={t('deleteTagTitle', { name: confirmDialog.tagName })}
+          message={t('deleteTagMessage')}
+          confirmLabel={t('deleteAction')}
           onConfirm={handleConfirmDelete}
           onCancel={handleCancelDelete}
           tone="danger"

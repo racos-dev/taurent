@@ -9,15 +9,17 @@ import { useNavigate } from 'react-router-dom';
 import { ScreenHeader, SearchScreenBody } from '@taurent/web-ui';
 import { useSearchScreen } from '../hooks';
 import { mobileScreenRootClassName } from '../ui/mobileScreenLayout';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export function SearchScreen() {
+  const { t } = useTaurentTranslation('search');
   const navigate = useNavigate();
   const model = useSearchScreen();
 
   return (
     <div className={mobileScreenRootClassName({ height: 'full' })}>
       <ScreenHeader
-        title="Search"
+        title={t('title')}
         subtitle={model.isSearching ? 'Searching...' : 'Find torrents'}
         variant="mobile"
         onBack={() => navigate('/')}

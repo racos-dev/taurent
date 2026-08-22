@@ -9,6 +9,7 @@ import {
   filledVariantClasses,
   GHOST_DISABLED_CLASSES,
 } from '../../primitives/buttonStyles';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export const ManageTagsBody = React.memo<ManageTagsBodyProps>(({
   variant = 'desktop',
@@ -21,9 +22,10 @@ export const ManageTagsBody = React.memo<ManageTagsBodyProps>(({
   isDeleting = false,
   mutationError = null,
 }) => {
+  const { t } = useTaurentTranslation('management');
   const [newTagName, setNewTagName] = useState('');
   const [tagToDelete, setTagToDelete] = useState<string | null>(null);
-  const [createError, setCreateError] = useState<string | null>(null);
+  const [hasDuplicateName, setHasDuplicateName] = useState(false);
 
   const tagList = tags || [];
 
@@ -31,10 +33,10 @@ export const ManageTagsBody = React.memo<ManageTagsBodyProps>(({
     const trimmed = newTagName.trim();
     if (!trimmed) return;
     if (tagList.some((tag) => tag === trimmed)) {
-      setCreateError('A tag with this name already exists');
+      setHasDuplicateName(true);
       return;
     }
-    setCreateError(null);
+    setHasDuplicateName(false);
     onCreateTag(trimmed);
     setNewTagName('');
   };
@@ -53,13 +55,13 @@ export const ManageTagsBody = React.memo<ManageTagsBodyProps>(({
           {/* Add Tag Section */}
           <div className="p-3 bg-surface rounded-sm border border-border">
             <label className="block text-sm font-medium text-text-secondary mb-2">
-              Add New Tag
+              {t('addNewTag')}
             </label>
             <div className="flex gap-2">
               <Input
                 value={newTagName}
-                onChange={(v) => { setNewTagName(v); setCreateError(null); }}
-                placeholder="Tag name"
+                onChange={(v) => { setNewTagName(v); setHasDuplicateName(false); }}
+                placeholder={t('tagName')}
                 className="flex-1"
               />
               <button
@@ -76,11 +78,11 @@ export const ManageTagsBody = React.memo<ManageTagsBodyProps>(({
                 )}
               >
                 <Plus size={ICON_SIZES.md} />
-                Add
+                {t('add')}
               </button>
             </div>
-            {createError && (
-              <p className="text-xs text-error mt-1">{createError}</p>
+            {hasDuplicateName && (
+              <p className="text-xs text-error mt-1">{t('duplicateTag')}</p>
             )}
             <MutationErrorBanner error={mutationError} />
           </div>
@@ -89,7 +91,7 @@ export const ManageTagsBody = React.memo<ManageTagsBodyProps>(({
           <div className="bg-surface rounded-sm border border-border overflow-hidden">
             <div className="px-4 py-3 border-b border-border flex items-center justify-between">
               <span className="text-sm font-medium text-text-secondary">
-                Tags ({tagList.length})
+                {t('tagsCount', { count: tagList.length })}
               </span>
               <button
                 onClick={refetch}
@@ -102,11 +104,11 @@ export const ManageTagsBody = React.memo<ManageTagsBodyProps>(({
 
             {isLoading ? (
               <div className="p-8 text-center text-text-secondary">
-                Loading tags...
+                {t('loadingTags')}
               </div>
             ) : tagList.length === 0 ? (
               <div className="p-8 text-center text-text-secondary">
-                No tags defined
+                {t('noTagsDefined')}
               </div>
             ) : (
               <div className="p-3">
@@ -134,9 +136,9 @@ export const ManageTagsBody = React.memo<ManageTagsBodyProps>(({
 
         {tagToDelete && (
           <ConfirmDialog
-            title="Delete Tag"
-            message={`Are you sure you want to delete the tag "${tagToDelete}"? This action cannot be undone.`}
-            confirmLabel="Delete"
+            title={t('deleteTagHeading')}
+            message={t('deleteTagConfirm', { name: tagToDelete })}
+            confirmLabel={t('deleteAction')}
             onConfirm={handleDeleteConfirm}
             onCancel={() => setTagToDelete(null)}
             tone="danger"
@@ -154,12 +156,12 @@ export const ManageTagsBody = React.memo<ManageTagsBodyProps>(({
           <div className="max-w-2xl space-y-6">
             {/* Add Tag Section */}
             <div className="bg-surface p-4 rounded-sm border border-border">
-              <h2 className="text-sm font-medium text-text-secondary mb-3">Add New Tag</h2>
+              <h2 className="text-sm font-medium text-text-secondary mb-3">{t('addNewTag')}</h2>
               <div className="flex gap-2">
                 <Input
                   value={newTagName}
-                  onChange={(v) => { setNewTagName(v); setCreateError(null); }}
-                  placeholder="Tag name"
+                  onChange={(v) => { setNewTagName(v); setHasDuplicateName(false); }}
+                  placeholder={t('tagName')}
                   className="flex-1"
                 />
                 <Button
@@ -167,11 +169,11 @@ export const ManageTagsBody = React.memo<ManageTagsBodyProps>(({
                   disabled={!newTagName.trim() || isCreating}
                 >
                   <Plus size={ICON_SIZES.md} className="mr-1" />
-                  Add
+                  {t('add')}
                 </Button>
               </div>
-              {createError && (
-                <p className="text-xs text-error mt-1">{createError}</p>
+              {hasDuplicateName && (
+                <p className="text-xs text-error mt-1">{t('duplicateTag')}</p>
               )}
               <MutationErrorBanner error={mutationError} />
             </div>
@@ -180,7 +182,7 @@ export const ManageTagsBody = React.memo<ManageTagsBodyProps>(({
             <div className="bg-surface rounded-sm border border-border overflow-hidden">
               <div className="px-4 py-3 border-b border-border flex items-center justify-between">
                 <h2 className="text-sm font-medium text-text-secondary">
-                  Tags ({tagList.length})
+                  {t('tagsCount', { count: tagList.length })}
                 </h2>
                 <button
                   onClick={refetch}
@@ -193,11 +195,11 @@ export const ManageTagsBody = React.memo<ManageTagsBodyProps>(({
 
               {isLoading ? (
                 <div className="p-8 text-center text-text-secondary">
-                  Loading tags...
+                  {t('loadingTags')}
                 </div>
               ) : tagList.length === 0 ? (
                 <div className="p-8 text-center text-text-secondary">
-                  No tags defined
+                  {t('noTagsDefined')}
                 </div>
               ) : (
                 <div className="p-4">
@@ -231,9 +233,9 @@ export const ManageTagsBody = React.memo<ManageTagsBodyProps>(({
 
       {tagToDelete && (
         <ConfirmDialog
-          title="Delete Tag"
-          message={`Are you sure you want to delete the tag "${tagToDelete}"? This action cannot be undone.`}
-          confirmLabel="Delete"
+          title={t('deleteTagHeading')}
+          message={t('deleteTagConfirm', { name: tagToDelete })}
+          confirmLabel={t('deleteAction')}
           onConfirm={handleDeleteConfirm}
           onCancel={() => setTagToDelete(null)}
           tone="danger"

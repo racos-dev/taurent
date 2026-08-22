@@ -9,9 +9,10 @@ import { Button } from '../../primitives/Button';
 import { IconButton } from '../../primitives/IconButton';
 import { Spinner } from '../../shared/Spinner';
 import type { FilterCategorySectionProps } from './types';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export const FilterCategorySection = React.memo<FilterCategorySectionProps>(({
-  title = 'Categories',
+  title,
   categories,
   categorySavePaths = {},
   selectedCategory,
@@ -36,6 +37,8 @@ export const FilterCategorySection = React.memo<FilterCategorySectionProps>(({
   icon,
   onLongPressItem,
 }) => {
+  const { t } = useTaurentTranslation('management');
+  const sectionTitle = title ?? t('categories');
   const [confirmDialog, setConfirmDialog] = useState<{ categoryName: string } | null>(null);
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [editSavePath, setEditSavePath] = useState('');
@@ -89,7 +92,7 @@ export const FilterCategorySection = React.memo<FilterCategorySectionProps>(({
         size="sm"
         value={newCategoryName}
         onChange={onNewCategoryNameChange}
-        placeholder="Category name"
+        placeholder={t('categoryName')}
         autoFocus
         onKeyDown={(e) => {
           if (e.key === 'Enter' && newCategoryName.trim()) onSubmitAdd();
@@ -101,7 +104,7 @@ export const FilterCategorySection = React.memo<FilterCategorySectionProps>(({
         size="sm"
         value={newCategorySavePath}
         onChange={(value) => onNewCategorySavePathChange?.(value)}
-        placeholder="Save path (optional)"
+        placeholder={t('optionalSavePath')}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && newCategoryName.trim()) onSubmitAdd();
           if (e.key === 'Escape') handleCategoryAddCancel();
@@ -115,7 +118,7 @@ export const FilterCategorySection = React.memo<FilterCategorySectionProps>(({
           onClick={handleCategoryAddCancel}
           className="flex-1"
         >
-          Cancel
+          {t('cancel')}
         </Button>
         <Button
           type="button"
@@ -125,7 +128,7 @@ export const FilterCategorySection = React.memo<FilterCategorySectionProps>(({
           disabled={!newCategoryName.trim() || isAdding}
           className="flex-1"
         >
-          {isAdding ? 'Adding...' : 'Add'}
+          {isAdding ? t('adding') : t('add')}
         </Button>
       </div>
     </div>
@@ -136,7 +139,7 @@ export const FilterCategorySection = React.memo<FilterCategorySectionProps>(({
       {/* Header */}
       <div className="flex items-center justify-between mb-1">
         <h2 className="text-xs font-medium text-text-secondary">
-          {title}
+          {sectionTitle}
         </h2>
         <div className="flex items-center gap-1">
           {onRefresh && (
@@ -144,7 +147,7 @@ export const FilterCategorySection = React.memo<FilterCategorySectionProps>(({
               onClick={onRefresh}
               loading={isLoading}
               disabled={isLoading}
-              title="Refresh categories"
+              title={t('refreshCategories')}
               variant="ghost"
             >
               <Spinner variant="icon" size="sm" />
@@ -152,7 +155,7 @@ export const FilterCategorySection = React.memo<FilterCategorySectionProps>(({
           )}
           <IconButton
             onClick={() => onShowAddForm(!showAddForm)}
-            title={showAddForm ? 'Close add category form' : 'Add category'}
+            title={showAddForm ? t('closeAddCategory') : t('addCategory')}
             variant="ghost"
             isActive={showAddForm}
           >
@@ -170,7 +173,7 @@ export const FilterCategorySection = React.memo<FilterCategorySectionProps>(({
               size="sm"
               value={newCategoryName}
               onChange={onNewCategoryNameChange}
-              placeholder="New category name"
+              placeholder={t('newCategoryName')}
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && newCategoryName.trim()) onSubmitAdd();
@@ -190,14 +193,14 @@ export const FilterCategorySection = React.memo<FilterCategorySectionProps>(({
               size="sm"
               variant="primary"
             >
-              Add
+              {t('add')}
             </Button>
             <IconButton
               onClick={() => {
                 onCancelAdd();
                 onShowAddForm(false);
               }}
-              title="Cancel add category"
+              title={t('cancelAddCategory')}
               variant="ghost"
             >
               <X size={ICON_SIZES.sm} className="text-text-secondary" />
@@ -219,7 +222,7 @@ export const FilterCategorySection = React.memo<FilterCategorySectionProps>(({
           )}
         >
           <Folder size={ICON_SIZES.sm} />
-          <span title="All Categories" className="flex-1 truncate text-left">All Categories</span>
+          <span title={t('allCategories')} className="flex-1 truncate text-left">{t('allCategories')}</span>
         </button>
 
         {/* Individual category pills */}
@@ -243,7 +246,7 @@ export const FilterCategorySection = React.memo<FilterCategorySectionProps>(({
             <IconButton
               onClick={() => handleDeletePress(category)}
               disabled={isDeleting}
-              title={`Delete ${category}`}
+              title={t('deleteNamed', { name: category })}
               tone="danger"
               variant="ghost"
               className="opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 focus-visible:opacity-100"
@@ -255,11 +258,11 @@ export const FilterCategorySection = React.memo<FilterCategorySectionProps>(({
 
         {/* Loading / empty states */}
         {isLoading && (
-          <div className="px-2 py-1 text-text-muted text-xs">Loading categories...</div>
+          <div className="px-2 py-1 text-text-muted text-xs">{t('loadingCategories')}</div>
         )}
 
         {!isLoading && categories.length === 0 && !showAddForm && (
-          <StateCard title="No categories" className="py-2 px-3" />
+          <StateCard title={t('noCategories')} className="py-2 px-3" />
         )}
       </div>
     </>
@@ -269,7 +272,7 @@ export const FilterCategorySection = React.memo<FilterCategorySectionProps>(({
     <>
       {/* "All Categories" list item */}
       <FilterListItem
-        label="All Categories"
+        label={t('allCategories')}
         icon={icon ?? <Folder size={ICON_SIZES.md} />}
         isSelected={selectedCategory === null}
         onPress={() => onCategoryChange?.(null)}
@@ -278,7 +281,7 @@ export const FilterCategorySection = React.memo<FilterCategorySectionProps>(({
       {/* Category list items or empty state */}
       {categories.length === 0 && !showAddForm ? (
         <StateCard
-          title={isLoading ? 'Loading categories...' : 'No categories yet'}
+          title={isLoading ? t('loadingCategories') : t('noCategoriesYet')}
           icon={icon ?? <Folder size={ICON_SIZES.lg} />}
           className="py-3 px-3"
         />
@@ -298,7 +301,7 @@ export const FilterCategorySection = React.memo<FilterCategorySectionProps>(({
                 <Input
                   value={editSavePath}
                   onChange={setEditSavePath}
-                  placeholder="Save path"
+                  placeholder={t('savePath')}
                   size="sm"
                   autoFocus
                   onKeyDown={(e) => {
@@ -315,7 +318,7 @@ export const FilterCategorySection = React.memo<FilterCategorySectionProps>(({
                     className="flex-1"
                   >
                     <X size={ICON_SIZES.md} />
-                    Cancel
+                    {t('cancel')}
                   </Button>
                   <Button
                     type="button"
@@ -326,7 +329,7 @@ export const FilterCategorySection = React.memo<FilterCategorySectionProps>(({
                     className="flex-1"
                   >
                     <Check size={ICON_SIZES.md} />
-                    Save
+                    {t('save')}
                   </Button>
                 </div>
               </div>
@@ -354,7 +357,7 @@ export const FilterCategorySection = React.memo<FilterCategorySectionProps>(({
                 <IconButton
                   onClick={() => handleStartEdit(category)}
                   disabled={isEditing}
-                  title={`Edit ${category}`}
+                  title={t('editNamed', { name: category })}
                   variant="ghost"
                 >
                   <Edit2 size={ICON_SIZES.md} />
@@ -363,7 +366,7 @@ export const FilterCategorySection = React.memo<FilterCategorySectionProps>(({
               <IconButton
                 onClick={() => handleDeletePress(category)}
                 disabled={isDeleting}
-                title={`Delete ${category}`}
+                title={t('deleteNamed', { name: category })}
                 tone="danger"
                 variant="ghost"
               >
@@ -386,7 +389,7 @@ export const FilterCategorySection = React.memo<FilterCategorySectionProps>(({
               onCancelAdd();
               onShowAddForm(false);
             }}
-            placeholder="Category name"
+            placeholder={t('categoryName')}
             isPending={isAdding}
           />
         )
@@ -399,7 +402,7 @@ export const FilterCategorySection = React.memo<FilterCategorySectionProps>(({
             className="justify-start text-primary"
           >
             <Plus size={ICON_SIZES.md} />
-            Add Category
+            {t('addCategory')}
           </Button>
         </div>
       )}
@@ -413,9 +416,9 @@ export const FilterCategorySection = React.memo<FilterCategorySectionProps>(({
       {/* Delete confirmation dialog - only shown when not using onLongPressItem (desktop pattern) */}
       {confirmDialog && (
         <ConfirmDialog
-          title={`Delete "${confirmDialog.categoryName}"?`}
-          message="This action cannot be undone."
-          confirmLabel="Delete"
+          title={t('deleteCategoryTitle', { name: confirmDialog.categoryName })}
+          message={t('deleteCategoryMessage')}
+          confirmLabel={t('deleteAction')}
           onConfirm={handleConfirmDelete}
           onCancel={handleCancelDelete}
           tone="danger"

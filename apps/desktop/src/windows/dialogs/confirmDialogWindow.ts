@@ -2,7 +2,7 @@ import { openDialogHostWindow } from './dialogHostWindow';
 
 export const CONFIRM_DIALOG_WINDOW_CONFIG = {
   route: '/confirm-dialog-window',
-  title: 'Confirm',
+  titleKey: 'windows.confirm',
   width: 400,
   height: 200,
   minWidth: 400,

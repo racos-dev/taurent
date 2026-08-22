@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { onOperationFailed } from '@taurent/bridge';
-import { formatUserMessageForContext } from '@taurent/shared/utils/error';
+import { classifyError } from '@taurent/shared/utils/error';
+import { useTaurentTranslation, type TaurentTFunction } from '@taurent/shared/i18n';
 import type { OperationFailedEvent } from '@taurent/bridge/events';
 import { subscribeOperationFailures } from './operationFailureReporter';
 
@@ -46,34 +47,42 @@ function shouldUseNativeNotification(operation: string): boolean {
   return NATIVE_NOTIFICATION_OPERATIONS.some((prefix) => operation.startsWith(prefix));
 }
 
-function formatOperationFailure(operation: string, error: unknown): string {
+function localizedError(error: unknown, context: string | undefined, t: TaurentTFunction): string {
+  const category = classifyError(error);
+  if (category !== 'unknown') return t(category, { ns: 'errors' });
+  if (context) return t(context, { ns: 'errors' });
+  return t('unknown', { ns: 'errors' });
+}
+
+function formatOperationFailure(operation: string, error: unknown, t: TaurentTFunction): string {
   if (operation.startsWith('session-health-check:')) {
-    return 'Connection check failed. Taurent will keep trying.';
+    return t('healthCheck', { ns: 'errors' });
   }
   if (operation.startsWith('session-retry:')) {
-    return 'Could not reconnect to the server. Taurent will keep trying.';
+    return t('reconnect', { ns: 'errors' });
   }
   if (operation.startsWith('session-disconnect:') || operation === 'session-disconnected') {
-    return formatUserMessageForContext(error, 'connection');
+    return localizedError(error, 'connection', t);
   }
   if (operation.startsWith('session-error:')) {
-    return formatUserMessageForContext(error, 'connection');
+    return localizedError(error, 'connection', t);
   }
   if (operation.startsWith('server-switch:')) {
-    return formatUserMessageForContext(error, 'server-switch');
+    return localizedError(error, 'serverSwitch', t);
   }
   if (operation === 'native-menu-sync') {
-    return formatUserMessageForContext(error, 'native-menu');
+    return localizedError(error, 'nativeMenu', t);
   }
-  return formatUserMessageForContext(error);
+  return localizedError(error, undefined, t);
 }
 
 function buildNotificationPayload(
   operation: string,
   error: unknown,
-  source: NotificationSource
+  source: NotificationSource,
+  t: TaurentTFunction,
 ): OperationNotificationPayload {
-  const message = formatOperationFailure(operation, error);
+  const message = formatOperationFailure(operation, error, t);
 
   return {
     operation,
@@ -90,6 +99,7 @@ export function useOperationNotifications({
   native,
   isForeground = getDefaultForegroundState,
 }: UseOperationNotificationsOptions) {
+  const { t } = useTaurentTranslation('errors');
   const toastNotify = toast ?? notify;
 
   useEffect(() => {
@@ -117,16 +127,16 @@ export function useOperationNotifications({
     };
 
     const unsubReporter = subscribeOperationFailures(({ operation, error }) => {
-      routeNotification(buildNotificationPayload(operation, error, 'reporter'));
+      routeNotification(buildNotificationPayload(operation, error, 'reporter', t));
     });
 
     const unlisten = onOperationFailed((event: OperationFailedEvent) => {
-      routeNotification(buildNotificationPayload(event.operation, event.error, 'bridge'));
+      routeNotification(buildNotificationPayload(event.operation, event.error, 'bridge', t));
     });
 
     return () => {
       unlisten();
       unsubReporter();
     };
-  }, [isForeground, native, toastNotify]);
+  }, [isForeground, native, t, toastNotify]);
 }

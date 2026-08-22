@@ -2,7 +2,7 @@ import { openDialogHostWindow } from './dialogHostWindow';
 
 export const CREATE_DIALOG_WINDOW_CONFIG = {
   route: '/create-dialog-window',
-  title: 'Create',
+  titleKey: 'windows.create',
   width: 400,
   height: 260,
   minWidth: 400,

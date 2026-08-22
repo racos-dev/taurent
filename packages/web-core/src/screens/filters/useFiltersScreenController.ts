@@ -20,6 +20,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import type { TorrentFilterType, TrackerEntry } from '@taurent/shared';
 import type { UseFiltersFormStateResult } from '../../hooks/useFiltersFormState';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 // ─── Input types ───────────────────────────────────────────────────────────────
 
@@ -146,6 +147,7 @@ export function useFiltersScreenController({
   onClose,
   onClear,
 }: FiltersScreenOptions): FiltersScreenControllerResult {
+  const { t } = useTaurentTranslation('management');
   // ─── Filter selection state ─────────────────────────────────────
   const [selectedFilter, setSelectedFilter] = useState<TorrentFilterType | null>(initialValues.filter);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(initialValues.category);
@@ -202,31 +204,31 @@ export function useFiltersScreenController({
   const handleCategoryLongPress = useCallback(
     (categoryName: string) => {
       setConfirmDialog({
-        title: `Delete "${categoryName}"?`,
-        message: 'Torrents in this category will become uncategorized. This action cannot be undone.',
-        confirmLabel: 'Delete',
+        title: t('deleteCategoryTitle', { name: categoryName }),
+        message: t('deleteCategoryMessage'),
+        confirmLabel: t('deleteAction'),
         tone: 'danger',
         onConfirm: () => {
           formState.handleDeleteCategory(categoryName);
         },
       });
     },
-    [formState]
+    [formState, t]
   );
 
   const handleTagLongPress = useCallback(
     (tagName: string) => {
       setConfirmDialog({
-        title: `Delete "${tagName}"?`,
-        message: 'This action cannot be undone.',
-        confirmLabel: 'Delete',
+        title: t('deleteTagTitle', { name: tagName }),
+        message: t('deleteTagMessage'),
+        confirmLabel: t('deleteAction'),
         tone: 'danger',
         onConfirm: () => {
           formState.handleDeleteTag(tagName);
         },
       });
     },
-    [formState]
+    [formState, t]
   );
 
   const closeConfirmDialog = useCallback(() => {

@@ -2,6 +2,7 @@ import { Pencil, Trash2, Eraser } from '@taurent/shared';
 import { ContextMenu } from '@taurent/web-ui';
 import type { ContextMenuItem as TContextMenuItem } from '@taurent/web-ui';
 import { TorrentBulkMenuItems } from './TorrentBulkMenuItems';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 interface CategoryContextMenuProps {
   x: number;
@@ -32,13 +33,14 @@ export function CategoryContextMenu({
   onPauseTorrents,
   onRemoveTorrents,
 }: CategoryContextMenuProps) {
+  const { t } = useTaurentTranslation('torrents');
   const isUncategorized = categoryName === '';
 
   const items: TContextMenuItem[] = [
-    { kind: 'separator', id: 'sep-header', label: categoryName || 'Uncategorized' },
-    { kind: 'item', id: 'edit-category', label: 'Edit category...', icon: Pencil, disabled: isUncategorized || !canManageCategories, onClick: () => { onClose(); onEdit(); } },
-    { kind: 'item', id: 'remove-category', label: 'Remove category', icon: Trash2, disabled: isUncategorized || !canManageCategories, onClick: () => { onClose(); onDelete(); }, destructive: true },
-    { kind: 'item', id: 'remove-unused-categories', label: 'Remove unused categories', icon: Eraser, disabled: !canManageCategories, onClick: () => { onClose(); onRemoveUnused(); } },
+    { kind: 'separator', id: 'sep-header', label: categoryName || t('sidebar.uncategorized') },
+    { kind: 'item', id: 'edit-category', label: t('sidebar.editCategory'), icon: Pencil, disabled: isUncategorized || !canManageCategories, onClick: () => { onClose(); onEdit(); } },
+    { kind: 'item', id: 'remove-category', label: t('sidebar.removeCategory'), icon: Trash2, disabled: isUncategorized || !canManageCategories, onClick: () => { onClose(); onDelete(); }, destructive: true },
+    { kind: 'item', id: 'remove-unused-categories', label: t('sidebar.removeUnusedCategories'), icon: Eraser, disabled: !canManageCategories, onClick: () => { onClose(); onRemoveUnused(); } },
     ...(hashes.length > 0
       ? (
           [

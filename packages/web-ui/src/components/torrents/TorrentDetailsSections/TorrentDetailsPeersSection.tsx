@@ -1,7 +1,11 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { cn } from '@taurent/shared';
-import { formatUserMessageForContext } from '@taurent/shared/utils/error';
-import { formatBytes, formatProgress, formatSpeed } from '@taurent/shared/utils/formatters';
+import {
+  useLocalization,
+  useLocalizedErrorFormatter,
+  useLocalizedFormatters,
+  useTaurentTranslation,
+} from '@taurent/shared/i18n';
 import type { PeerRow, TorrentDetailsPeersSectionProps } from './types';
 import {
   DesktopDetailTable,
@@ -11,22 +15,23 @@ import {
 import { StateCard } from '../../shared/StateCard';
 import { RetryButton } from '../../shared/RetryButton';
 
-function compareValues(a: number | string, b: number | string, direction: DesktopDetailTableSortDirection): number {
+function compareValues(a: number | string, b: number | string, direction: DesktopDetailTableSortDirection, locale: string): number {
   if (typeof a === 'number' && typeof b === 'number') {
     return direction === 'asc' ? a - b : b - a;
   }
 
-  const result = String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
+  const result = String(a).localeCompare(String(b), locale, { numeric: true, sensitivity: 'base' });
   return direction === 'asc' ? result : -result;
 }
 
 function PeerProgressCell({ progress }: { progress: number }) {
+  const format = useLocalizedFormatters();
   return (
     <div className="flex items-center justify-end gap-2">
       <div className="h-2 w-16 overflow-hidden rounded-sm bg-surface-elevated">
         <div className="h-full rounded-sm bg-primary" style={{ width: `${Math.max(0, Math.min(progress, 1)) * 100}%` }} />
       </div>
-      <span className="w-12 text-right text-text-secondary">{formatProgress(progress)}</span>
+      <span className="w-12 text-right text-text-secondary">{format.formatPercent(progress)}</span>
     </div>
   );
 }
@@ -48,6 +53,10 @@ function DesktopPeersTable({ peers, onBanPeer, onAddPeers, onCopyPeerAddress, ba
   onCopyPeerAddress?: (peer: PeerRow) => void;
   banPeerIsPending?: boolean;
 }) {
+  const { locale } = useLocalization();
+  const { t } = useTaurentTranslation('torrents');
+  const { t: tCommon } = useTaurentTranslation('common');
+  const format = useLocalizedFormatters();
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; peer: PeerRow | null } | null>(null);
   const [activePeerKey, setActivePeerKey] = useState<string | null>(null);
   const [sortColumnId, setSortColumnId] = useState<string>('dlSpeed');
@@ -114,13 +123,13 @@ function DesktopPeersTable({ peers, onBanPeer, onAddPeers, onCopyPeerAddress, ba
       }
     };
 
-    return [...peers].sort((left, right) => compareValues(sortValue(left), sortValue(right), sortDirection));
-  }, [peers, sortColumnId, sortDirection]);
+    return [...peers].sort((left, right) => compareValues(sortValue(left), sortValue(right), sortDirection, locale));
+  }, [locale, peers, sortColumnId, sortDirection]);
 
   const columns = useMemo<DesktopDetailTableColumn<PeerRow>[]>(() => [
     {
       id: 'country',
-      label: 'Country/Region',
+      label: t('details.peers.countryRegion'),
       width: 136,
       minWidth: 100,
       sortable: true,
@@ -131,7 +140,7 @@ function DesktopPeersTable({ peers, onBanPeer, onAddPeers, onCopyPeerAddress, ba
     },
     {
       id: 'ip',
-      label: 'IP',
+      label: t('details.peers.ip'),
       width: 154,
       minWidth: 120,
       sortable: true,
@@ -139,7 +148,7 @@ function DesktopPeersTable({ peers, onBanPeer, onAddPeers, onCopyPeerAddress, ba
     },
     {
       id: 'port',
-      label: 'Port',
+      label: t('details.peers.port'),
       width: 76,
       minWidth: 64,
       align: 'right',
@@ -148,7 +157,7 @@ function DesktopPeersTable({ peers, onBanPeer, onAddPeers, onCopyPeerAddress, ba
     },
     {
       id: 'connection',
-      label: 'Connection',
+      label: t('details.peers.connection'),
       width: 124,
       minWidth: 100,
       sortable: true,
@@ -156,7 +165,7 @@ function DesktopPeersTable({ peers, onBanPeer, onAddPeers, onCopyPeerAddress, ba
     },
     {
       id: 'flags',
-      label: 'Flags',
+      label: t('details.peers.flags'),
       width: 92,
       minWidth: 76,
       sortable: true,
@@ -164,15 +173,15 @@ function DesktopPeersTable({ peers, onBanPeer, onAddPeers, onCopyPeerAddress, ba
     },
     {
       id: 'client',
-      label: 'Client',
+      label: t('details.peers.client'),
       width: 164,
       minWidth: 124,
       sortable: true,
-      renderCell: (peer) => <span className="block truncate text-text-secondary" title={peer.client || 'Unknown'}>{peer.client || 'Unknown'}</span>,
+      renderCell: (peer) => <span className="block truncate text-text-secondary" title={peer.client || tCommon('values.unknown')}>{peer.client || tCommon('values.unknown')}</span>,
     },
     {
       id: 'progress',
-      label: 'Progress',
+      label: t('fields.progress'),
       width: 136,
       minWidth: 124,
       align: 'right',
@@ -181,58 +190,58 @@ function DesktopPeersTable({ peers, onBanPeer, onAddPeers, onCopyPeerAddress, ba
     },
     {
       id: 'dlSpeed',
-      label: 'DL Speed',
+      label: t('fields.downloadSpeed'),
       width: 112,
       minWidth: 88,
       align: 'right',
       sortable: true,
-      renderCell: (peer) => <span className="text-text-secondary">{formatSpeed(peer.dl_speed)}</span>,
+      renderCell: (peer) => <span className="text-text-secondary">{format.formatSpeed(peer.dl_speed)}</span>,
     },
     {
       id: 'ulSpeed',
-      label: 'UL Speed',
+      label: t('fields.uploadSpeed'),
       width: 112,
       minWidth: 88,
       align: 'right',
       sortable: true,
-      renderCell: (peer) => <span className="text-text-secondary">{formatSpeed(peer.up_speed)}</span>,
+      renderCell: (peer) => <span className="text-text-secondary">{format.formatSpeed(peer.up_speed)}</span>,
     },
     {
       id: 'downloaded',
-      label: 'Downloaded',
+      label: t('fields.downloaded'),
       width: 112,
       minWidth: 96,
       align: 'right',
       sortable: true,
-      renderCell: (peer) => <span className="text-text-secondary">{formatBytes(peer.downloaded)}</span>,
+      renderCell: (peer) => <span className="text-text-secondary">{format.formatBytes(peer.downloaded)}</span>,
     },
     {
       id: 'uploaded',
-      label: 'Uploaded',
+      label: t('fields.uploaded'),
       width: 112,
       minWidth: 96,
       align: 'right',
       sortable: true,
-      renderCell: (peer) => <span className="text-text-secondary">{formatBytes(peer.uploaded)}</span>,
+      renderCell: (peer) => <span className="text-text-secondary">{format.formatBytes(peer.uploaded)}</span>,
     },
     {
       id: 'relevance',
-      label: 'Relevance',
+      label: t('details.peers.relevance'),
       width: 96,
       minWidth: 80,
       align: 'right',
       sortable: true,
-      renderCell: (peer) => <span className="text-text-secondary">{peer.relevance != null ? formatProgress(peer.relevance) : '—'}</span>,
+      renderCell: (peer) => <span className="text-text-secondary">{peer.relevance != null ? format.formatPercent(peer.relevance) : '—'}</span>,
     },
     {
       id: 'files',
-      label: 'Files',
+      label: t('details.peers.files'),
       width: 160,
       minWidth: 100,
       sortable: true,
       renderCell: (peer) => <span className="block truncate text-text-secondary" title={peer.files || ''}>{peer.files || '—'}</span>,
     },
-  ], []);
+  ], [format, t, tCommon]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -276,6 +285,7 @@ function PeerContextMenuOverlay({ x, y, peer, onClose, onAddPeers, onCopyPeerAdd
   onBanPeer?: (peerKey: string) => void;
   banPeerIsPending?: boolean;
 }) {
+  const { t } = useTaurentTranslation('torrents');
   const menuRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -321,7 +331,7 @@ function PeerContextMenuOverlay({ x, y, peer, onClose, onAddPeers, onCopyPeerAdd
           onClick={() => { onAddPeers(); onClose(); }}
           className="flex w-full items-center px-2 py-1 text-left text-xs text-text-primary hover:bg-surface-interactive select-none"
         >
-          Add peers...
+          {t('details.peers.add')}
         </button>
       ) : null}
       {peer && onCopyPeerAddress ? (
@@ -331,7 +341,7 @@ function PeerContextMenuOverlay({ x, y, peer, onClose, onAddPeers, onCopyPeerAdd
           onClick={() => { onCopyPeerAddress(peer); onClose(); }}
           className="flex w-full items-center px-2 py-1 text-left text-xs text-text-primary hover:bg-surface-interactive select-none"
         >
-          Copy IP:port
+          {t('details.peers.copyAddress')}
         </button>
       ) : null}
       {peer && onBanPeer ? (
@@ -342,7 +352,7 @@ function PeerContextMenuOverlay({ x, y, peer, onClose, onAddPeers, onCopyPeerAdd
           onClick={() => { onBanPeer(peer.key); onClose(); }}
           className="flex w-full items-center px-2 py-1 text-left text-xs text-error hover:bg-error-20 disabled:text-text-disabled select-none"
         >
-          Ban peer permanently
+          {t('details.peers.banPermanently')}
         </button>
       ) : null}
     </div>
@@ -354,6 +364,8 @@ function PeerCard({ peer, onRequestBan, banPeerIsPending }: {
   onRequestBan?: (peerKey: string) => void;
   banPeerIsPending?: boolean;
 }) {
+  const { t } = useTaurentTranslation('torrents');
+  const format = useLocalizedFormatters();
   return (
     <div className="rounded-sm border border-border bg-surface p-3">
       <div className="mb-3 flex items-start justify-between gap-3">
@@ -361,13 +373,13 @@ function PeerCard({ peer, onRequestBan, banPeerIsPending }: {
           <p title={`${peer.ip}:${peer.port}`} className="truncate text-sm font-medium text-text-primary">
             {peer.ip}:{peer.port}
           </p>
-          <p title={peer.client || 'Unknown client'} className="truncate text-xs text-text-secondary">
-            {peer.client || 'Unknown client'}
+          <p title={peer.client || t('details.peers.unknownClient')} className="truncate text-xs text-text-secondary">
+            {peer.client || t('details.peers.unknownClient')}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <span className="rounded-sm bg-primary-20 px-2 py-1 text-xs font-medium text-primary">
-            {formatProgress(peer.progress)}
+            {format.formatPercent(peer.progress)}
           </span>
           {onRequestBan ? (
             <button
@@ -375,9 +387,9 @@ function PeerCard({ peer, onRequestBan, banPeerIsPending }: {
               onClick={() => { onRequestBan(peer.key); }}
               disabled={banPeerIsPending}
               className="rounded-sm bg-error/10 px-2 py-1 text-xs font-medium text-error transition-colors hover:bg-error/20 disabled:text-text-disabled"
-              title="Ban this peer"
+              title={t('details.peers.banThisPeer')}
             >
-              Ban
+              {t('details.peers.ban')}
             </button>
           ) : null}
         </div>
@@ -392,20 +404,20 @@ function PeerCard({ peer, onRequestBan, banPeerIsPending }: {
 
       <div className="mt-3 grid grid-cols-2 gap-3 text-xs text-text-secondary">
         <div>
-          <span className="block text-text-muted">Down</span>
-          <span>{formatSpeed(peer.dl_speed)}</span>
+          <span className="block text-text-muted">{t('details.peers.down')}</span>
+          <span>{format.formatSpeed(peer.dl_speed)}</span>
         </div>
         <div>
-          <span className="block text-text-muted">Up</span>
-          <span>{formatSpeed(peer.up_speed)}</span>
+          <span className="block text-text-muted">{t('details.peers.up')}</span>
+          <span>{format.formatSpeed(peer.up_speed)}</span>
         </div>
         <div>
-          <span className="block text-text-muted">Downloaded</span>
-          <span>{formatBytes(peer.downloaded)}</span>
+          <span className="block text-text-muted">{t('fields.downloaded')}</span>
+          <span>{format.formatBytes(peer.downloaded)}</span>
         </div>
         <div>
-          <span className="block text-text-muted">Uploaded</span>
-          <span>{formatBytes(peer.uploaded)}</span>
+          <span className="block text-text-muted">{t('fields.uploaded')}</span>
+          <span>{format.formatBytes(peer.uploaded)}</span>
         </div>
       </div>
     </div>
@@ -414,6 +426,9 @@ function PeerCard({ peer, onRequestBan, banPeerIsPending }: {
 
 export const TorrentDetailsPeersSection = React.memo<TorrentDetailsPeersSectionProps>(
   ({ variant = 'desktop', peers, isLoading, error, onRetry, onBanPeer, onAddPeers, onCopyPeerAddress, banPeerIsPending }) => {
+    const { t } = useTaurentTranslation('torrents');
+    const { t: tCommon } = useTaurentTranslation('common');
+    const formatError = useLocalizedErrorFormatter();
     const [pendingBanKey, setPendingBanKey] = useState<string | null>(null);
     const [banError, setBanError] = useState<string | null>(null);
 
@@ -429,9 +444,9 @@ export const TorrentDetailsPeersSection = React.memo<TorrentDetailsPeersSectionP
         await onBanPeer(pendingBanKey);
         setPendingBanKey(null);
       } catch (err) {
-        setBanError(formatUserMessageForContext(err, 'torrent-action'));
+        setBanError(formatError(err, 'torrent-action'));
       }
-    }, [pendingBanKey, onBanPeer]);
+    }, [formatError, pendingBanKey, onBanPeer]);
 
     const handleCancelBan = useCallback(() => {
       setPendingBanKey(null);
@@ -454,7 +469,7 @@ export const TorrentDetailsPeersSection = React.memo<TorrentDetailsPeersSectionP
     if (error) {
       return (
         <StateCard
-          title="Could not load peers"
+          title={t('details.peers.loadError')}
           action={onRetry ? <RetryButton onClick={onRetry as () => void} /> : undefined}
         />
       );
@@ -474,7 +489,7 @@ export const TorrentDetailsPeersSection = React.memo<TorrentDetailsPeersSectionP
           {pendingBanKey ? (
             <div className="mt-2 rounded-md border border-error/30 bg-error/5 p-3">
               <p className="text-xs font-medium text-text-primary">
-                Ban peer {pendingBanKey.split('_')[0]}?
+                {t('details.peers.banConfirm', { address: pendingBanKey.split('_')[0] })}
               </p>
               <div className="mt-2 flex gap-2">
                 <button
@@ -483,7 +498,7 @@ export const TorrentDetailsPeersSection = React.memo<TorrentDetailsPeersSectionP
                   disabled={banPeerIsPending}
                   className="rounded-sm border border-border px-2 py-1 text-xs font-medium text-text-secondary enabled:hover:bg-surface-interactive disabled:bg-bg-disabled disabled:text-text-disabled disabled:border-border-disabled"
                 >
-                  Cancel
+                  {tCommon('actions.cancel')}
                 </button>
                 <button
                   type="button"
@@ -491,7 +506,7 @@ export const TorrentDetailsPeersSection = React.memo<TorrentDetailsPeersSectionP
                   disabled={banPeerIsPending}
                   className="rounded-sm bg-error px-2 py-1 text-xs font-medium text-text-on-danger enabled:hover:bg-error/90 disabled:bg-bg-disabled disabled:text-text-disabled disabled:border-border-disabled"
                 >
-                  {banPeerIsPending ? 'Banning...' : 'Ban'}
+                  {banPeerIsPending ? t('details.peers.banning') : t('details.peers.ban')}
                 </button>
               </div>
             </div>
@@ -504,7 +519,7 @@ export const TorrentDetailsPeersSection = React.memo<TorrentDetailsPeersSectionP
 
     if (!peers || peers.length === 0) {
       return (
-        <StateCard title="No peers connected" />
+        <StateCard title={t('details.peers.empty')} />
       );
     }
 
@@ -519,10 +534,10 @@ export const TorrentDetailsPeersSection = React.memo<TorrentDetailsPeersSectionP
         {pendingBanKey ? (
           <div className="mt-3 rounded-sm border border-error/30 bg-error/5 p-3">
             <p className="text-sm font-medium text-text-primary">
-              Ban peer {pendingBanKey.split('_')[0]}?
+              {t('details.peers.banConfirm', { address: pendingBanKey.split('_')[0] })}
             </p>
             <p className="mt-1 text-xs text-text-secondary">
-              This will disconnect the peer and prevent future connections from this address.
+              {t('details.peers.banMessage')}
             </p>
 <div className="mt-3 flex gap-2">
                 <button
@@ -531,7 +546,7 @@ export const TorrentDetailsPeersSection = React.memo<TorrentDetailsPeersSectionP
                   disabled={banPeerIsPending}
                   className="flex items-center justify-center gap-2 rounded-sm border border-border px-3 py-2 text-sm font-medium text-text-secondary transition-colors enabled:hover:bg-surface-interactive disabled:bg-bg-disabled disabled:text-text-disabled disabled:border-border-disabled"
                 >
-                  Cancel
+                  {tCommon('actions.cancel')}
                 </button>
                 <button
                   type="button"
@@ -539,7 +554,7 @@ export const TorrentDetailsPeersSection = React.memo<TorrentDetailsPeersSectionP
                   disabled={banPeerIsPending}
                   className="flex items-center justify-center gap-2 rounded-sm bg-error px-3 py-2 text-sm font-medium text-text-on-danger transition-colors enabled:hover:bg-error/90 disabled:bg-bg-disabled disabled:text-text-disabled disabled:border-border-disabled"
                 >
-                  {banPeerIsPending ? 'Banning...' : 'Ban peer'}
+                  {banPeerIsPending ? t('details.peers.banning') : t('details.peers.banTitle')}
                 </button>
               </div>
           </div>

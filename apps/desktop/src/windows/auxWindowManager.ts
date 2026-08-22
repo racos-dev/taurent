@@ -4,11 +4,12 @@ import { WebviewWindow, getAllWebviewWindows } from '@tauri-apps/api/webviewWind
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import type { WebviewWindow as TauriWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { resolveSystemThemeBackgroundRgba } from '@taurent/shared/theme/backgroundRuntime';
+import { localization } from '@taurent/shared/i18n';
 
 export interface AuxWindowConfig {
   label: string;
   route: string;
-  title: string;
+  titleKey: `windows.${string}`;
   width: number;
   height: number;
   minWidth?: number;
@@ -133,7 +134,8 @@ async function resolveCenterPosition(config: AuxWindowConfig): Promise<{ x?: num
 }
 
 async function applyAuxWindowConfig(win: TauriWebviewWindow, config: AuxWindowConfig): Promise<void> {
-  const { title, width, height, minWidth, minHeight, resizable } = config;
+  const { titleKey, width, height, minWidth, minHeight, resizable } = config;
+  const title = localization.t(titleKey, { ns: 'desktop' });
 
   // Reconfiguring an existing shared host is best-effort. Never prevent the
   // dialog from opening if a platform rejects a dynamic size/resizability call.
@@ -169,7 +171,8 @@ export async function openAuxWindow(
   config: AuxWindowConfig,
   options: OpenOptions = {}
 ): Promise<WebviewWindow> {
-  const { label, route, title, width, height, minWidth, minHeight, resizable, minimizable, maximizable, decorations } = config;
+  const { label, route, titleKey, width, height, minWidth, minHeight, resizable, minimizable, maximizable, decorations } = config;
+  const title = localization.t(titleKey, { ns: 'desktop' });
   const { payload, prebake } = options;
   ensureReadyListener(label);
 
@@ -331,7 +334,7 @@ export async function closeAuxWindow(label: string): Promise<void> {
 interface WindowLifecycleConfig {
   label: string;
   route: string;
-  title: string;
+  titleKey: `windows.${string}`;
   width: number;
   height: number;
   minWidth?: number;

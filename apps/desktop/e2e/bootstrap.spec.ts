@@ -2,6 +2,24 @@ import { expect, test } from '@playwright/test';
 import { gotoDesktop, readRecordedCalls, waitForHomeReady } from './helpers/desktop';
 
 test.describe('desktop bootstrap flows', () => {
+  test('localizes first-run and connection recovery in Romanian', async ({ page }) => {
+    await gotoDesktop(page, { appScenario: 'no-saved-servers', language: 'ro' });
+
+    await expect(page).toHaveURL(/\/add-server$/);
+    await expect(page.getByRole('heading', { name: 'Adaugă un server nou' })).toBeVisible();
+    await expect.poll(async () => {
+      const calls = await readRecordedCalls(page);
+      const call = [...calls].reverse().find((entry) => entry.name === 'syncNativeUiLabels');
+      const labels = call?.args[0] as Record<string, string> | undefined;
+      return labels ? `${labels.menu_file}|${labels.tray_show}|${labels.window_add_torrent}` : '';
+    }).toBe('Fișier|Afișează|Adaugă torrent');
+
+    await gotoDesktop(page, { appScenario: 'saved-server-unavailable', language: 'ro' });
+    await expect(page).toHaveURL(/\/login$/);
+    await expect(page.getByRole('heading', { name: 'Conectare la server' })).toBeVisible();
+    await expect(page.getByText('Conectarea la server a eșuat. Încearcă din nou.')).toBeVisible();
+  });
+
   test('redirects to add-server when no saved servers exist', async ({ page }) => {
     await gotoDesktop(page, { appScenario: 'no-saved-servers' });
 

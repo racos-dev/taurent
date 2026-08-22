@@ -4,11 +4,15 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 import { emit } from '@tauri-apps/api/event';
 import { BridgeAdapter } from '@taurent/bridge/adapters/desktop'
 import { DialogActions, Input } from '@taurent/web-ui';
-import { formatUserMessageForContext } from '@taurent/shared/utils/error';
 import { useQBClient } from '../connection/QBClientProvider';
 import { dismissDialogWindow } from '../windows/dialogs/dialogHostWindow';
+import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 
 export function EditCategoryDialogScreen() {
+  const { t } = useTaurentTranslation('desktop');
+  const { t: tDialogs } = useTaurentTranslation('dialogs');
+  const { t: tCommon } = useTaurentTranslation('common');
+  const formatError = useLocalizedErrorFormatter();
   const [searchParams] = useSearchParams();
   const { serverId, sessionGeneration } = useQBClient();
 
@@ -17,12 +21,12 @@ export function EditCategoryDialogScreen() {
 
   const [savePath, setSavePath] = useState(initialSavePath);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    void getCurrentWindow().setTitle(`Edit Category — ${name}`);
-  }, [name]);
+    void getCurrentWindow().setTitle(t('windows.editCategoryNamed', { name }));
+  }, [name, t]);
 
   // Sync when singleton window is reused for a different category
   useEffect(() => {
@@ -48,7 +52,7 @@ export function EditCategoryDialogScreen() {
       });
       await dismissDialogWindow();
     } catch (err) {
-      setError(formatUserMessageForContext(err, 'settings-save'));
+      setError(err);
       setIsSubmitting(false);
     }
   }
@@ -61,7 +65,7 @@ export function EditCategoryDialogScreen() {
     <div className="flex h-full min-h-0 flex-col gap-4 overflow-hidden p-5 pb-4">
       <div className="flex min-h-0 flex-1 flex-col gap-3">
         <div>
-          <label className="text-xs font-medium text-text-secondary">Category name</label>
+          <label className="text-xs font-medium text-text-secondary">{tDialogs('desktop.categoryName')}</label>
           <Input
             type="text"
             value={name}
@@ -69,7 +73,7 @@ export function EditCategoryDialogScreen() {
           />
         </div>
         <div>
-          <label className="text-xs font-medium text-text-secondary">Save path</label>
+          <label className="text-xs font-medium text-text-secondary">{tDialogs('desktop.savePath')}</label>
           <Input
             ref={inputRef}
             type="text"
@@ -78,7 +82,7 @@ export function EditCategoryDialogScreen() {
               setSavePath(value);
               setError(null);
             }}
-            placeholder="Default save path"
+            placeholder={tDialogs('desktop.defaultSavePath')}
             autoFocus
             onKeyDown={(e) => {
               if (e.key === 'Enter' && hasChanges) void handleSubmit();
@@ -86,18 +90,18 @@ export function EditCategoryDialogScreen() {
             }}
           />
         </div>
-        {error && (
+        {error !== null && (
           <p className="max-h-16 overflow-y-auto break-words whitespace-pre-wrap text-xs text-error">
-            {error}
+            {formatError(error, 'settings-save')}
           </p>
         )}
       </div>
 
       <DialogActions
         actions={[
-          { label: 'Cancel', onClick: handleCancel, disabled: isSubmitting },
+          { label: tCommon('actions.cancel'), onClick: handleCancel, disabled: isSubmitting },
           {
-            label: isSubmitting ? 'Saving...' : 'Save',
+            label: isSubmitting ? tCommon('actions.saving') : tCommon('actions.save'),
             onClick: () => void handleSubmit(),
             variant: 'primary',
             disabled: isSubmitting || !hasChanges,

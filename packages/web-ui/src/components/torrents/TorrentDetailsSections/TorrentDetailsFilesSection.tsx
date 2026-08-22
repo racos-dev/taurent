@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { cn, Icon, formatPriority, formatProgress } from '@taurent/shared';
-import { formatAvailabilityPercent, formatBytes } from '@taurent/shared/utils/formatters';
+import { cn, Icon } from '@taurent/shared';
+import { useLocalization, useLocalizedFormatters, useTaurentTranslation } from '@taurent/shared/i18n';
 import type { TorrentDetailsFilesSectionProps, FileDisplayRow, FilePriorityTarget, FolderStats, FileTreeNode } from './types';
 import { Checkbox } from '../../primitives/Checkbox';
 import { Select } from '../../primitives/Select';
@@ -19,10 +19,6 @@ function normalizeFileAvailability(availability: number | undefined): number {
     return -1;
   }
   return availability;
-}
-
-function formatFileAvailability(availability: number): string {
-  return formatAvailabilityPercent(availability);
 }
 
 function averageKnownFileAvailability(files: TorrentFile[]): number {
@@ -97,16 +93,17 @@ function getFolderStats(node: FileTreeNode): FolderStats {
   };
 }
 
-function compareValues(a: number | string, b: number | string, direction: DesktopDetailTableSortDirection): number {
+function compareValues(a: number | string, b: number | string, direction: DesktopDetailTableSortDirection, locale: string): number {
   if (typeof a === 'number' && typeof b === 'number') {
     return direction === 'asc' ? a - b : b - a;
   }
 
-  const result = String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
+  const result = String(a).localeCompare(String(b), locale, { numeric: true, sensitivity: 'base' });
   return direction === 'asc' ? result : -result;
 }
 
 function FileProgressCell({ progress }: { progress: number }) {
+  const format = useLocalizedFormatters();
   const isComplete = progress >= 1;
   return (
     <div className="flex items-center justify-end gap-2">
@@ -116,17 +113,10 @@ function FileProgressCell({ progress }: { progress: number }) {
           style={{ width: `${Math.max(0, Math.min(progress, 1)) * 100}%` }} 
         />
       </div>
-      <span className="w-10 text-right text-text-secondary">{formatProgress(progress, 0)}</span>
+      <span className="w-10 text-right text-text-secondary">{format.formatPercent(progress, 0)}</span>
     </div>
   );
 }
-
-const PRIORITY_OPTIONS: SelectOption<number>[] = [
-  { value: 1, label: 'Normal' },
-  { value: 6, label: 'High' },
-  { value: 7, label: 'Maximum' },
-  { value: 0, label: 'Skip' },
-];
 
 const LONG_PRESS_DELAY_MS = 500;
 
@@ -201,6 +191,16 @@ function DesktopFiles({ files, onFileToggle, onToggleAll, onFilePriority, onFile
   onFilesContextMenu?: (event: React.MouseEvent<HTMLDivElement>) => void;
   onFolderRowClick?: (row: FileDisplayRow) => void;
 }) {
+  const { locale } = useLocalization();
+  const { t } = useTaurentTranslation('torrents');
+  const { t: tCommon } = useTaurentTranslation('common');
+  const format = useLocalizedFormatters();
+  const priorityOptions = useMemo<SelectOption<number>[]>(() => [
+    { value: 1, label: tCommon('values.normal') },
+    { value: 6, label: tCommon('values.high') },
+    { value: 7, label: tCommon('values.maximum') },
+    { value: 0, label: tCommon('values.skip') },
+  ], [tCommon]);
   const tree = useMemo(() => buildFileTree(files), [files]);
   const [sortColumnId, setSortColumnId] = useState<string>('name');
   const [sortDirection, setSortDirection] = useState<DesktopDetailTableSortDirection>('asc');
@@ -308,7 +308,7 @@ function DesktopFiles({ files, onFileToggle, onToggleAll, onFilePriority, onFile
             }
           })();
 
-          return compareValues(leftValue, rightValue, sortDirection);
+          return compareValues(leftValue, rightValue, sortDirection, locale);
         })
         .map((node) => (
           node.children.length > 0
@@ -339,7 +339,7 @@ function DesktopFiles({ files, onFileToggle, onToggleAll, onFilePriority, onFile
     );
 
     return flatten(sortNodes(tree), 0);
-  }, [expanded, getRowStats, sortColumnId, sortDirection, tree]);
+  }, [expanded, getRowStats, locale, sortColumnId, sortDirection, tree]);
 
   const allEnabled = files.every((file) => file.priority > 0);
   const someEnabled = files.some((file) => file.priority > 0);
@@ -356,7 +356,7 @@ function DesktopFiles({ files, onFileToggle, onToggleAll, onFilePriority, onFile
               onToggleAll?.(checked);
             }}
           />
-          <span>Name</span>
+          <span>{t('fields.name')}</span>
         </div>
       ),
       width: 360,
@@ -394,7 +394,7 @@ function DesktopFiles({ files, onFileToggle, onToggleAll, onFilePriority, onFile
                     handleToggleExpand(row.path);
                   }}
                   className="flex h-5 w-5 shrink-0 items-center justify-center"
-                  title={expanded.has(row.path) ? 'Collapse' : 'Expand'}
+                  title={t(expanded.has(row.path) ? 'details.files.collapse' : 'details.files.expand')}
                 >
                   <Icon
                     name="chevron-down"
@@ -433,16 +433,16 @@ function DesktopFiles({ files, onFileToggle, onToggleAll, onFilePriority, onFile
     },
     {
       id: 'size',
-      label: 'Size',
+      label: t('fields.size'),
       width: 116,
       minWidth: 92,
       align: 'right',
       sortable: true,
-      renderCell: (row) => <span className="text-text-secondary">{formatBytes(row.stats.totalSize)}</span>,
+      renderCell: (row) => <span className="text-text-secondary">{format.formatBytes(row.stats.totalSize)}</span>,
     },
     {
       id: 'progress',
-      label: 'Progress',
+      label: t('fields.progress'),
       width: 136,
       minWidth: 124,
       align: 'right',
@@ -451,25 +451,25 @@ function DesktopFiles({ files, onFileToggle, onToggleAll, onFilePriority, onFile
     },
     {
       id: 'remaining',
-      label: 'Remaining',
+      label: t('fields.remaining'),
       width: 116,
       minWidth: 100,
       align: 'right',
       sortable: true,
-      renderCell: (row) => <span className="text-text-secondary">{formatBytes(row.stats.remaining)}</span>,
+      renderCell: (row) => <span className="text-text-secondary">{format.formatBytes(row.stats.remaining)}</span>,
     },
     {
       id: 'availability',
-      label: 'Availability',
+      label: t('fields.availability'),
       width: 102,
       minWidth: 90,
       align: 'right',
       sortable: true,
-      renderCell: (row) => <span className="text-text-secondary">{formatFileAvailability(row.stats.avgAvailability)}</span>,
+      renderCell: (row) => <span className="text-text-secondary">{row.stats.avgAvailability < 0 ? '-' : format.formatPercent(row.stats.avgAvailability)}</span>,
     },
     {
       id: 'priority',
-      label: 'Priority',
+      label: t('fields.priority'),
       width: 118,
       minWidth: 104,
       align: 'center',
@@ -481,8 +481,8 @@ function DesktopFiles({ files, onFileToggle, onToggleAll, onFilePriority, onFile
 
         if (row.isFolder) {
           const folderOptions: SelectOption<number>[] = priorityValue === -1
-            ? [{ value: -1, label: 'Mixed', disabled: true }, ...PRIORITY_OPTIONS]
-            : PRIORITY_OPTIONS;
+            ? [{ value: -1, label: t('details.files.mixed'), disabled: true }, ...priorityOptions]
+            : priorityOptions;
           return (
             <div className="inline-block" onClick={(e) => e.stopPropagation()}>
               <Select
@@ -508,7 +508,7 @@ function DesktopFiles({ files, onFileToggle, onToggleAll, onFilePriority, onFile
           <div className="inline-block" onClick={(e) => e.stopPropagation()}>
             <Select
               value={priorityValue}
-              options={PRIORITY_OPTIONS}
+              options={priorityOptions}
               onChange={(newPriority) => {
                 if (newPriority !== row.file?.priority && row.file) {
                   onFilePriority?.({ ...row.file, priority: newPriority });
@@ -519,7 +519,7 @@ function DesktopFiles({ files, onFileToggle, onToggleAll, onFilePriority, onFile
         );
       },
     },
-  ], [allEnabled, expanded, handleToggleExpand, onFilePriority, onFileToggle, onToggleAll, someEnabled, onFolderRowClick]);
+  ], [allEnabled, expanded, format, handleToggleExpand, onFilePriority, onFileToggle, onToggleAll, priorityOptions, someEnabled, onFolderRowClick, t]);
 
   const handleRowContextMenu = useCallback(
     (event: React.MouseEvent<HTMLTableRowElement>, row: FileDisplayRow) => {
@@ -562,6 +562,8 @@ function MobileFileCard({
   onPriority?: (file: TorrentFile) => void;
   onPriorityTarget?: (target: FilePriorityTarget) => void;
 }) {
+  const { t } = useTaurentTranslation('torrents');
+  const format = useLocalizedFormatters();
   const progress = (file.progress || 0) * 100;
   const barClass = file.is_seed ? 'bg-success' : progress >= 100 ? 'bg-success' : 'bg-primary';
   const longPressHandlers = useLongPress(() => {
@@ -583,10 +585,10 @@ function MobileFileCard({
             <Icon name="file" className="mt-0 h-4 w-4 shrink-0 text-text-muted" strokeWidth={2} />
             <div className="break-words text-sm font-medium text-text-primary">{file.name.split('/').pop() || file.name}</div>
           </div>
-          <div className="mt-1 text-xs text-text-secondary">{formatBytes(file.size)}</div>
+          <div className="mt-1 text-xs text-text-secondary">{format.formatBytes(file.size)}</div>
         </div>
         <span className="rounded-sm bg-surface px-2 py-1 text-xs text-text-secondary">
-          {formatPriority(file.priority)}
+          {format.formatPriority(file.priority)}
         </span>
       </div>
 
@@ -595,9 +597,9 @@ function MobileFileCard({
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-text-secondary">
-        <span className="rounded-sm bg-surface px-2 py-1">{formatProgress(file.progress)}</span>
-        <span className="rounded-sm bg-surface px-2 py-1">Availability {formatFileAvailability(file.availability)}</span>
-        {file.is_seed ? <span className="rounded-sm bg-surface px-2 py-1">Seed file</span> : null}
+        <span className="rounded-sm bg-surface px-2 py-1">{format.formatPercent(file.progress)}</span>
+        <span className="rounded-sm bg-surface px-2 py-1">{t('fields.availability')} {file.availability < 0 ? '-' : format.formatPercent(file.availability)}</span>
+        {file.is_seed ? <span className="rounded-sm bg-surface px-2 py-1">{t('details.files.seedFile')}</span> : null}
       </div>
     </div>
   );
@@ -614,18 +616,24 @@ function MobileFolderCard({
   onToggle: () => void;
   onPriorityTarget?: (target: FilePriorityTarget) => void;
 }) {
+  const { t } = useTaurentTranslation('torrents');
+  const format = useLocalizedFormatters();
   const files = useMemo(() => getNodeFiles(row.node), [row.node]);
   const progress = row.stats.progress * 100;
   const priorityValue = getPriorityValue(files);
   const longPressHandlers = useLongPress(() => {
-    onPriorityTarget?.(buildPriorityTarget(`${row.node.name} (${row.stats.fileCount} files)`, files));
+    onPriorityTarget?.(buildPriorityTarget(t('details.files.folderTarget', {
+      name: row.node.name, count: row.stats.fileCount,
+    }), files));
   });
 
   return (
     <button
       type="button"
       aria-expanded={isExpanded}
-      aria-label={`${isExpanded ? 'Collapse' : 'Expand'} folder ${row.node.name}`}
+      aria-label={t('details.files.folderAction', {
+        action: t(isExpanded ? 'details.files.collapse' : 'details.files.expand'), name: row.node.name,
+      })}
       onClick={onToggle}
       onKeyDown={(event) => {
         if (event.key === 'Enter' || event.key === ' ') {
@@ -652,10 +660,10 @@ function MobileFolderCard({
             <span className="truncate text-sm font-medium text-text-primary">{row.node.name}</span>
             <span className="shrink-0 text-xs text-text-muted">({row.stats.fileCount})</span>
           </div>
-          <div className="mt-1 text-xs text-text-secondary">{formatBytes(row.stats.totalSize)}</div>
+          <div className="mt-1 text-xs text-text-secondary">{format.formatBytes(row.stats.totalSize)}</div>
         </div>
         <span className="rounded-sm bg-surface px-2 py-1 text-xs text-text-secondary">
-          {priorityValue === -1 ? 'Mixed' : formatPriority(priorityValue)}
+          {priorityValue === -1 ? t('details.files.mixed') : format.formatPriority(priorityValue)}
         </span>
       </div>
 
@@ -664,9 +672,9 @@ function MobileFolderCard({
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-text-secondary">
-        <span className="rounded-sm bg-surface px-2 py-1">{formatProgress(row.stats.progress)}</span>
-        <span className="rounded-sm bg-surface px-2 py-1">Availability {formatFileAvailability(row.stats.avgAvailability)}</span>
-        <span className="rounded-sm bg-surface px-2 py-1">{row.stats.fileCount} files</span>
+        <span className="rounded-sm bg-surface px-2 py-1">{format.formatPercent(row.stats.progress)}</span>
+        <span className="rounded-sm bg-surface px-2 py-1">{t('fields.availability')} {row.stats.avgAvailability < 0 ? '-' : format.formatPercent(row.stats.avgAvailability)}</span>
+        <span className="rounded-sm bg-surface px-2 py-1">{t('details.files.files', { count: row.stats.fileCount })}</span>
       </div>
     </button>
   );
@@ -771,6 +779,7 @@ function MobileFiles({
 
 export const TorrentDetailsFilesSection = React.memo<TorrentDetailsFilesSectionProps>(
   ({ variant = 'desktop', files, isLoading, error, onRetry, onFilePriority, onFilePriorityTarget, onFileToggle, onToggleAll, onFileContextMenu, onFolderContextMenu, onFilesContextMenu, onFolderRowClick }) => {
+    const { t } = useTaurentTranslation('torrents');
     if (isLoading && !files) {
       if (variant === 'mobile') {
         return (
@@ -793,7 +802,7 @@ export const TorrentDetailsFilesSection = React.memo<TorrentDetailsFilesSectionP
     if (error) {
       return (
         <StateCard
-          title="Could not load files"
+          title={t('details.files.loadError')}
           action={onRetry ? <RetryButton onClick={onRetry as () => void} /> : undefined}
         />
       );
@@ -805,7 +814,7 @@ export const TorrentDetailsFilesSection = React.memo<TorrentDetailsFilesSectionP
 
     if (!files || files.length === 0) {
       return (
-        <StateCard title="No files available" />
+        <StateCard title={t('details.files.empty')} />
       );
     }
 

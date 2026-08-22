@@ -8,7 +8,7 @@ import { useAddTorrentScreenController } from '@taurent/web-core';
 import { useQBClient } from '../connection';
 import { closeAuxWindow } from '../windows/auxWindowManager';
 import { pickTorrentFiles, storage } from '../platform';
-import { formatUserMessageForContext } from '@taurent/shared/utils/error';
+import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 
 type AddTorrentMode = 'magnet' | 'file';
 
@@ -17,6 +17,8 @@ interface AddTorrentScreenProps {
 }
 
 export function AddTorrentScreen({ variant = 'main' }: AddTorrentScreenProps) {
+  const { t } = useTaurentTranslation('torrents');
+  const formatError = useLocalizedErrorFormatter();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   // Desktop always uses 'magnet' as the base mode for the controller;
@@ -72,6 +74,12 @@ export function AddTorrentScreen({ variant = 'main' }: AddTorrentScreenProps) {
     onSubmitSuccess: handleSuccess,
     onSubmitError: () => {
       // Error is surfaced via controller.error
+    },
+    formatError: (error) => formatError(error, 'add-torrent'),
+    validationMessages: {
+      magnetRequired: t('addForm.magnetRequired'),
+      invalidMagnet: t('addForm.invalidMagnet'),
+      fileRequired: t('addForm.fileRequired'),
     },
   });
 
@@ -142,9 +150,9 @@ export function AddTorrentScreen({ variant = 'main' }: AddTorrentScreenProps) {
       controller.setSelectedFiles([...new Set([...controller.selectedFiles, ...files])]);
       controller.setLastUsedSource('file');
     } catch (err) {
-      controller.setError(formatUserMessageForContext(err, 'file-picker'));
+      controller.setError(formatError(err, 'file-picker'));
     }
-  }, [controller]);
+  }, [controller, formatError]);
 
   const handleMagnetUriChange = useCallback((value: string) => {
     controller.setMagnetUri(value);

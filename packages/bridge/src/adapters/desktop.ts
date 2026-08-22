@@ -6,6 +6,7 @@ import type {
   AppUpdateProgress,
   DesktopBridge,
   NativeMenuState,
+  NativeUiLabels,
   NativeUiAction,
   ResolveResult,
 } from '../contracts/interfaces';
@@ -13,6 +14,7 @@ export type {
   AppUpdateInfo,
   AppUpdateProgress,
   NativeMenuState,
+  NativeUiLabels,
   NativeUiAction,
   ResolveResult,
 } from '../contracts/interfaces';
@@ -996,6 +998,10 @@ export function createDesktopBridge(transport?: Transport): DesktopBridge {
 
     async syncMenuState(state: NativeMenuState): Promise<void> {
       return t.invoke('sync_menu_state', { state });
+    },
+
+    async syncNativeUiLabels(labels: NativeUiLabels): Promise<void> {
+      return t.invoke('sync_native_ui_labels', { labels });
     },
 
     async getPendingNativeUiActions(): Promise<NativeUiAction[]> {

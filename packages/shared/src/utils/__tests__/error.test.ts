@@ -268,6 +268,9 @@ describe('classifyError', () => {
 
   it('classifies connection refused as network', () => {
     expect(classifyError(new Error('connection refused'))).toBe('network');
+    expect(classifyError(new Error('ECONNREFUSED'))).toBe('network');
+    expect(classifyError(new Error('ENOTFOUND'))).toBe('network');
+    expect(classifyError(new Error('net::ERR_CONNECTION_REFUSED'))).toBe('network');
   });
 
   it('classifies HTTP 409 as conflict before generic HTTP', () => {

@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useShellStore, useTorrentSelectionStore } from '@/stores';
 import { toast } from '@taurent/web-ui/components/shared/Toast/toast';
-import { formatUserMessageForContext } from '@taurent/shared/utils/error';
+import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 import { useTorrentProperties, useTorrentTrackers, useTorrentFiles, useTorrentPeers, useTorrentWebSeeds } from '../../hooks/torrents/useTorrentDetails';
 import { useLiveTorrentByHash } from '../../hooks/torrents/useLiveTorrentByHash';
 import { useTorrentActions } from '../../hooks/torrents/useTorrentActions';
@@ -59,14 +59,6 @@ function PeersTabCoordinator({ paneOpen, activeTab, peersRefetch, selectedTorren
   return null;
 }
 
-const TABS: Array<{ id: DetailTab; label: string }> = [
-  { id: 'overview', label: 'General' },
-  { id: 'trackers', label: 'Trackers' },
-  { id: 'peers', label: 'Peers' },
-  { id: 'httpSources', label: 'HTTP Sources' },
-  { id: 'files', label: 'Content' },
-];
-
 function clampHeight(height: number): number {
   return Math.min(MAX_PANEL_HEIGHT, Math.max(MIN_PANEL_HEIGHT, height));
 }
@@ -80,6 +72,16 @@ function normalizeHttpSourceUrls(value: string): string {
 }
 
 export function DetailPanel() {
+  const { t } = useTaurentTranslation('torrents');
+  const { t: tCommon } = useTaurentTranslation('common');
+  const formatError = useLocalizedErrorFormatter();
+  const tabs = useMemo<Array<{ id: DetailTab; label: string }>>(() => [
+    { id: 'overview', label: t('details.panel.general') },
+    { id: 'trackers', label: t('details.screen.trackers') },
+    { id: 'peers', label: t('details.screen.peers') },
+    { id: 'httpSources', label: t('details.screen.httpSources') },
+    { id: 'files', label: t('details.panel.content') },
+  ], [t]);
   const panelRef = useRef<HTMLDivElement>(null);
   const resizeStateRef = useRef<{ bottomEdge: number } | null>(null);
 
@@ -308,8 +310,8 @@ export function DetailPanel() {
     void removeTrackerMutation.mutateAsync({
       hash: panelTorrentHash,
       urls: tracker.url,
-    }).catch((err) => { toast.error(formatUserMessageForContext(err, 'torrent-action')); });
-  }, [panelTorrentHash, removeTrackerMutation]);
+    }).catch((err) => { toast.error(formatError(err, 'torrent-action')); });
+  }, [formatError, panelTorrentHash, removeTrackerMutation]);
 
   const handleCopyTrackerUrl = useCallback((tracker: Tracker) => {
     void navigator.clipboard.writeText(tracker.url);
@@ -349,11 +351,11 @@ export function DetailPanel() {
     }).then(() => {
       closeAddHttpSources();
     }).catch((err) => {
-      toast.error(formatUserMessageForContext(err, 'torrent-action'), {
+      toast.error(formatError(err, 'torrent-action'), {
         dedupeKey: 'desktop-detail-panel:add-http-sources',
       });
     });
-  }, [addHttpSourcesMutation, closeAddHttpSources, newHttpSourceUrls, panelTorrentHash]);
+  }, [addHttpSourcesMutation, closeAddHttpSources, formatError, newHttpSourceUrls, panelTorrentHash]);
 
   const handleEditHttpSource = useCallback((seed: WebSeed) => {
     setEditingHttpSource(seed);
@@ -371,11 +373,11 @@ export function DetailPanel() {
       setEditingHttpSource(null);
       setEditHttpSourceUrl('');
     }).catch((err) => {
-      toast.error(formatUserMessageForContext(err, 'torrent-action'), {
+      toast.error(formatError(err, 'torrent-action'), {
         dedupeKey: 'desktop-detail-panel:edit-http-source',
       });
     });
-  }, [editHttpSourceMutation, editHttpSourceUrl, editingHttpSource, panelTorrentHash]);
+  }, [editHttpSourceMutation, editHttpSourceUrl, editingHttpSource, formatError, panelTorrentHash]);
 
   const handleRemoveHttpSource = useCallback((seed: WebSeed) => {
     if (!panelTorrentHash) return;
@@ -383,11 +385,11 @@ export function DetailPanel() {
       hash: panelTorrentHash,
       urls: seed.url,
     }).catch((err) => {
-      toast.error(formatUserMessageForContext(err, 'torrent-action'), {
+      toast.error(formatError(err, 'torrent-action'), {
         dedupeKey: 'desktop-detail-panel:remove-http-source',
       });
     });
-  }, [panelTorrentHash, removeHttpSourceMutation]);
+  }, [formatError, panelTorrentHash, removeHttpSourceMutation]);
 
   // ─── File toggle/priority handlers ────────────────────────────────────────
   const handleFileToggle = useCallback((fileIndex: number, enabled: boolean) => {
@@ -397,11 +399,11 @@ export function DetailPanel() {
       ids: [fileIndex],
       priority: enabled ? 1 : 0,
     }).catch((err) => {
-      toast.error(formatUserMessageForContext(err, 'torrent-action'), {
+      toast.error(formatError(err, 'torrent-action'), {
         dedupeKey: 'desktop-detail-panel:file-priority',
       });
     });
-  }, [panelTorrentHash, setFilePriorityMutation]);
+  }, [formatError, panelTorrentHash, setFilePriorityMutation]);
 
   const handleToggleAllFiles = useCallback((enabled: boolean) => {
     if (!panelTorrentHash || !files) return;
@@ -523,7 +525,7 @@ export function DetailPanel() {
       >
         <button
           type="button"
-          aria-label="Resize properties pane"
+          aria-label={t('details.panel.resize')}
           aria-orientation="horizontal"
           aria-valuemin={MIN_PANEL_HEIGHT}
           aria-valuemax={MAX_PANEL_HEIGHT}
@@ -534,11 +536,11 @@ export function DetailPanel() {
       <div className="flex min-w-0 min-h-0 flex-1 flex-col overflow-hidden">
           <div className="flex items-center gap-2 border-b border-border px-3 py-1">
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-medium text-text-muted">Properties</p>
+              <p className="text-xs font-medium text-text-muted">{t('details.panel.properties')}</p>
             </div>
           </div>
           <div className="flex flex-1 items-center justify-center text-xs text-text-secondary">
-            Select a torrent to view details
+            {t('details.panel.selectTorrent')}
           </div>
         </div>
       </aside>
@@ -553,7 +555,7 @@ export function DetailPanel() {
       {/* Top resize handle */}
       <button
         type="button"
-        aria-label="Resize properties pane"
+        aria-label={t('details.panel.resize')}
         aria-orientation="horizontal"
         aria-valuemin={MIN_PANEL_HEIGHT}
         aria-valuemax={MAX_PANEL_HEIGHT}
@@ -572,7 +574,7 @@ export function DetailPanel() {
             type="button"
             onClick={handleDismiss}
             className="flex h-6 w-6 items-center justify-center rounded-sm border border-border text-text-secondary transition-colors enabled:hover:bg-surface-interactive enabled:hover:text-text-primary disabled:text-text-disabled"
-            aria-label="Close properties pane"
+            aria-label={t('details.panel.close')}
           >
             ×
           </button>
@@ -581,7 +583,7 @@ export function DetailPanel() {
         {/* Tab bar */}
         <TabBar
           variant="underline"
-          tabs={TABS}
+          tabs={tabs}
           activeTab={shellTab}
           onTabChange={handleTabChange as (id: string) => void}
         />
@@ -608,7 +610,10 @@ export function DetailPanel() {
                     value={controller.newTrackerUrl}
                     onChange={controller.setNewTrackerUrl}
                     onKeyDown={(e) => { if (e.key === 'Enter') { controller.handleAddTrackerSubmit(); } }}
-                    placeholder="https://tracker.example.com/announce"
+                    placeholder={
+                      // i18n-audit-ignore: protocol URL example is intentionally verbatim
+                      'https://tracker.example.com/announce'
+                    }
                     className="min-w-0 flex-1"
                     disabled={controller.addTrackerIsPending}
                     size="sm"
@@ -619,7 +624,7 @@ export function DetailPanel() {
                     disabled={controller.addTrackerIsPending || !controller.newTrackerUrl.trim()}
                     className="shrink-0 rounded-sm border border-primary bg-primary px-2 py-1 text-xs font-medium text-text-on-primary transition-colors enabled:hover:bg-primary/90 disabled:cursor-not-allowed disabled:text-text-disabled disabled:bg-bg-disabled disabled:text-text-disabled disabled:border-border-disabled"
                   >
-                    Add
+                    {tCommon('actions.add')}
                   </button>
                   <button
                     type="button"
@@ -627,7 +632,7 @@ export function DetailPanel() {
                     disabled={controller.addTrackerIsPending}
                     className="shrink-0 rounded-sm border border-border px-2 py-1 text-xs font-medium text-text-secondary transition-colors enabled:hover:bg-surface-interactive disabled:cursor-not-allowed disabled:text-text-disabled disabled:bg-bg-disabled disabled:text-text-disabled disabled:border-border-disabled"
                   >
-                    Cancel
+                    {tCommon('actions.cancel')}
                   </button>
                 </div>
               ) : null}
@@ -635,7 +640,7 @@ export function DetailPanel() {
               {/* Edit tracker dialog */}
               {editingTracker && (
                 <div className="flex items-center gap-2 rounded-sm border border-border bg-surface p-2">
-                  <span className="text-xs text-text-secondary shrink-0">Edit:</span>
+                  <span className="text-xs text-text-secondary shrink-0">{t('details.panel.edit')}</span>
                   <Input
                     type="text"
                     value={editTrackerUrl}
@@ -651,7 +656,7 @@ export function DetailPanel() {
                     disabled={editTrackerMutation.isPending || !editTrackerUrl.trim()}
                     className="shrink-0 rounded-sm border border-primary bg-primary px-2 py-1 text-xs font-medium text-text-on-primary transition-colors enabled:hover:bg-primary/90 disabled:cursor-not-allowed disabled:text-text-disabled disabled:bg-bg-disabled disabled:text-text-disabled disabled:border-border-disabled"
                   >
-                    Save
+                    {tCommon('actions.save')}
                   </button>
                   <button
                     type="button"
@@ -659,7 +664,7 @@ export function DetailPanel() {
                     disabled={editTrackerMutation.isPending}
                     className="shrink-0 rounded-sm border border-border px-2 py-1 text-xs font-medium text-text-secondary transition-colors enabled:hover:bg-surface-interactive disabled:cursor-not-allowed disabled:text-text-disabled disabled:bg-bg-disabled disabled:text-text-disabled disabled:border-border-disabled"
                   >
-                    Cancel
+                    {tCommon('actions.cancel')}
                   </button>
                 </div>
               )}
@@ -693,7 +698,10 @@ export function DetailPanel() {
                     value={controller.newPeers}
                     onChange={controller.setNewPeers}
                     onKeyDown={(e) => { if (e.key === 'Enter') { controller.handleAddPeersSubmit(); } }}
-                    placeholder="host:port, host:port (e.g. 1.2.3.4:6881)"
+                    placeholder={
+                      // i18n-audit-ignore: network address example is intentionally verbatim
+                      'host:port, host:port (e.g. 1.2.3.4:6881)'
+                    }
                     className="min-w-0 flex-1"
                     disabled={controller.addPeersIsPending}
                     size="sm"
@@ -704,7 +712,7 @@ export function DetailPanel() {
                     disabled={controller.addPeersIsPending || !controller.newPeers.trim()}
                     className="shrink-0 rounded-sm border border-primary bg-primary px-2 py-1 text-xs font-medium text-text-on-primary transition-colors enabled:hover:bg-primary/90 disabled:cursor-not-allowed disabled:text-text-disabled disabled:bg-bg-disabled disabled:text-text-disabled disabled:border-border-disabled"
                   >
-                    Add
+                    {tCommon('actions.add')}
                   </button>
                   <button
                     type="button"
@@ -712,7 +720,7 @@ export function DetailPanel() {
                     disabled={controller.addPeersIsPending}
                     className="shrink-0 rounded-sm border border-border px-2 py-1 text-xs font-medium text-text-secondary transition-colors enabled:hover:bg-surface-interactive disabled:cursor-not-allowed disabled:text-text-disabled disabled:bg-bg-disabled disabled:text-text-disabled disabled:border-border-disabled"
                   >
-                    Cancel
+                    {tCommon('actions.cancel')}
                   </button>
                 </div>
               ) : null}
@@ -738,7 +746,10 @@ export function DetailPanel() {
                     value={newHttpSourceUrls}
                     onChange={setNewHttpSourceUrls}
                     onKeyDown={(e) => { if (e.key === 'Enter') { handleAddHttpSourcesSubmit(); } }}
-                    placeholder="https://example.com/file, https://mirror.example.com/file"
+                    placeholder={
+                      // i18n-audit-ignore: protocol URL examples are intentionally verbatim
+                      'https://example.com/file, https://mirror.example.com/file'
+                    }
                     className="min-w-0 flex-1"
                     disabled={addHttpSourcesMutation.isPending}
                     size="sm"
@@ -749,7 +760,7 @@ export function DetailPanel() {
                     disabled={addHttpSourcesMutation.isPending || !newHttpSourceUrls.trim()}
                     className="shrink-0 rounded-sm border border-primary bg-primary px-2 py-1 text-xs font-medium text-text-on-primary transition-colors enabled:hover:bg-primary/90 disabled:cursor-not-allowed disabled:text-text-disabled disabled:bg-bg-disabled disabled:text-text-disabled disabled:border-border-disabled"
                   >
-                    Add
+                    {tCommon('actions.add')}
                   </button>
                   <button
                     type="button"
@@ -757,14 +768,14 @@ export function DetailPanel() {
                     disabled={addHttpSourcesMutation.isPending}
                     className="shrink-0 rounded-sm border border-border px-2 py-1 text-xs font-medium text-text-secondary transition-colors enabled:hover:bg-surface-interactive disabled:cursor-not-allowed disabled:text-text-disabled disabled:bg-bg-disabled disabled:text-text-disabled disabled:border-border-disabled"
                   >
-                    Cancel
+                    {tCommon('actions.cancel')}
                   </button>
                 </div>
               ) : null}
 
               {editingHttpSource ? (
                 <div className="flex items-center gap-2 rounded-sm border border-border bg-surface p-2">
-                  <span className="text-xs text-text-secondary shrink-0">Edit:</span>
+                  <span className="text-xs text-text-secondary shrink-0">{t('details.panel.edit')}</span>
                   <Input
                     type="text"
                     value={editHttpSourceUrl}
@@ -780,7 +791,7 @@ export function DetailPanel() {
                     disabled={editHttpSourceMutation.isPending || !editHttpSourceUrl.trim()}
                     className="shrink-0 rounded-sm border border-primary bg-primary px-2 py-1 text-xs font-medium text-text-on-primary transition-colors enabled:hover:bg-primary/90 disabled:cursor-not-allowed disabled:text-text-disabled disabled:bg-bg-disabled disabled:text-text-disabled disabled:border-border-disabled"
                   >
-                    Save
+                    {tCommon('actions.save')}
                   </button>
                   <button
                     type="button"
@@ -788,7 +799,7 @@ export function DetailPanel() {
                     disabled={editHttpSourceMutation.isPending}
                     className="shrink-0 rounded-sm border border-border px-2 py-1 text-xs font-medium text-text-secondary transition-colors enabled:hover:bg-surface-interactive disabled:cursor-not-allowed disabled:text-text-disabled disabled:bg-bg-disabled disabled:text-text-disabled disabled:border-border-disabled"
                   >
-                    Cancel
+                    {tCommon('actions.cancel')}
                   </button>
                 </div>
               ) : null}
@@ -813,14 +824,14 @@ export function DetailPanel() {
               {files && files.length > 50 && (
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-text-secondary">
-                    Showing {controller.visibleFiles.length} of {files.length} files
+                    {t('details.panel.showingFiles', { visible: controller.visibleFiles.length, total: files.length })}
                   </span>
                   <button
                     type="button"
                     onClick={() => { controller.setShowAllFiles(!controller.showAllFiles); }}
                     className="text-xs text-primary enabled:hover:text-primary/80"
                   >
-                    {controller.showAllFiles ? 'Show less' : 'Show all'}
+                    {t(controller.showAllFiles ? 'details.panel.showLess' : 'details.panel.showAll')}
                   </button>
                 </div>
               )}

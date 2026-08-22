@@ -3,6 +3,28 @@ import { describe, expect, it, vi } from 'vitest';
 import { useAddServerScreenController } from '../useAddServerScreenController';
 
 describe('useAddServerScreenController', () => {
+  it('returns semantic validation codes instead of captured display copy', () => {
+    const { result } = renderHook(() =>
+      useAddServerScreenController({
+        addServer: vi.fn(),
+        onSuccess: vi.fn(),
+        bridgeServers: { normalizeServerUrl: vi.fn() },
+      }),
+    );
+
+    act(() => {
+      result.current.setName('');
+      result.current.setUrl('https://');
+      result.current.setUsername('');
+    });
+
+    expect(result.current.validationErrors).toEqual({
+      name: 'nameRequired',
+      url: 'invalidUrl',
+      username: 'usernameRequired',
+    });
+  });
+
   it('keeps entered values and shows an error when connection after add fails', async () => {
     const addServer = vi.fn().mockResolvedValue({ id: 'server-1' });
     const onSuccess = vi.fn().mockRejectedValue(new Error('auth error: invalid credentials'));

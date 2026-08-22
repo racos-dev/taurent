@@ -2,13 +2,14 @@ import { emit, listen } from '@tauri-apps/api/event';
 import type { ResourceInvalidatedEvent } from '@taurent/bridge/events';
 import { createWindowLifecycle, openAuxWindow } from '../auxWindowManager';
 
+// i18n-audit-ignore: stable Tauri window identifier, not display copy
 const SETTINGS_WINDOW_LABEL = 'settings';
 type SettingsSection = 'desktop-window' | 'desktop-theme' | 'desktop-about' | 'desktop-servers' | 'desktop-path-mappings';
 
 const lc = createWindowLifecycle({
   label: SETTINGS_WINDOW_LABEL,
   route: '/settings-window',
-  title: 'Settings',
+  titleKey: 'windows.settings',
   width: 1000,
   height: 700,
   minWidth: 1000,

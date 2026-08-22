@@ -26,6 +26,7 @@ function resolveWindowLabel(): string {
 class MockWindow {
   private closeRequestedHandlers = new Set<CloseRequestedHandler>();
   private visible = true;
+  private title = 'Taurent';
   private position = { x: 80, y: 80 };
   private size = { width: 1280, height: 800 };
 
@@ -45,7 +46,13 @@ class MockWindow {
     this.visible = false;
   }
 
-  async setTitle(_title: string) {}
+  async setTitle(title: string) {
+    this.title = title;
+  }
+
+  getTitle() {
+    return this.title;
+  }
 
   async setSize(_size: unknown) {}
 
@@ -110,6 +117,7 @@ declare global {
       requestClose: () => Promise<boolean>;
       isVisible: () => Promise<boolean>;
       label: () => string;
+      title: () => string;
     };
   }
 }
@@ -119,6 +127,7 @@ if (typeof window !== 'undefined') {
     requestClose: () => currentWindow.requestClose(),
     isVisible: () => currentWindow.isVisible(),
     label: () => currentWindow.label,
+    title: () => currentWindow.getTitle(),
   };
 }
 

@@ -101,7 +101,11 @@ export function isNetworkError(error: unknown): boolean {
     message.includes('network') ||
     message.includes('timeout') ||
     message.includes('failed to fetch') ||
-    message.includes('connection')
+    message.includes('connection') ||
+    message.includes('econnrefused') ||
+    message.includes('enotfound') ||
+    message.includes('ehostunreach') ||
+    message.includes('err_connection_refused')
   );
 }
 

@@ -8,6 +8,7 @@
 // in the web-ui package without creating a dependency cycle.
 
 import type { AppIconName } from '@taurent/shared';
+import type { TaurentTFunction } from '@taurent/shared/i18n';
 
 // ─── Local mutation shapes ─────────────────────────────────────────────────────
 // Minimal shapes needed by builders. Keep in sync with the mutations that
@@ -117,17 +118,18 @@ export function buildPrimaryBatchActions(
   },
   hashes: string[],
   isBatchActionPending: boolean,
-  onDeleteClick: () => void
+  onDeleteClick: () => void,
+  t: TaurentTFunction,
 ): TorrentActionDescriptor[] {
   return [
     buildHashListAction(
-      'resume', 'play', 'Resume', 'Starting...', 'primary',
+      'resume', 'play', t('actions.resume'), t('actions.starting'), 'primary',
       actions.resume.isPending,
       isBatchActionPending,
       () => void actions.resume.mutateAsync(hashes)
     ),
     buildHashListAction(
-      'pause', 'pause', 'Pause', 'Pausing...', undefined,
+      'pause', 'pause', t('actions.pause'), t('actions.pausing'), undefined,
       actions.pause.isPending,
       isBatchActionPending,
       () => void actions.pause.mutateAsync(hashes)
@@ -135,7 +137,7 @@ export function buildPrimaryBatchActions(
     {
       key: 'delete',
       icon: 'trash',
-      label: actions.delete.isPending ? 'Deleting...' : 'Delete',
+      label: actions.delete.isPending ? t('actions.deleting') : t('actions.delete'),
       tone: 'danger',
       disabled: isBatchActionPending,
       isPending: actions.delete.isPending,
@@ -165,13 +167,14 @@ export function buildSecondaryBatchActions(
   onDownloadLimitClick: () => void,
   onUploadLimitClick: () => void,
   onCategoryClick: () => void,
-  onTagsClick: () => void
+  onTagsClick: () => void,
+  t: TaurentTFunction,
 ): TorrentActionDescriptor[] {
   const result: TorrentActionDescriptor[] = [];
 
   result.push(
     buildHashListAction(
-      'recheck', 'refresh', 'Recheck', 'Rechecking...', undefined,
+      'recheck', 'refresh', t('actions.recheck'), t('actions.rechecking'), undefined,
       actions.recheck.isPending,
       isBatchActionPending,
       () => void actions.recheck.mutateAsync(hashes)
@@ -180,7 +183,7 @@ export function buildSecondaryBatchActions(
 
   result.push(
     buildHashListAction(
-      'reannounce', 'globe', 'Announce', 'Announcing...', undefined,
+      'reannounce', 'globe', t('actions.announce'), t('actions.announcing'), undefined,
       actions.reannounce.isPending,
       isBatchActionPending,
       () => void actions.reannounce.mutateAsync(hashes)
@@ -191,7 +194,7 @@ export function buildSecondaryBatchActions(
     result.push({
       key: 'download-limit',
       icon: 'download',
-      label: 'DL Limit',
+      label: t('actions.downloadLimit'),
       disabled: isBatchActionPending,
       isPending: actions.setDownloadLimit.isPending,
       onClick: onDownloadLimitClick,
@@ -202,7 +205,7 @@ export function buildSecondaryBatchActions(
     result.push({
       key: 'upload-limit',
       icon: 'upload',
-      label: 'UL Limit',
+      label: t('actions.uploadLimit'),
       disabled: isBatchActionPending,
       isPending: actions.setUploadLimit.isPending,
       onClick: onUploadLimitClick,
@@ -213,7 +216,7 @@ export function buildSecondaryBatchActions(
     result.push({
       key: 'category',
       icon: 'folder',
-      label: 'Category',
+      label: t('actions.category'),
       disabled: isBatchActionPending,
       isPending: actions.setCategory.isPending,
       onClick: onCategoryClick,
@@ -224,7 +227,7 @@ export function buildSecondaryBatchActions(
     result.push({
       key: 'tags',
       icon: 'tag',
-      label: 'Tags',
+      label: t('actions.tags'),
       disabled: isBatchActionPending,
       isPending: actions.addTags.isPending || actions.removeTags.isPending,
       onClick: onTagsClick,
@@ -235,7 +238,7 @@ export function buildSecondaryBatchActions(
     const increasePriority = actions.increasePriority;
     result.push(
       buildHashListAction(
-        'increase-priority', 'chevron-up', 'Queue Up', 'Moving...', undefined,
+        'increase-priority', 'chevron-up', t('actions.queueUp'), t('actions.moving'), undefined,
         increasePriority.isPending,
         isBatchActionPending,
         () => void increasePriority.mutateAsync(hashes)
@@ -247,7 +250,7 @@ export function buildSecondaryBatchActions(
     const decreasePriority = actions.decreasePriority;
     result.push(
       buildHashListAction(
-        'decrease-priority', 'chevron-down', 'Queue Down', 'Moving...', undefined,
+        'decrease-priority', 'chevron-down', t('actions.queueDown'), t('actions.moving'), undefined,
         decreasePriority.isPending,
         isBatchActionPending,
         () => void decreasePriority.mutateAsync(hashes)
@@ -279,7 +282,8 @@ export function buildDetailActions(
   },
   hash: string,
   isPaused: boolean,
-  isActionPending: boolean
+  isActionPending: boolean,
+  t: TaurentTFunction,
 ): {
   pauseResume: TorrentActionDescriptor;
   delete: TorrentActionDescriptor;
@@ -290,8 +294,8 @@ export function buildDetailActions(
   const pauseResumeDescriptor = buildHashListAction(
     'pause-resume',
     isPaused ? 'play' : 'pause',
-    isPaused ? 'Resume' : 'Pause',
-    isPaused ? 'Resuming...' : 'Pausing...',
+    isPaused ? t('actions.resume') : t('actions.pause'),
+    isPaused ? t('actions.resuming') : t('actions.pausing'),
     'primary',
     isPaused ? actions.resume.isPending : actions.pause.isPending,
     isActionPending,
@@ -301,7 +305,7 @@ export function buildDetailActions(
   const deleteDescriptor: TorrentActionDescriptor = {
     key: 'delete',
     icon: 'trash',
-    label: actions.delete.isPending ? 'Deleting...' : 'Delete',
+    label: actions.delete.isPending ? t('actions.deleting') : t('actions.delete'),
     tone: 'danger',
     disabled: isActionPending,
     isPending: actions.delete.isPending,
@@ -313,20 +317,20 @@ export function buildDetailActions(
       key: 'force-start',
       icon: 'zap',
       label: actions.forceStart.isPending
-        ? 'Setting...'
-        : 'Force Start',
+        ? t('actions.setting')
+        : t('actions.forceStart'),
       disabled: isActionPending,
       isPending: actions.forceStart.isPending,
       onClick: () => {},
     },
     buildHashListAction(
-      'recheck', 'refresh', 'Recheck', 'Rechecking...', undefined,
+      'recheck', 'refresh', t('actions.recheck'), t('actions.rechecking'), undefined,
       actions.recheck.isPending,
       isActionPending,
       () => void actions.recheck.mutateAsync(hashes)
     ),
     buildHashListAction(
-      'reannounce', 'globe', 'Announce', 'Announcing...', undefined,
+      'reannounce', 'globe', t('actions.announce'), t('actions.announcing'), undefined,
       actions.reannounce.isPending,
       isActionPending,
       () => void actions.reannounce.mutateAsync(hashes)

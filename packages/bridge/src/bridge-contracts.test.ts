@@ -191,6 +191,16 @@ describe('bridge contract coverage', () => {
     expect(transport.invoke).toHaveBeenCalledWith('sync_menu_state', { state });
   });
 
+  it('serializes renderer-authored native labels under the dedicated command', async () => {
+    const transport = createMockTransport();
+    const bridge = createDesktopBridge(transport.transport);
+    const labels = { menu_app: 'Taurent', tray_show: 'Afișează' } as never;
+
+    await bridge.syncNativeUiLabels(labels);
+
+    expect(transport.invoke).toHaveBeenCalledWith('sync_native_ui_labels', { labels });
+  });
+
   it('getDownloadCompletionNotificationsEnabled invokes get_download_completion_notifications_enabled with no args', async () => {
     const transport = createMockTransport(() => true);
     const bridge = createDesktopBridge(transport.transport);

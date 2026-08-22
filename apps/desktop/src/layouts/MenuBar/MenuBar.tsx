@@ -4,18 +4,20 @@ import { useDesktopCommands } from '../../hooks/shell/useDesktopCommands';
 import { useShellStore } from '@/stores';
 import { DropdownMenu } from '@taurent/web-ui';
 import type { MenuItem } from '@taurent/web-ui';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 const TOP_LEVEL_MENU_TRIGGERS = [
-  { label: 'File', testId: 'menu-file' },
-  { label: 'Torrent', testId: 'menu-torrent' },
-  { label: 'Tools', testId: 'menu-tools' },
-  { label: 'View', testId: 'menu-view' },
-  { label: 'Help', testId: 'menu-help' },
+  { labelKey: 'menu.file', testId: 'menu-file' },
+  { labelKey: 'menu.torrent', testId: 'menu-torrent' },
+  { labelKey: 'menu.tools', testId: 'menu-tools' },
+  { labelKey: 'menu.view', testId: 'menu-view' },
+  { labelKey: 'menu.help', testId: 'menu-help' },
 ] as const;
 
 const isMacPlatform = typeof navigator !== 'undefined' && /mac/i.test(navigator.platform);
 
 export function MenuBar() {
+  const { t } = useTaurentTranslation('desktop');
   const { commands } = useTransferCommandList();
   const {
     addTorrent,
@@ -57,77 +59,77 @@ export function MenuBar() {
 
   // File menu: Add Torrent, Settings
   const fileMenuItems: MenuItem[] = [
-    { label: 'Add Torrent…', shortcut: addTorrentShortcut, onClick: addTorrent },
+    { label: t('menu.addTorrent'), shortcut: addTorrentShortcut, onClick: addTorrent },
     { separator: true },
-    { label: 'Settings…', shortcut: settingsShortcut, onClick: openSettings },
+    { label: t('menu.settings'), shortcut: settingsShortcut, onClick: openSettings },
   ];
 
   // Torrent menu: all selection-dependent commands
   const torrentMenuItems: MenuItem[] = [
     {
-      label: 'Pause',
+      label: t('menu.pause'),
       shortcut: cmd('pause')?.shortcut,
       onClick: () => cmd('pause')?.onClick(),
       disabled: !cmd('pause')?.enabled,
     },
     {
-      label: 'Resume',
+      label: t('menu.resume'),
       shortcut: cmd('resume')?.shortcut,
       onClick: () => cmd('resume')?.onClick(),
       disabled: !cmd('resume')?.enabled,
     },
     {
-      label: 'Delete',
+      label: t('menu.delete'),
       shortcut: cmd('delete')?.shortcut,
       onClick: () => cmd('delete')?.onClick(),
       disabled: !cmd('delete')?.enabled,
     },
     { separator: true },
     {
-      label: 'Recheck',
+      label: t('menu.recheck'),
       onClick: () => cmd('recheck')?.onClick(),
       disabled: !cmd('recheck')?.enabled,
     },
     {
-      label: 'Reannounce',
+      label: t('menu.reannounce'),
       onClick: () => cmd('reannounce')?.onClick(),
       disabled: !cmd('reannounce')?.enabled,
     },
     {
-      label: 'Force Start',
+      label: t('menu.forceStart'),
       onClick: () => cmd('force-start')?.onClick(),
       disabled: !cmd('force-start')?.enabled,
     },
     { separator: true },
     {
-      label: 'Set Category…',
+      label: t('menu.setCategory'),
       onClick: () => cmd('set-category')?.onClick(),
       disabled: !cmd('set-category')?.enabled,
     },
     {
-      label: 'Set Tags…',
+      label: t('menu.setTags'),
       onClick: () => cmd('set-tags')?.onClick(),
       disabled: !cmd('set-tags')?.enabled,
     },
     { separator: true },
     {
-      label: 'Queue Up',
+      label: t('menu.queueUp'),
       onClick: () => cmd('queue-up')?.onClick(),
       disabled: !cmd('queue-up')?.enabled,
     },
     {
-      label: 'Queue Down',
+      label: t('menu.queueDown'),
       onClick: () => cmd('queue-down')?.onClick(),
       disabled: !cmd('queue-down')?.enabled,
     },
     {
-      label: 'Move to Top',
+      label: t('menu.moveTop'),
       shortcut: cmd('move-top')?.shortcut,
       onClick: () => cmd('move-top')?.onClick(),
       disabled: !cmd('move-top')?.enabled,
     },
     {
-      label: 'Move to Bottom',
+      label: t('menu.moveBottom'),
       shortcut: cmd('move-bottom')?.shortcut,
       onClick: () => cmd('move-bottom')?.onClick(),
       disabled: !cmd('move-bottom')?.enabled,
@@ -136,21 +138,21 @@ export function MenuBar() {
 
   // Tools menu: Search, RSS
   const toolsMenuItems: MenuItem[] = [
-    { label: 'Search…', shortcut: searchShortcut, onClick: openSearch },
-    { label: 'RSS…', onClick: openRSS },
+    { label: t('menu.search'), shortcut: searchShortcut, onClick: openSearch },
+    { label: t('menu.rss'), onClick: openRSS },
     { separator: true },
-    { label: 'Statistics…', onClick: openStatistics },
+    { label: t('menu.statistics'), onClick: openStatistics },
   ];
 
   // View menu: Toggle Sidebar, Toggle Details, [macOS: Toggle In-Window Menu Bar], Settings
   const viewMenuItems: MenuItem[] = [
     {
-      label: 'Toggle Sidebar',
+      label: t('menu.toggleSidebar'),
       shortcut: toggleSidebarShortcut,
       onClick: toggleSidebar,
     },
     {
-      label: 'Toggle Details Panel',
+      label: t('menu.toggleDetails'),
       shortcut: toggleDetailsShortcut,
       onClick: togglePropertiesPane,
     },
@@ -161,7 +163,7 @@ export function MenuBar() {
     viewMenuItems.push(
       { separator: true },
       {
-        label: inWindowMenuBarVisible ? 'Hide Menu Bar' : 'Show Menu Bar',
+        label: inWindowMenuBarVisible ? t('menu.hideMenuBar') : t('menu.showMenuBar'),
         onClick: toggleInWindowMenuBarVisible,
       }
     );
@@ -169,7 +171,7 @@ export function MenuBar() {
 
   // Help menu: About Taurent (opens Settings deep-linked to desktop-about)
   const helpMenuItems: MenuItem[] = [
-    { label: 'About Taurent', onClick: openAbout },
+    { label: t('menu.about'), onClick: openAbout },
   ];
 
   const menuItemArrays: MenuItem[][] = [
@@ -184,7 +186,7 @@ export function MenuBar() {
   return (
     <div
       role="menubar"
-      aria-label="Application menu"
+      aria-label={t('accessibility.applicationMenu')}
       data-testid="menu-bar"
       className="flex items-center border-b border-border bg-surface px-1 text-sm select-none"
       data-tauri-drag-region
@@ -192,9 +194,9 @@ export function MenuBar() {
       onMouseLeave={scheduleClose}
     >
       {TOP_LEVEL_MENU_TRIGGERS.map((menuConfig, index) => (
-        <div key={menuConfig.label}>
+        <div key={menuConfig.testId}>
           <DropdownMenu
-            label={menuConfig.label}
+            label={t(menuConfig.labelKey)}
             items={menuItemArrays[index]}
             dataTestid={menuConfig.testId}
             open={openMenuIndex === index}

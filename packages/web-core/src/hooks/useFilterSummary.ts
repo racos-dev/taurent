@@ -5,7 +5,8 @@
 // Desktop adoption is deferred intentionally.
 
 import { useMemo } from 'react';
-import { formatLabel } from '@taurent/shared';
+import { formatLabel, getTorrentFilterLabelKey } from '@taurent/shared';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export interface FilterSummaryItem {
   label: string;
@@ -27,34 +28,36 @@ export function useFilterSummary({
   tracker,
   search,
 }: UseFilterSummaryOptions): FilterSummaryItem[] {
+  const { t } = useTaurentTranslation('torrents');
   return useMemo(() => {
     const items: FilterSummaryItem[] = [];
 
     if (filter) {
-      items.push({ label: formatLabel(filter), tone: 'primary' });
+      const labelKey = getTorrentFilterLabelKey(filter);
+      items.push({ label: labelKey ? t(labelKey) : formatLabel(filter), tone: 'primary' });
     }
 
     if (category) {
-      items.push({ label: `Category: ${category}` });
+      items.push({ label: t('summary.category', { value: category }) });
     }
 
     if (tag) {
-      items.push({ label: `Tag: ${tag}` });
+      items.push({ label: t('summary.tag', { value: tag }) });
     }
 
     if (tracker) {
       try {
         const trackerHostname = new URL(tracker).hostname;
-        items.push({ label: `Tracker: ${trackerHostname}` });
+        items.push({ label: t('summary.tracker', { value: trackerHostname }) });
       } catch {
-        items.push({ label: `Tracker: ${tracker}` });
+        items.push({ label: t('summary.tracker', { value: tracker }) });
       }
     }
 
     if (search) {
-      items.push({ label: `Search: ${search}` });
+      items.push({ label: t('summary.search', { value: search }) });
     }
 
     return items;
-  }, [category, filter, search, tag, tracker]);
+  }, [category, filter, search, t, tag, tracker]);
 }

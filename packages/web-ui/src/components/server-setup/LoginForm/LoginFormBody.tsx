@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTaurentTranslation } from '@taurent/shared';
 import { ServerConnectionFields } from '../ServerConnectionFields';
 import { Button } from '../../primitives/Button';
 import type { LoginFormBodyProps } from './types';
@@ -14,9 +15,11 @@ export const LoginFormBody = React.memo<LoginFormBodyProps>(({
   locationError,
   connectError,
 }) => {
+  const { t } = useTaurentTranslation('auth');
+
   return (
     <>
-      <h1 className="text-2xl font-bold text-text-primary mb-6">Connect to qBittorrent</h1>
+      <h1 className="text-2xl font-bold text-text-primary mb-6">{t('form.connectTitle')}</h1>
       {locationError && (
         <div className="mb-4 p-3 bg-error-20 border border-error rounded-sm text-error text-sm">
           {locationError}
@@ -26,10 +29,10 @@ export const LoginFormBody = React.memo<LoginFormBodyProps>(({
         <div className="mb-4 p-3 bg-error-20 border border-error rounded-sm text-error text-sm">
           {connectError.includes('browser mode') ? (
             <>
-              <strong>CORS Error Detected</strong>
+              <strong>{t('form.corsTitle')}</strong>
               <p className="mt-1">{connectError}</p>
               <p className="mt-2 text-xs text-error">
-                This may be caused by running the app in a browser instead of the desktop or mobile client.
+                {t('form.browserHint')}
               </p>
             </>
           ) : (
@@ -47,7 +50,7 @@ export const LoginFormBody = React.memo<LoginFormBodyProps>(({
         showNameField={false}
       />
       <Button type="submit" className="w-full" disabled={isConnecting}>
-        {isConnecting ? 'Connecting...' : 'Connect'}
+        {isConnecting ? t('form.connecting') : t('form.connect')}
       </Button>
     </>
   );

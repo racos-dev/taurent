@@ -100,6 +100,41 @@ export const TORRENT_DETAILED_STATE_LABELS: Record<string, string> = {
   unknown: 'Unknown',
 };
 
+export type TorrentDetailedStateKey =
+  | 'status.allocating'
+  | 'status.checking'
+  | 'status.checkingResume'
+  | 'status.downloading'
+  | 'status.downloadingMetadata'
+  | 'status.error'
+  | 'status.forcedDownload'
+  | 'status.forcedUpload'
+  | 'status.missingFiles'
+  | 'status.moving'
+  | 'status.paused'
+  | 'status.queued'
+  | 'status.seeding'
+  | 'status.stalled'
+  | 'status.unknown';
+
+export const TORRENT_DETAILED_STATE_KEYS: Record<string, TorrentDetailedStateKey> = {
+  error: 'status.error', missingFiles: 'status.missingFiles', uploading: 'status.seeding',
+  stoppedUP: 'status.paused', queuedUP: 'status.queued', stalledUP: 'status.stalled',
+  checkingUP: 'status.checking', forcedUP: 'status.forcedUpload', allocating: 'status.allocating',
+  downloading: 'status.downloading', metaDL: 'status.downloadingMetadata', stoppedDL: 'status.paused',
+  queuedDL: 'status.queued', stalledDL: 'status.stalled', checkingDL: 'status.checking',
+  forcedDL: 'status.forcedDownload', checkingResumeData: 'status.checkingResume', moving: 'status.moving',
+  unknown: 'status.unknown',
+};
+
+export function localizeTorrentDetailedState(
+  state: string,
+  translate: (key: TorrentDetailedStateKey) => string,
+): string {
+  const key = TORRENT_DETAILED_STATE_KEYS[state];
+  return key ? translate(key) : state;
+}
+
 /**
  * Returns a detailed raw-state label for use in detail/state displays.
  * Unlike getStatusLabel which returns normalized summary labels (e.g. "Seeding"),

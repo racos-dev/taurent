@@ -25,7 +25,7 @@ const baseColumn = {
   sortable: true,
   resizable: true,
   deferred: false,
-} satisfies Omit<ColumnDefinition, 'id' | 'label' | 'align'>;
+} satisfies Omit<ColumnDefinition, 'id' | 'labelKey' | 'align'>;
 
 describe('TorrentTableRow', () => {
   it('aligns body cells from column metadata', () => {
@@ -33,21 +33,21 @@ describe('TorrentTableRow', () => {
       {
         ...baseColumn,
         id: 'left',
-        label: 'Left',
+        labelKey: 'columns.left',
         align: 'left',
         formatter: () => 'Left',
       },
       {
         ...baseColumn,
         id: 'center',
-        label: 'Center',
+        labelKey: 'columns.center',
         align: 'center',
         formatter: () => 'Center',
       },
       {
         ...baseColumn,
         id: 'right',
-        label: 'Right',
+        labelKey: 'columns.right',
         align: 'right',
         formatter: () => 'Right',
       },

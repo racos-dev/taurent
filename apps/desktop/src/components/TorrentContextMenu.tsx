@@ -29,7 +29,7 @@ import { openTorrentNumericDialogWindow } from '../windows/dialogs/torrentNumeri
 import { openTorrentShareLimitsDialogWindow } from '../windows/dialogs/torrentShareLimitsDialogWindow';
 import { openCreateDialogWindow } from '../windows/dialogs/createDialogWindow';
 import { toast } from '@taurent/web-ui/components/shared/Toast/toast';
-import { formatUserMessageForContext } from '@taurent/shared/utils/error';
+import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 import type { Torrent } from '@taurent/shared';
 import { ContextMenu } from '@taurent/web-ui';
 import type { ContextMenuItem as TContextMenuItem } from '@taurent/web-ui';
@@ -68,8 +68,8 @@ export function TorrentContextMenu({
   selectedHashes,
   onClose,
 }: TorrentContextMenuProps) {
-
-
+  const { t } = useTaurentTranslation('torrents');
+  const formatError = useLocalizedErrorFormatter();
 
   // Compute selection hashes
   const selectionHashes = useMemo(() => {
@@ -292,34 +292,34 @@ export function TorrentContextMenu({
     const savePath = await pickSavePath(defaultName);
     if (!savePath) return;
     void actions.exportTorrent?.mutateAsync({ hash, savePath })
-      .catch((err) => { toast.error(formatUserMessageForContext(err, 'torrent-action')); });
+      .catch((err) => { toast.error(formatError(err, 'torrent-action')); });
     onClose();
-  }, [isSingle, selectionHashes, targetTorrent, actions, onClose]);
+  }, [isSingle, selectionHashes, targetTorrent, actions, onClose, formatError]);
 
   const items: TContextMenuItem[] = useMemo(() => [
     // Multi-selection count header
     ...(!isSingle
-      ? [{ kind: 'separator' as const, id: 'selection-count', label: `${selectionHashes.length} torrents selected` }]
+      ? [{ kind: 'separator' as const, id: 'selection-count', label: t('selected', { count: selectionHashes.length }) }]
       : []),
 
     // Start / Pause / Force Start
-    { kind: 'item', id: 'start', label: 'Start', icon: Play, disabled: !resumeCmd?.enabled, onClick: () => handleAction(resumeCmd?.onClick) },
-    { kind: 'item', id: 'pause', label: 'Pause', icon: Pause, disabled: !pauseCmd?.enabled, onClick: () => handleAction(pauseCmd?.onClick) },
-    { kind: 'item', id: 'force-start', label: 'Force Start', icon: Rocket, disabled: !forceStartCmd?.enabled, onClick: () => handleAction(forceStartCmd?.onClick) },
+    { kind: 'item', id: 'start', label: t('contextMenu.start'), icon: Play, disabled: !resumeCmd?.enabled, onClick: () => handleAction(resumeCmd?.onClick) },
+    { kind: 'item', id: 'pause', label: t('contextMenu.pause'), icon: Pause, disabled: !pauseCmd?.enabled, onClick: () => handleAction(pauseCmd?.onClick) },
+    { kind: 'item', id: 'force-start', label: t('contextMenu.forceStart'), icon: Rocket, disabled: !forceStartCmd?.enabled, onClick: () => handleAction(forceStartCmd?.onClick) },
 
     { kind: 'separator', id: 'sep-actions' },
 
     // Remove
-    { kind: 'item', id: 'remove', label: 'Remove', icon: Trash2, destructive: true, disabled: !deleteCmd?.enabled, onClick: () => handleAction(deleteCmd?.onClick) },
+    { kind: 'item', id: 'remove', label: t('contextMenu.remove'), icon: Trash2, destructive: true, disabled: !deleteCmd?.enabled, onClick: () => handleAction(deleteCmd?.onClick) },
 
     { kind: 'separator', id: 'sep-remove' },
 
     // Set Location
-    { kind: 'item', id: 'set-location', label: 'Set Location...', icon: HardDrive, disabled: !canSetLocation, onClick: () => openDialog('setLocation') },
+    { kind: 'item', id: 'set-location', label: t('contextMenu.setLocation'), icon: HardDrive, disabled: !canSetLocation, onClick: () => openDialog('setLocation') },
 
     // Rename — single selection only
     ...(!isSingle ? [] : [
-      { kind: 'item' as const, id: 'rename', label: 'Rename...', icon: Type, disabled: !canRename, onClick: () => openDialog('rename') },
+      { kind: 'item' as const, id: 'rename', label: t('contextMenu.rename'), icon: Type, disabled: !canRename, onClick: () => openDialog('rename') },
     ]),
 
     { kind: 'separator', id: 'sep-rename' },
@@ -328,11 +328,11 @@ export function TorrentContextMenu({
     {
       kind: 'submenu',
       id: 'submenu-category',
-      label: 'Category',
+      label: t('contextMenu.category'),
       icon: FolderOpen,
       children: [
-        { kind: 'item', id: 'category-action-new', label: 'New...', disabled: !hasSelection, onClick: () => openDialog('newCategory') },
-        { kind: 'item', id: 'category-action-reset', label: 'Reset', disabled: !canResetCategory, closeOnSelect: false, onClick: () => { setTorrentCategory.mutate({ hashes: selectionHashes, category: '' }); } },
+        { kind: 'item', id: 'category-action-new', label: t('contextMenu.new'), disabled: !hasSelection, onClick: () => openDialog('newCategory') },
+        { kind: 'item', id: 'category-action-reset', label: t('contextMenu.reset'), disabled: !canResetCategory, closeOnSelect: false, onClick: () => { setTorrentCategory.mutate({ hashes: selectionHashes, category: '' }); } },
         ...(activeCategoryList.length > 0
           ? [
               { kind: 'separator' as const, id: 'category-separator' },
@@ -353,11 +353,11 @@ export function TorrentContextMenu({
     {
       kind: 'submenu',
       id: 'submenu-tags',
-      label: 'Tags',
+      label: t('contextMenu.tags'),
       icon: Tag,
       children: [
-        { kind: 'item', id: 'tag-action-add', label: 'Add...', disabled: !hasSelection, onClick: () => openDialog('addTag') },
-        { kind: 'item', id: 'tag-action-remove-all', label: 'Remove All', disabled: allTagsInSelection.size === 0, closeOnSelect: false, onClick: () => { if (allTagsInSelection.size > 0) { removeTorrentTags.mutate({ hashes: selectionHashes, tags: Array.from(allTagsInSelection) }); } } },
+        { kind: 'item', id: 'tag-action-add', label: t('contextMenu.add'), disabled: !hasSelection, onClick: () => openDialog('addTag') },
+        { kind: 'item', id: 'tag-action-remove-all', label: t('contextMenu.removeAll'), disabled: allTagsInSelection.size === 0, closeOnSelect: false, onClick: () => { if (allTagsInSelection.size > 0) { removeTorrentTags.mutate({ hashes: selectionHashes, tags: Array.from(allTagsInSelection) }); } } },
         ...(tags && tags.length > 0
           ? [
               { kind: 'separator' as const, id: 'tag-separator' },
@@ -375,38 +375,38 @@ export function TorrentContextMenu({
     },
 
     // Automatic Torrent Management
-    { kind: 'item', id: 'auto-tmm', label: 'Automatic Torrent Management', icon: isAutoTmmEnabled ? CheckIcon : undefined, disabled: !hasService || !hasSelection, onClick: handleToggleAutoTmm },
+    { kind: 'item', id: 'auto-tmm', label: t('contextMenu.automaticManagement'), icon: isAutoTmmEnabled ? CheckIcon : undefined, disabled: !hasService || !hasSelection, onClick: handleToggleAutoTmm },
 
     { kind: 'separator', id: 'sep-auto-tmm' },
 
     // Limit Download Rate (only when selection has incomplete torrents)
     ...(hasIncompleteSelection
-      ? [{ kind: 'item' as const, id: 'limit-download', label: 'Limit Download Rate...', icon: ArrowDownFromLine, disabled: !canSetDownloadLimit, onClick: () => openDialog('limitDownload') }]
+      ? [{ kind: 'item' as const, id: 'limit-download', label: t('contextMenu.limitDownload'), icon: ArrowDownFromLine, disabled: !canSetDownloadLimit, onClick: () => openDialog('limitDownload') }]
       : []),
 
     // Limit Upload Rate
-    { kind: 'item', id: 'limit-upload', label: 'Limit Upload Rate...', icon: ArrowUpFromLine, disabled: !canSetUploadLimit, onClick: () => openDialog('limitUpload') },
+    { kind: 'item', id: 'limit-upload', label: t('contextMenu.limitUpload'), icon: ArrowUpFromLine, disabled: !canSetUploadLimit, onClick: () => openDialog('limitUpload') },
 
     // Limit Share Ratio
-    { kind: 'item', id: 'share-limits', label: 'Limit Share Ratio...', disabled: !hasService || !hasSelection, onClick: () => openDialog('shareLimits') },
+    { kind: 'item', id: 'share-limits', label: t('contextMenu.limitShareRatio'), disabled: !hasService || !hasSelection, onClick: () => openDialog('shareLimits') },
 
     // Sequential download / first-last pieces (only when downloading or mixed)
     ...((isDownloadingSelection || isMixedDownloadingAndSeedingSelection)
       ? [
-          { kind: 'item' as const, id: 'seq-dl', label: 'Download in Sequential Order', icon: isSeqDlEnabled ? CheckIcon : undefined, disabled: !hasService || !hasSelection, onClick: handleToggleSeqDl },
-          { kind: 'item' as const, id: 'first-last', label: 'Download First and Last Pieces First', icon: isFirstLastPrioEnabled ? CheckIcon : undefined, disabled: !hasService || !hasSelection, onClick: handleToggleFirstLastPrio },
+          { kind: 'item' as const, id: 'seq-dl', label: t('contextMenu.sequential'), icon: isSeqDlEnabled ? CheckIcon : undefined, disabled: !hasService || !hasSelection, onClick: handleToggleSeqDl },
+          { kind: 'item' as const, id: 'first-last', label: t('contextMenu.firstLast'), icon: isFirstLastPrioEnabled ? CheckIcon : undefined, disabled: !hasService || !hasSelection, onClick: handleToggleFirstLastPrio },
         ]
       : []),
 
     { kind: 'separator', id: 'sep-sequential' },
 
     // Force Recheck / Reannounce
-    { kind: 'item', id: 'force-recheck', label: 'Force Recheck', icon: RefreshCw, disabled: !recheckCmd?.enabled, onClick: () => handleAction(recheckCmd?.onClick) },
-    { kind: 'item', id: 'force-reannounce', label: 'Force Reannounce', icon: RefreshCw, disabled: !reannounceCmd?.enabled, onClick: () => handleAction(reannounceCmd?.onClick) },
+    { kind: 'item', id: 'force-recheck', label: t('contextMenu.forceRecheck'), icon: RefreshCw, disabled: !recheckCmd?.enabled, onClick: () => handleAction(recheckCmd?.onClick) },
+    { kind: 'item', id: 'force-reannounce', label: t('contextMenu.forceReannounce'), icon: RefreshCw, disabled: !reannounceCmd?.enabled, onClick: () => handleAction(reannounceCmd?.onClick) },
 
     // Super Seeding (only when seeding selection)
     ...(isSeedingSelection
-      ? [{ kind: 'item' as const, id: 'super-seeding', label: 'Super Seeding Mode', icon: isSuperSeedingEnabled ? CheckIcon : undefined, disabled: !hasService || !hasSelection, onClick: handleToggleSuperSeeding }]
+      ? [{ kind: 'item' as const, id: 'super-seeding', label: t('contextMenu.superSeeding'), icon: isSuperSeedingEnabled ? CheckIcon : undefined, disabled: !hasService || !hasSelection, onClick: handleToggleSuperSeeding }]
       : []),
 
     { kind: 'separator', id: 'sep-super-seeding' },
@@ -415,21 +415,21 @@ export function TorrentContextMenu({
     {
       kind: 'submenu',
       id: 'submenu-copy',
-      label: 'Copy',
+      label: t('contextMenu.copy'),
       icon: Copy,
       children: [
-        { kind: 'item', id: 'copy-hash', label: 'Hash', disabled: !copyHashCmd?.enabled, onClick: () => handleAction(copyHashCmd?.onClick) },
-        { kind: 'item', id: 'copy-name', label: 'Name', disabled: !copyNameCmd?.enabled, onClick: () => handleAction(copyNameCmd?.onClick) },
-        { kind: 'item', id: 'copy-magnet', label: 'Magnet URI', disabled: !copyMagnetCmd?.enabled, onClick: () => handleAction(copyMagnetCmd?.onClick) },
-        { kind: 'item', id: 'copy-path', label: 'Content Path', disabled: !targetTorrent.content_path, onClick: () => handleCopyToClipboard(targetTorrent.content_path!) },
+        { kind: 'item', id: 'copy-hash', label: t('contextMenu.hash'), disabled: !copyHashCmd?.enabled, onClick: () => handleAction(copyHashCmd?.onClick) },
+        { kind: 'item', id: 'copy-name', label: t('contextMenu.name'), disabled: !copyNameCmd?.enabled, onClick: () => handleAction(copyNameCmd?.onClick) },
+        { kind: 'item', id: 'copy-magnet', label: t('contextMenu.magnetUri'), disabled: !copyMagnetCmd?.enabled, onClick: () => handleAction(copyMagnetCmd?.onClick) },
+        { kind: 'item', id: 'copy-path', label: t('contextMenu.contentPath'), disabled: !targetTorrent.content_path, onClick: () => handleCopyToClipboard(targetTorrent.content_path!) },
       ],
     },
 
     // Open Folder
-    { kind: 'item', id: 'open-folder', label: 'Open Folder', icon: FolderOpen, disabled: !openFolderCmd?.enabled, onClick: () => handleAction(openFolderCmd?.onClick) },
+    { kind: 'item', id: 'open-folder', label: t('contextMenu.openFolder'), icon: FolderOpen, disabled: !openFolderCmd?.enabled, onClick: () => handleAction(openFolderCmd?.onClick) },
 
     // Export .torrent — single selection only
-    { kind: 'item', id: 'export-torrent', label: 'Export .torrent', icon: Download, disabled: !hasService || !isSingle, onClick: handleExportTorrent },
+    { kind: 'item', id: 'export-torrent', label: t('contextMenu.exportTorrent'), icon: Download, disabled: !hasService || !isSingle, onClick: handleExportTorrent },
   ], [
     isSingle, selectionHashes, resumeCmd, pauseCmd, forceStartCmd, deleteCmd, handleAction,
     canSetLocation, canRename, openDialog, hasSelection, canResetCategory, setTorrentCategory,
@@ -440,7 +440,7 @@ export function TorrentContextMenu({
     isSeqDlEnabled, isFirstLastPrioEnabled, handleToggleSeqDl, handleToggleFirstLastPrio,
     recheckCmd, reannounceCmd, isSeedingSelection, isSuperSeedingEnabled, handleToggleSuperSeeding,
     copyHashCmd, copyNameCmd, copyMagnetCmd, targetTorrent, handleCopyToClipboard,
-    openFolderCmd, handleExportTorrent,
+    openFolderCmd, handleExportTorrent, t,
   ]);
 
   return <ContextMenu x={x} y={y} onClose={onClose} items={items} width="w-56" />;

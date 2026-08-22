@@ -1,7 +1,8 @@
 import React from 'react';
-import { cn, formatBytes, formatRatio } from '@taurent/shared';
+import { cn } from '@taurent/shared';
 import type { StatisticsScreenBodyProps } from './types';
 import { StateCard, MetadataList, MetadataRow } from '@taurent/web-ui';
+import { useLocalizedFormatters, useTaurentTranslation } from '@taurent/shared/i18n';
 
 export const StatisticsScreenBody = React.memo<StatisticsScreenBodyProps>(({
   statistics,
@@ -9,13 +10,16 @@ export const StatisticsScreenBody = React.memo<StatisticsScreenBodyProps>(({
   isConnected,
   contentClassName,
 }) => {
+  const { t } = useTaurentTranslation('statistics');
+  const { t: tCommon } = useTaurentTranslation('common');
+  const format = useLocalizedFormatters();
   const formatPercentStat = (value: number | string | null, decimals = 2) => {
     if (value === null || value === undefined || value === '') {
-      return 'N/A';
+      return tCommon('values.notAvailable');
     }
 
     if (typeof value === 'number') {
-      return `${value.toFixed(decimals)}%`;
+      return `${format.formatNumber(value, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}%`;
     }
 
     return value;
@@ -25,8 +29,8 @@ export const StatisticsScreenBody = React.memo<StatisticsScreenBodyProps>(({
     return (
       <div className={cn("mx-auto flex w-full flex-col gap-2 px-2 py-2", contentClassName ?? "max-w-lg")}>
         <StateCard
-          title="Not connected"
-          message="Connect to a qBittorrent server to view statistics."
+          title={t('notConnected')}
+          message={t('connectMessage')}
         />
       </div>
     );
@@ -36,8 +40,8 @@ export const StatisticsScreenBody = React.memo<StatisticsScreenBodyProps>(({
     return (
       <div className={cn("mx-auto flex w-full flex-col gap-2 px-2 py-2", contentClassName ?? "max-w-lg")}>
         <StateCard
-          title="Loading statistics"
-          message="Fetching the latest statistics from your qBittorrent server."
+          title={t('loading')}
+          message={t('loadingMessage')}
         />
       </div>
     );
@@ -47,8 +51,8 @@ export const StatisticsScreenBody = React.memo<StatisticsScreenBodyProps>(({
     return (
       <div className={cn("mx-auto flex w-full flex-col gap-2 px-2 py-2", contentClassName ?? "max-w-lg")}>
         <StateCard
-          title="Statistics unavailable"
-          message="Statistics data is not available at this time."
+          title={t('unavailable')}
+          message={t('unavailableMessage')}
         />
       </div>
     );
@@ -58,36 +62,38 @@ export const StatisticsScreenBody = React.memo<StatisticsScreenBodyProps>(({
     <div className={cn("mx-auto flex w-full flex-col gap-2 px-2 py-2", contentClassName ?? "max-w-lg")}>
       <section className="overflow-hidden rounded-sm border border-border bg-surface">
         <div className="p-3">
-          <h2 className="mb-1 text-sm font-semibold text-text-primary">User statistics</h2>
+          <h2 className="mb-1 text-sm font-semibold text-text-primary">{t('user')}</h2>
           <MetadataList className="space-y-0">
-            <MetadataRow label="All-time upload" value={formatBytes(statistics.alltimeUl)} />
-            <MetadataRow label="All-time download" value={formatBytes(statistics.alltimeDl)} />
-            <MetadataRow label="All-time share ratio" value={formatRatio(statistics.globalRatio)} />
-            <MetadataRow label="Session waste" value={formatBytes(statistics.totalWastedSession)} />
-            <MetadataRow label="Connected peers" value={String(statistics.totalPeerConnections)} />
+            <MetadataRow label={t('allTimeUpload')} value={format.formatBytes(statistics.alltimeUl)} />
+            <MetadataRow label={t('allTimeDownload')} value={format.formatBytes(statistics.alltimeDl)} />
+            <MetadataRow label={t('allTimeRatio')} value={format.formatRatio(statistics.globalRatio)} />
+            <MetadataRow label={t('sessionWaste')} value={format.formatBytes(statistics.totalWastedSession)} />
+            <MetadataRow label={t('connectedPeers')} value={format.formatCount(statistics.totalPeerConnections)} />
           </MetadataList>
         </div>
       </section>
 
       <section className="overflow-hidden rounded-sm border border-border bg-surface">
         <div className="p-3">
-          <h2 className="mb-1 text-sm font-semibold text-text-primary">Cache statistics</h2>
+          <h2 className="mb-1 text-sm font-semibold text-text-primary">{t('cache')}</h2>
           <MetadataList className="space-y-0">
-            <MetadataRow label="Read cache hits" value={formatPercentStat(statistics.readCacheHits > 0 ? statistics.readCacheHits : null)} />
-            <MetadataRow label="Total buffer size" value={formatBytes(statistics.totalBuffersSize)} />
+            <MetadataRow label={t('readCacheHits')} value={formatPercentStat(statistics.readCacheHits > 0 ? statistics.readCacheHits : null)} />
+            <MetadataRow label={t('totalBufferSize')} value={format.formatBytes(statistics.totalBuffersSize)} />
           </MetadataList>
         </div>
       </section>
 
       <section className="overflow-hidden rounded-sm border border-border bg-surface">
         <div className="p-3">
-          <h2 className="mb-1 text-sm font-semibold text-text-primary">Performance statistics</h2>
+          <h2 className="mb-1 text-sm font-semibold text-text-primary">{t('performance')}</h2>
           <MetadataList className="space-y-0">
-            <MetadataRow label="Write cache overload" value={formatPercentStat(statistics.writeCacheOverload)} />
-            <MetadataRow label="Read cache overload" value={formatPercentStat(statistics.readCacheOverload)} />
-            <MetadataRow label="Queued I/O jobs" value={String(statistics.queuedIoJobs)} />
-            <MetadataRow label="Average time in queue" value={statistics.averageTimeQueue > 0 ? `${statistics.averageTimeQueue.toFixed(1)}s` : 'N/A'} />
-            <MetadataRow label="Total queued size" value={formatBytes(statistics.totalQueuedSize)} />
+            <MetadataRow label={t('writeCacheOverload')} value={formatPercentStat(statistics.writeCacheOverload)} />
+            <MetadataRow label={t('readCacheOverload')} value={formatPercentStat(statistics.readCacheOverload)} />
+            <MetadataRow label={t('queuedIoJobs')} value={format.formatCount(statistics.queuedIoJobs)} />
+            <MetadataRow label={t('averageQueueTime')} value={statistics.averageTimeQueue > 0
+              ? t('seconds', { value: format.formatNumber(statistics.averageTimeQueue, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) })
+              : tCommon('values.notAvailable')} />
+            <MetadataRow label={t('totalQueuedSize')} value={format.formatBytes(statistics.totalQueuedSize)} />
           </MetadataList>
         </div>
       </section>

@@ -17,6 +17,7 @@ export {
 
 export {
   type RemoteSettingsSectionKey,
+  type RemoteSettingsTranslationKey,
   type RemoteSettingsField,
   type RemoteSettingsSectionDefinition,
   type NumberEditorMeta,

@@ -2,7 +2,7 @@ import { openDialogHostWindow } from './dialogHostWindow';
 
 export const TORRENT_DELETE_DIALOG_WINDOW_CONFIG = {
   route: '/torrent-delete-dialog-window',
-  title: 'Delete Torrent',
+  titleKey: 'windows.deleteTorrent',
   width: 400,
   height: 200,
   minWidth: 400,

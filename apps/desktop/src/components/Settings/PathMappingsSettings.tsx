@@ -6,7 +6,7 @@ import type { PathMapping } from '@taurent/bridge';
 import { BridgeAdapter } from '@taurent/bridge/adapters/desktop'
 import { useQBClient } from '../../connection';
 import { Icon } from '@taurent/shared';
-import { formatUserMessageForContext } from '@taurent/shared/utils/error';
+import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 
 interface MappingRow {
   id: string;
@@ -29,14 +29,16 @@ function emptyRow(): MappingRow {
  * Changes auto-save through BridgeAdapter.desktop.setPathMappings.
  */
 export const PathMappingsSettings = React.memo(() => {
+  const { t } = useTaurentTranslation('settings');
+  const formatError = useLocalizedErrorFormatter();
   const { serverId } = useQBClient();
 
   const [mappings, setMappings] = useState<MappingRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [saveError, setSaveError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<unknown | null>(null);
+  const [saveError, setSaveError] = useState<unknown | null>(null);
 
   // ── Load mappings on mount / serverId change ────────────────────────────
   useEffect(() => {
@@ -59,7 +61,7 @@ export const PathMappingsSettings = React.memo(() => {
         );
       } catch (err) {
         if (cancelled) return;
-        setLoadError(formatUserMessageForContext(err, 'path-mappings'));
+        setLoadError(err);
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -72,8 +74,8 @@ export const PathMappingsSettings = React.memo(() => {
 
   // ── Raw save (no debounce, no loading-state management) ─────────────────
   const saveMappings = useCallback(
-    async (rows: MappingRow[]) => {
-      if (!serverId) return;
+    async (rows: MappingRow[]): Promise<boolean> => {
+      if (!serverId) return false;
       setSaveError(null);
       try {
         const toSave: PathMapping[] = rows
@@ -83,9 +85,11 @@ export const PathMappingsSettings = React.memo(() => {
           }))
           .filter((m) => m.serverPath.length > 0 && m.localPath.length > 0);
         await BridgeAdapter.setPathMappings(serverId, toSave);
+        return true;
       } catch (err) {
         console.error('[PathMappingsSettings] autosave failed', err);
-        setSaveError(formatUserMessageForContext(err, 'path-mappings'));
+        setSaveError(err);
+        return false;
       }
     },
     [serverId],
@@ -106,8 +110,9 @@ export const PathMappingsSettings = React.memo(() => {
       debounceRef.current = setTimeout(() => {
         setIsSaving(true);
         setShowSaved(false);
-        void saveMappings(latestRowsRef.current).then(() => {
+        void saveMappings(latestRowsRef.current).then((saved) => {
           setIsSaving(false);
+          if (!saved) return;
           setShowSaved(true);
           if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
           savedTimerRef.current = setTimeout(() => setShowSaved(false), 2000);
@@ -183,50 +188,50 @@ export const PathMappingsSettings = React.memo(() => {
       {/* Header row */}
       <div className="flex flex-col gap-2">
         <p className="max-w-2xl text-sm leading-6 text-text-secondary">
-          Map server-side paths to local paths. Use this when your server and local storage are on different drives or network locations.
+          {t('pathMappingSettings.description')}
         </p>
         <div className="flex items-center gap-2">
-          <Button variant="secondary" size="sm" onClick={handleAddRow}><Icon name="plus" iconSize="sm" /><span>Add path mapping</span></Button>
+          <Button variant="secondary" size="sm" onClick={handleAddRow}><Icon name="plus" iconSize="sm" /><span>{t('pathMappingSettings.add')}</span></Button>
           {isSaving && (
             <span className="flex items-center gap-1 text-xs text-text-muted">
               <Spinner variant="ring" size="sm" />
-              Saving…
+              {t('pathMappingSettings.saving')}
             </span>
           )}
           {!isSaving && showSaved && (
             <span className="flex items-center gap-1 text-xs text-success">
               <Check size={12} />
-              Saved
+              {t('pathMappingSettings.saved')}
             </span>
           )}
-          {!isSaving && saveError && (
-            <span className="text-xs text-error">{saveError}</span>
+          {!isSaving && saveError !== null && (
+            <span className="text-xs text-error">{formatError(saveError, 'path-mappings')}</span>
           )}
         </div>
       </div>
 
       {/* Load error */}
-      {loadError && (
-        <p className="text-sm text-error">{loadError}</p>
+      {loadError !== null && (
+        <p className="text-sm text-error">{formatError(loadError, 'path-mappings')}</p>
       )}
 
       {/* Empty state */}
       {isLoading ? (
         <div className="flex items-center justify-center gap-2 py-4">
           <Spinner variant="ring" size="md" />
-          <span className="text-sm text-text-secondary">Loading path mappings…</span>
+          <span className="text-sm text-text-secondary">{t('pathMappingSettings.loading')}</span>
         </div>
       ) : mappings.length === 0 ? (
         <div className="flex flex-col items-center gap-2 rounded-sm border border-border bg-surface p-4">
-          <p className="text-sm text-text-secondary">No path mappings configured.</p>
-          <p className="text-xs text-text-muted">Click &quot;Add path mapping&quot; to create your first mapping.</p>
+          <p className="text-sm text-text-secondary">{t('pathMappingSettings.empty')}</p>
+          <p className="text-xs text-text-muted">{t('pathMappingSettings.emptyHint')}</p>
         </div>
       ) : (
         <div className="flex flex-col gap-2">
           {/* Column headers */}
           <div className="grid grid-cols-[1fr_1fr_auto] gap-2 px-1">
-            <p className="text-xs font-medium text-text-muted">Server path</p>
-            <p className="text-xs font-medium text-text-muted">Local path</p>
+            <p className="text-xs font-medium text-text-muted">{t('pathMappingSettings.serverPath')}</p>
+            <p className="text-xs font-medium text-text-muted">{t('pathMappingSettings.localPath')}</p>
             <div className="w-8" />
           </div>
 
@@ -264,6 +269,7 @@ const MappingRowUI = React.memo(function MappingRowUI({
   onPickLocalPath,
   onRemove,
 }: MappingRowUIProps) {
+  const { t } = useTaurentTranslation('settings');
   const handleServerChange = (value: string) => {
     onServerPathChange(row.id, value);
   };
@@ -287,6 +293,7 @@ const MappingRowUI = React.memo(function MappingRowUI({
           type="text"
           value={row.serverPath}
           onChange={handleServerChange}
+          // i18n-audit-ignore: filesystem path example is intentionally verbatim
           placeholder="/data/torrents"
           size="sm"
         />
@@ -297,6 +304,7 @@ const MappingRowUI = React.memo(function MappingRowUI({
           type="text"
           value={row.localPath}
           onChange={handleLocalChange}
+          // i18n-audit-ignore: filesystem path example is intentionally verbatim
           placeholder="/mnt/torrents"
           className="flex-1"
           size="sm"
@@ -304,7 +312,7 @@ const MappingRowUI = React.memo(function MappingRowUI({
         <button
           type="button"
           onClick={handlePickClick}
-          title="Pick local folder"
+          title={t('pathMappingSettings.pickFolder')}
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border border-border bg-surface hover:bg-surface-interactive transition-colors"
         >
           <FolderOpen className="size-4 text-text-secondary" />
@@ -315,7 +323,7 @@ const MappingRowUI = React.memo(function MappingRowUI({
       <button
         type="button"
         onClick={handleRemoveClick}
-        title="Remove mapping"
+        title={t('pathMappingSettings.remove')}
         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border border-border bg-surface hover:bg-surface-interactive hover:border-error hover:text-error transition-colors"
       >
         <Trash2 className="size-4" />

@@ -21,6 +21,7 @@ import { TrackersSection } from './TrackersSection';
 import { useSidebarActions } from './useSidebarActions';
 import { StatusContextMenu } from '../../components/ContextMenu';
 import { TORRENT_FILTER_OPTIONS } from '@taurent/shared';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 const FILTER_ICONS: Record<TorrentFilterType, React.ComponentType<{ className?: string }>> = {
   all: Filter,
@@ -38,6 +39,7 @@ const FILTER_ICONS: Record<TorrentFilterType, React.ComponentType<{ className?: 
 };
 
 export function Sidebar() {
+  const { t } = useTaurentTranslation('torrents');
   const {
     activeFilters,
     setStatusFilter,
@@ -88,17 +90,18 @@ export function Sidebar() {
     <div className="bg-surface border-r border-border flex flex-col h-full">
       <div className="flex-1 overflow-auto py-1">
         <SidebarSection
-          title="Status"
+          title={t('sidebar.status')}
           expanded={expandedSections.has('status')}
           onToggle={() => toggleSection('status')}
         >
           {TORRENT_FILTER_OPTIONS.map((option) => {
             const IconComponent = FILTER_ICONS[option.value];
+            const label = t(option.labelKey);
             return (
               <SidebarFilterItem
                 key={option.value}
                 icon={<IconComponent />}
-                label={option.label}
+                label={label}
                 count={statusCounts[option.value] || 0}
                 active={activeFilters.status === FILTER_TYPE_TO_STATUS[option.value]}
                 onClick={() => {
@@ -106,7 +109,7 @@ export function Sidebar() {
                     activeFilters.status === FILTER_TYPE_TO_STATUS[option.value] ? 'all' : FILTER_TYPE_TO_STATUS[option.value];
                   setStatusFilter(newStatus);
                 }}
-                onContextMenu={(e) => handleStatusContextMenu(e, option.label, option.value)}
+                onContextMenu={(e) => handleStatusContextMenu(e, label, option.value)}
               />
             );
           })}

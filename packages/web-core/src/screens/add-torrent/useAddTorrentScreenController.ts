@@ -44,7 +44,17 @@ export interface AddTorrentScreenControllerOptions {
    * Mobile should pass undefined (default behavior uses `mode` prop).
    */
   desktopUnifiedMode?: boolean;
+  formatError?: (error: unknown) => string;
+  validationMessages?: Record<AddTorrentValidationError, string>;
 }
+
+export type AddTorrentValidationError = 'magnetRequired' | 'invalidMagnet' | 'fileRequired';
+
+const DEFAULT_VALIDATION_MESSAGES: Record<AddTorrentValidationError, string> = {
+  magnetRequired: 'Please enter a URL or magnet link',
+  invalidMagnet: 'Invalid URL or magnet format',
+  fileRequired: 'Please select at least one torrent file',
+};
 
 export interface AddTorrentOptionsInput {
   savepath?: string;
@@ -136,6 +146,8 @@ export function useAddTorrentScreenController({
   onSubmitSuccess,
   onSubmitError,
   desktopUnifiedMode = false,
+  formatError = (error) => formatUserMessageForContext(error, 'add-torrent'),
+  validationMessages = DEFAULT_VALIDATION_MESSAGES,
 }: AddTorrentScreenControllerOptions): AddTorrentScreenControllerResult {
   // ─── Form fields ─────────────────────────────────────────
   const [magnetUri, setMagnetUri] = useState('');
@@ -157,7 +169,9 @@ export function useAddTorrentScreenController({
   const [addToTop, setAddToTop] = useState(false);
 
   // ─── Error / submit state ────────────────────────────────
-  const [error, setError] = useState<string | null>(null);
+  const [manualError, setManualError] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<AddTorrentValidationError | null>(null);
+  const [rawError, setRawError] = useState<unknown | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submitInFlightRef = useRef(false);
 
@@ -178,7 +192,19 @@ export function useAddTorrentScreenController({
   // If no explicit source chosen yet, null means neutral — no source highlighted.
   const effectiveActiveSource: 'magnet' | 'file' | null = lastUsedSource ?? (magnetUri.trim() ? 'magnet' : (selectedFiles.length > 0 ? 'file' : null));
 
-  const clearError = useCallback(() => setError(null), []);
+  const clearError = useCallback(() => {
+    setManualError(null);
+    setValidationError(null);
+    setRawError(null);
+  }, []);
+  const setError = useCallback((message: string | null) => {
+    setManualError(message);
+    setValidationError(null);
+    setRawError(null);
+  }, []);
+  const error = validationError
+    ? validationMessages[validationError]
+    : rawError === null ? manualError : formatError(rawError);
 
   // ─── File items (derived for body consumption) ───────────
   const fileItems: AddTorrentFileItem[] = selectedFiles.map((file, i) => ({
@@ -234,21 +260,21 @@ export function useAddTorrentScreenController({
 
     if (source === 'magnet') {
       if (!magnetUri.trim()) {
-        setError('Please enter a URL or magnet link');
+        setValidationError('magnetRequired');
         return false;
       }
       if (!validateMagnetLink(magnetUri.trim())) {
-        setError('Invalid URL or magnet format');
+        setValidationError('invalidMagnet');
         return false;
       }
     } else {
       if (selectedFiles.length === 0) {
-        setError('Please select at least one torrent file');
+        setValidationError('fileRequired');
         return false;
       }
     }
     return true;
-  }, [desktopUnifiedMode, resolveSubmitSource, mode, magnetUri, selectedFiles, clearError, setError]);
+  }, [desktopUnifiedMode, resolveSubmitSource, mode, magnetUri, selectedFiles, clearError]);
 
   // ─── Submit ─────────────────────────────────────────────
   const handleSubmit = useCallback(async (): Promise<void> => {
@@ -257,7 +283,7 @@ export function useAddTorrentScreenController({
     }
 
     submitInFlightRef.current = true;
-    setError(null);
+    clearError();
     setIsSubmitting(true);
 
     try {
@@ -270,14 +296,14 @@ export function useAddTorrentScreenController({
       }
       onSubmitSuccess();
     } catch (err) {
-      const message = formatUserMessageForContext(err, 'add-torrent');
-      setError(message);
+      const message = formatError(err);
+      setRawError(err);
       onSubmitError(message);
     } finally {
       submitInFlightRef.current = false;
       setIsSubmitting(false);
     }
-  }, [desktopUnifiedMode, resolveSubmitSource, mode, magnetUri, selectedFiles, addByUrl, addByFiles, buildOptions, onSubmitSuccess, onSubmitError]);
+  }, [desktopUnifiedMode, resolveSubmitSource, mode, magnetUri, selectedFiles, addByUrl, addByFiles, buildOptions, onSubmitSuccess, onSubmitError, clearError, formatError]);
 
   return {
     magnetUri,

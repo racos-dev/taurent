@@ -4,15 +4,19 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 import { emit } from '@tauri-apps/api/event';
 import { BridgeAdapter } from '@taurent/bridge/adapters/desktop'
 import { DialogActions, NumberInput } from '@taurent/web-ui';
-import { formatUserMessageForContext } from '@taurent/shared/utils/error';
 import { useQBClient } from '../connection/QBClientProvider';
 import { dismissDialogWindow } from '../windows/dialogs/dialogHostWindow';
 import { RESOURCE } from '@taurent/web-core/query';
+import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 
 type TransferLimitDialogDirection = 'download' | 'upload';
 type TransferLimitDialogMode = 'single' | 'combined';
 
 export function TransferLimitDialogScreen() {
+  const { t } = useTaurentTranslation('desktop');
+  const { t: tDialogs } = useTaurentTranslation('dialogs');
+  const { t: tCommon } = useTaurentTranslation('common');
+  const formatError = useLocalizedErrorFormatter();
   const [searchParams] = useSearchParams();
   const { serverId, sessionGeneration } = useQBClient();
 
@@ -25,7 +29,7 @@ export function TransferLimitDialogScreen() {
   const [dlValue, setDlValue] = useState(initialValue);
   const [upValue, setUpValue] = useState(initialValue);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown | null>(null);
   const dlInputRef = useRef<HTMLInputElement>(null);
   const upInputRef = useRef<HTMLInputElement>(null);
 
@@ -55,12 +59,12 @@ export function TransferLimitDialogScreen() {
   useEffect(() => {
     const title =
       mode === 'combined'
-        ? 'Global Speed Limits'
+        ? t('windows.globalSpeedLimits')
         : isAltSpeed
-          ? direction === 'download' ? 'Alt Download Limit' : 'Alt Upload Limit'
-          : direction === 'download' ? 'Download Limit' : 'Upload Limit';
+          ? direction === 'download' ? t('windows.altDownloadLimit') : t('windows.altUploadLimit')
+          : direction === 'download' ? t('windows.downloadLimit') : t('windows.uploadLimit');
     void getCurrentWindow().setTitle(title);
-  }, [mode, direction, isAltSpeed]);
+  }, [mode, direction, isAltSpeed, t]);
 
   // Focus and select in single-direction mode; focus download in combined mode
   useEffect(() => {
@@ -121,7 +125,7 @@ export function TransferLimitDialogScreen() {
 
       await dismissDialogWindow();
     } catch (err) {
-      setError(formatUserMessageForContext(err, 'speed-limits'));
+      setError(err);
       setIsSubmitting(false);
     }
   }
@@ -132,18 +136,18 @@ export function TransferLimitDialogScreen() {
 
   // Single-direction title (unchanged from before)
   const title = isAltSpeed
-    ? direction === 'download' ? 'Alt Download Limit' : 'Alt Upload Limit'
-    : direction === 'download' ? 'Download Limit' : 'Upload Limit';
+    ? direction === 'download' ? t('windows.altDownloadLimit') : t('windows.altUploadLimit')
+    : direction === 'download' ? t('windows.downloadLimit') : t('windows.uploadLimit');
 
   if (mode === 'combined') {
     return (
       <div className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto p-5 pb-4">
         <div className="flex min-h-0 flex-1 flex-col gap-3">
-          <p className="text-xs text-text-secondary">0 = unlimited</p>
+          <p className="text-xs text-text-secondary">{tDialogs('desktop.zeroUnlimited')}</p>
 
           {/* Download limit */}
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-text-secondary">Download Limit</label>
+            <label className="text-xs font-medium text-text-secondary">{tDialogs('desktop.downloadLimit')}</label>
             <NumberInput
               ref={dlInputRef}
               min={0}
@@ -165,7 +169,7 @@ export function TransferLimitDialogScreen() {
 
           {/* Upload limit */}
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-text-secondary">Upload Limit</label>
+            <label className="text-xs font-medium text-text-secondary">{tDialogs('desktop.uploadLimit')}</label>
             <NumberInput
               ref={upInputRef}
               min={0}
@@ -184,18 +188,18 @@ export function TransferLimitDialogScreen() {
             />
           </div>
 
-          {error && (
+          {error !== null && (
             <p className="max-h-16 overflow-y-auto break-words whitespace-pre-wrap text-xs text-error">
-              {error}
+              {formatError(error, 'speed-limits')}
             </p>
           )}
         </div>
 
         <DialogActions
           actions={[
-            { label: 'Cancel', onClick: handleCancel, disabled: isSubmitting },
+            { label: tCommon('actions.cancel'), onClick: handleCancel, disabled: isSubmitting },
             {
-              label: isSubmitting ? 'Saving...' : 'Set',
+              label: isSubmitting ? tCommon('actions.saving') : tCommon('actions.set'),
               onClick: () => void handleSubmit(),
               variant: 'primary',
               disabled: isSubmitting,
@@ -214,7 +218,7 @@ export function TransferLimitDialogScreen() {
       <div className="flex min-h-0 flex-1 flex-col gap-3">
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-text-secondary">{title}</label>
-          <p className="text-xs text-text-secondary">0 = unlimited</p>
+          <p className="text-xs text-text-secondary">{tDialogs('desktop.zeroUnlimited')}</p>
         </div>
         <NumberInput
           ref={inputRef}
@@ -233,18 +237,18 @@ export function TransferLimitDialogScreen() {
             if (e.key === 'Escape') handleCancel();
           }}
         />
-        {error && (
+        {error !== null && (
           <p className="max-h-16 overflow-y-auto break-words whitespace-pre-wrap text-xs text-error">
-            {error}
+            {formatError(error, 'speed-limits')}
           </p>
         )}
       </div>
 
       <DialogActions
         actions={[
-          { label: 'Cancel', onClick: handleCancel, disabled: isSubmitting },
+          { label: tCommon('actions.cancel'), onClick: handleCancel, disabled: isSubmitting },
           {
-            label: isSubmitting ? 'Saving...' : 'Set',
+            label: isSubmitting ? tCommon('actions.saving') : tCommon('actions.set'),
             onClick: () => void handleSubmit(),
             variant: 'primary',
             disabled: isSubmitting,

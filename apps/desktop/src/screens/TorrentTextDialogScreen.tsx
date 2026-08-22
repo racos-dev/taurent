@@ -4,11 +4,14 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 import { emit } from '@tauri-apps/api/event';
 import { BridgeAdapter } from '@taurent/bridge/adapters/desktop'
 import { DialogActions, Input } from '@taurent/web-ui';
-import { formatUserMessageForContext } from '@taurent/shared/utils/error';
+import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 import { useQBClient } from '../connection/QBClientProvider';
 import { dismissDialogWindow } from '../windows/dialogs/dialogHostWindow';
 
 export function TorrentTextDialogScreen() {
+  const { t } = useTaurentTranslation('torrents');
+  const { t: tCommon } = useTaurentTranslation('common');
+  const formatError = useLocalizedErrorFormatter();
   const [searchParams] = useSearchParams();
   const { serverId, sessionGeneration } = useQBClient();
 
@@ -23,9 +26,9 @@ export function TorrentTextDialogScreen() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const title = type === 'rename' ? 'Rename Torrent' : 'Set Location';
+    const title = t(type === 'rename' ? 'details.screen.renameTitle' : 'dialogs.text.setLocation');
     void getCurrentWindow().setTitle(title);
-  }, [type]);
+  }, [t, type]);
 
   useEffect(() => {
     setInputValue(initialValue);
@@ -56,7 +59,7 @@ export function TorrentTextDialogScreen() {
       });
       await dismissDialogWindow();
     } catch (err) {
-      setError(formatUserMessageForContext(err, 'torrent-action'));
+      setError(formatError(err, 'torrent-action'));
       setIsSubmitting(false);
     }
   }
@@ -65,12 +68,15 @@ export function TorrentTextDialogScreen() {
     void dismissDialogWindow();
   }
 
-  const title = type === 'rename' ? 'Rename Torrent' : 'Set Location';
+  const title = t(type === 'rename' ? 'details.screen.renameTitle' : 'dialogs.text.setLocation');
   const description = type === 'rename'
-    ? (isSingle ? undefined : `${hashes.length} torrents will be renamed`)
-    : (isSingle ? undefined : `${hashes.length} torrents will be moved`);
-  const submitLabel = type === 'rename' ? 'Rename' : 'Move';
-  const placeholder = type === 'rename' ? 'New name' : '/path/to/new/location';
+    ? (isSingle ? undefined : t('dialogs.text.renamed', { count: hashes.length }))
+    : (isSingle ? undefined : t('dialogs.text.moved', { count: hashes.length }));
+  const submitLabel = t(type === 'rename' ? 'details.screen.rename' : 'details.screen.move');
+  const placeholder = type === 'rename'
+    ? t('dialogs.text.newName')
+    // i18n-audit-ignore: filesystem path example is intentionally verbatim
+    : '/path/to/new/location';
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto p-5 pb-4">
@@ -103,9 +109,9 @@ export function TorrentTextDialogScreen() {
 
       <DialogActions
         actions={[
-          { label: 'Cancel', onClick: handleCancel, disabled: isSubmitting },
+          { label: tCommon('actions.cancel'), onClick: handleCancel, disabled: isSubmitting },
           {
-            label: isSubmitting ? 'Saving...' : submitLabel,
+            label: isSubmitting ? t('dialogs.saving') : submitLabel,
             onClick: () => void handleSubmit(),
             variant: 'primary',
             disabled: isSubmitting || !canSubmit,

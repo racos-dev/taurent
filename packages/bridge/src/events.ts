@@ -2,6 +2,7 @@
 
 import type { SessionStatus, MaindataSyncChangedEvent } from './types';
 import type { ThemePalette, ThemeVariant } from '@taurent/shared/theme/types';
+import type { LanguagePreference, SupportedLocale } from '@taurent/shared/i18n';
 
 export interface SessionChangedEvent {
   session_generation: number;
@@ -32,9 +33,15 @@ export interface ThemeChangedEvent {
   accent?: string | null;
 }
 
+export interface LanguageChangedEvent {
+  preference: LanguagePreference;
+  resolved_locale: SupportedLocale;
+}
+
 export type BridgeEvent =
   | { event: 'session-changed'; payload: SessionChangedEvent }
   | { event: 'resource-invalidated'; payload: ResourceInvalidatedEvent }
   | { event: 'operation-failed'; payload: OperationFailedEvent }
   | { event: 'theme-changed'; payload: ThemeChangedEvent }
+  | { event: 'language-changed'; payload: LanguageChangedEvent }
   | { event: 'maindata-sync-changed'; payload: MaindataSyncChangedEvent };

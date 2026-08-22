@@ -27,7 +27,9 @@ import {
   formatTags,
   formatTracker,
   formatTransferLimit,
-  getTorrentDetailedStateLabel,
+  createLocalizedFormatters,
+  getLanguageState,
+  localization,
 } from '@taurent/shared';
 
 // ============================================================================
@@ -39,7 +41,8 @@ import {
  * Uses shared getTorrentDetailedStateLabel for raw-state detail labels.
  */
 function formatState(state: string): string {
-  return getTorrentDetailedStateLabel(state) || '-';
+  const { locale } = getLanguageState();
+  return createLocalizedFormatters(locale, localization.t.bind(localization)).formatTorrentState(state) || '-';
 }
 
 // ============================================================================
@@ -49,8 +52,8 @@ function formatState(state: string): string {
 export interface ColumnDefinition {
   /** Unique identifier for the column */
   id: string;
-  /** Display label for the column header */
-  label: string;
+  /** Translation key for the column header. Resolve it at render time. */
+  labelKey: `columns.${string}`;
   /** Torrent field this column renders */
   field: keyof Torrent;
   /** Function to render the cell value from a torrent */
@@ -79,7 +82,7 @@ export interface ColumnDefinition {
 const DEFAULT_COLUMNS: ColumnDefinition[] = [
   {
     id: 'priority',
-    label: '#',
+    labelKey: 'columns.priority',
     field: 'priority',
     formatter: (torrent) => (torrent.priority > 0 ? String(torrent.priority) : '*'),
     defaultVisibility: true,
@@ -91,7 +94,7 @@ const DEFAULT_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'name',
-    label: 'Name',
+    labelKey: 'columns.name',
     field: 'name',
     formatter: (torrent) => torrent.name,
     defaultVisibility: true,
@@ -103,7 +106,7 @@ const DEFAULT_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'size',
-    label: 'Size',
+    labelKey: 'columns.size',
     field: 'size',
     formatter: (torrent) => formatBytes(torrent.size),
     defaultVisibility: true,
@@ -115,7 +118,7 @@ const DEFAULT_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'progress',
-    label: 'Progress',
+    labelKey: 'columns.progress',
     field: 'progress',
     formatter: (torrent) => formatProgress(torrent.progress),
     defaultVisibility: true,
@@ -127,7 +130,7 @@ const DEFAULT_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'num_seeds',
-    label: 'Seeds',
+    labelKey: 'columns.seeds',
     field: 'num_seeds',
     formatter: (torrent) => formatCountWithTotal(torrent.num_seeds, torrent.num_complete),
     defaultVisibility: true,
@@ -139,7 +142,7 @@ const DEFAULT_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'num_leechs',
-    label: 'Peers',
+    labelKey: 'columns.peers',
     field: 'num_leechs',
     formatter: (torrent) => formatCountWithTotal(torrent.num_leechs, torrent.num_incomplete),
     defaultVisibility: true,
@@ -151,7 +154,7 @@ const DEFAULT_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'dlspeed',
-    label: 'Down Speed',
+    labelKey: 'columns.downloadSpeed',
     field: 'dlspeed',
     formatter: (torrent) => formatSpeed(torrent.dlspeed),
     defaultVisibility: true,
@@ -163,7 +166,7 @@ const DEFAULT_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'upspeed',
-    label: 'Up Speed',
+    labelKey: 'columns.uploadSpeed',
     field: 'upspeed',
     formatter: (torrent) => formatSpeed(torrent.upspeed),
     defaultVisibility: true,
@@ -175,7 +178,7 @@ const DEFAULT_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'eta',
-    label: 'ETA',
+    labelKey: 'columns.eta',
     field: 'eta',
     formatter: (torrent) => formatEta(torrent.eta),
     defaultVisibility: true,
@@ -187,7 +190,7 @@ const DEFAULT_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'ratio',
-    label: 'Ratio',
+    labelKey: 'columns.ratio',
     field: 'ratio',
     formatter: (torrent) => formatRatio(torrent.ratio),
     defaultVisibility: true,
@@ -199,7 +202,7 @@ const DEFAULT_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'category',
-    label: 'Category',
+    labelKey: 'columns.category',
     field: 'category',
     formatter: (torrent) => torrent.category || '-',
     defaultVisibility: true,
@@ -211,7 +214,7 @@ const DEFAULT_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'tags',
-    label: 'Tags',
+    labelKey: 'columns.tags',
     field: 'tags',
     formatter: (torrent) => formatTags(torrent.tags),
     defaultVisibility: true,
@@ -223,7 +226,7 @@ const DEFAULT_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'added_on',
-    label: 'Added On',
+    labelKey: 'columns.addedOn',
     field: 'added_on',
     formatter: (torrent) => formatDate(torrent.added_on),
     defaultVisibility: true,
@@ -242,7 +245,7 @@ const DEFAULT_COLUMNS: ColumnDefinition[] = [
 const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   {
     id: 'state',
-    label: 'Status',
+    labelKey: 'columns.status',
     field: 'state',
     formatter: (torrent) => formatState(torrent.state),
     defaultVisibility: false,
@@ -254,7 +257,7 @@ const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'total_size',
-    label: 'Total Size',
+    labelKey: 'columns.totalSize',
     field: 'total_size',
     formatter: (torrent) => formatBytes(torrent.total_size),
     defaultVisibility: false,
@@ -266,7 +269,7 @@ const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'tracker',
-    label: 'Tracker',
+    labelKey: 'columns.tracker',
     field: 'tracker',
     formatter: (torrent) => formatTracker(torrent.tracker),
     defaultVisibility: false,
@@ -278,7 +281,7 @@ const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'dl_limit',
-    label: 'Down Limit',
+    labelKey: 'columns.downloadLimit',
     field: 'dl_limit',
     formatter: (torrent) => formatTransferLimit(torrent.dl_limit),
     defaultVisibility: false,
@@ -290,7 +293,7 @@ const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'up_limit',
-    label: 'Up Limit',
+    labelKey: 'columns.uploadLimit',
     field: 'up_limit',
     formatter: (torrent) => formatTransferLimit(torrent.up_limit),
     defaultVisibility: false,
@@ -302,7 +305,7 @@ const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'downloaded',
-    label: 'Downloaded',
+    labelKey: 'columns.downloaded',
     field: 'downloaded',
     formatter: (torrent) => formatBytes(torrent.downloaded),
     defaultVisibility: false,
@@ -314,7 +317,7 @@ const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'uploaded',
-    label: 'Uploaded',
+    labelKey: 'columns.uploaded',
     field: 'uploaded',
     formatter: (torrent) => formatBytes(torrent.uploaded),
     defaultVisibility: false,
@@ -326,7 +329,7 @@ const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'downloaded_session',
-    label: 'Session Download',
+    labelKey: 'columns.sessionDownload',
     field: 'downloaded_session',
     formatter: (torrent) => formatBytes(torrent.downloaded_session),
     defaultVisibility: false,
@@ -338,7 +341,7 @@ const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'uploaded_session',
-    label: 'Session Upload',
+    labelKey: 'columns.sessionUpload',
     field: 'uploaded_session',
     formatter: (torrent) => formatBytes(torrent.uploaded_session),
     defaultVisibility: false,
@@ -350,7 +353,7 @@ const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'amount_left',
-    label: 'Remaining',
+    labelKey: 'columns.remaining',
     field: 'amount_left',
     formatter: (torrent) => formatBytes(torrent.amount_left),
     defaultVisibility: false,
@@ -362,7 +365,7 @@ const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'time_active',
-    label: 'Time Active',
+    labelKey: 'columns.timeActive',
     field: 'time_active',
     formatter: (torrent) => formatDuration(torrent.time_active),
     defaultVisibility: false,
@@ -374,7 +377,7 @@ const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'seeding_time',
-    label: 'Seeding Time',
+    labelKey: 'columns.seedingTime',
     field: 'seeding_time',
     formatter: (torrent) => formatDuration(torrent.seeding_time),
     defaultVisibility: false,
@@ -386,7 +389,7 @@ const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'save_path',
-    label: 'Save Path',
+    labelKey: 'columns.savePath',
     field: 'save_path',
     formatter: (torrent) => torrent.save_path || '-',
     defaultVisibility: false,
@@ -398,7 +401,7 @@ const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'completed',
-    label: 'Completed',
+    labelKey: 'columns.completed',
     field: 'completed',
     formatter: (torrent) => formatBytes(torrent.completed),
     defaultVisibility: false,
@@ -410,7 +413,7 @@ const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'ratio_limit',
-    label: 'Ratio Limit',
+    labelKey: 'columns.ratioLimit',
     field: 'ratio_limit',
     formatter: (torrent) => formatRatioLimit(torrent.ratio_limit),
     defaultVisibility: false,
@@ -422,7 +425,7 @@ const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'completion_on',
-    label: 'Completed On',
+    labelKey: 'columns.completedOn',
     field: 'completion_on',
     formatter: (torrent) => formatDate(torrent.completion_on),
     defaultVisibility: false,
@@ -434,7 +437,7 @@ const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'seen_complete',
-    label: 'Last Seen Complete',
+    labelKey: 'columns.lastSeenComplete',
     field: 'seen_complete',
     formatter: (torrent) => formatSeenComplete(torrent.seen_complete),
     defaultVisibility: false,
@@ -446,7 +449,7 @@ const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'last_activity',
-    label: 'Last Activity',
+    labelKey: 'columns.lastActivity',
     field: 'last_activity',
     formatter: (torrent) => formatDateTime(torrent.last_activity),
     defaultVisibility: false,
@@ -458,7 +461,7 @@ const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'availability',
-    label: 'Availability',
+    labelKey: 'columns.availability',
     field: 'availability',
     formatter: (torrent) => formatAvailability(torrent.availability),
     defaultVisibility: false,
@@ -470,7 +473,7 @@ const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'popularity',
-    label: 'Popularity',
+    labelKey: 'columns.popularity',
     field: 'popularity' as keyof Torrent,
     formatter: (torrent) => formatPopularity(torrent.popularity),
     defaultVisibility: false,
@@ -482,7 +485,7 @@ const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'download_path',
-    label: 'Incomplete Save Path',
+    labelKey: 'columns.incompleteSavePath',
     field: 'download_path',
     formatter: (torrent) => torrent.download_path || '-',
     defaultVisibility: false,
@@ -494,7 +497,7 @@ const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'infohash_v1',
-    label: 'Info Hash v1',
+    labelKey: 'columns.infoHashV1',
     field: 'infohash_v1',
     formatter: (torrent) => torrent.infohash_v1 || '-',
     defaultVisibility: false,
@@ -506,7 +509,7 @@ const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'infohash_v2',
-    label: 'Info Hash v2',
+    labelKey: 'columns.infoHashV2',
     field: 'infohash_v2',
     formatter: (torrent) => torrent.infohash_v2 || '-',
     defaultVisibility: false,
@@ -518,7 +521,7 @@ const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'reannounce',
-    label: 'Reannounce In',
+    labelKey: 'columns.reannounceIn',
     field: 'reannounce' as keyof Torrent,
     formatter: (torrent) => formatReannounce(torrent.reannounce),
     defaultVisibility: false,
@@ -530,7 +533,7 @@ const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'isPrivate',
-    label: 'Private',
+    labelKey: 'columns.private',
     field: 'isPrivate' as keyof Torrent,
     formatter: (torrent) => (torrent.isPrivate !== undefined ? formatBoolean(torrent.isPrivate) : '-'),
     defaultVisibility: false,
@@ -542,7 +545,7 @@ const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'force_start',
-    label: 'Force Start',
+    labelKey: 'columns.forceStart',
     field: 'force_start',
     formatter: (torrent) => formatBoolean(torrent.force_start),
     defaultVisibility: false,
@@ -554,7 +557,7 @@ const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'num_complete',
-    label: 'Seeds (Total)',
+    labelKey: 'columns.seedsTotal',
     field: 'num_complete',
     formatter: (torrent) => formatCount(torrent.num_complete),
     defaultVisibility: false,
@@ -566,7 +569,7 @@ const OPTIONAL_COLUMNS: ColumnDefinition[] = [
   },
   {
     id: 'num_incomplete',
-    label: 'Peers (Total)',
+    labelKey: 'columns.peersTotal',
     field: 'num_incomplete',
     formatter: (torrent) => formatCount(torrent.num_incomplete),
     defaultVisibility: false,

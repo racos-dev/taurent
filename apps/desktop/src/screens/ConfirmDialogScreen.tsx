@@ -5,11 +5,15 @@ import { emit } from '@tauri-apps/api/event';
 import { BridgeAdapter } from '@taurent/bridge/adapters/desktop'
 import { DialogActions } from '@taurent/web-ui';
 import { AlertCircle, ICON_SIZES } from '@taurent/shared';
-import { formatUserMessageForContext } from '@taurent/shared/utils/error';
 import { useQBClient } from '../connection/QBClientProvider';
 import { dismissDialogWindow } from '../windows/dialogs/dialogHostWindow';
+import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 
 export function ConfirmDialogScreen() {
+  const { t } = useTaurentTranslation('dialogs');
+  const { t: tCommon } = useTaurentTranslation('common');
+  const { t: tDesktop } = useTaurentTranslation('desktop');
+  const formatError = useLocalizedErrorFormatter();
   const [searchParams] = useSearchParams();
   const { serverId, sessionGeneration } = useQBClient();
 
@@ -17,12 +21,12 @@ export function ConfirmDialogScreen() {
   const type = (searchParams.get('type') ?? 'category') as 'category' | 'tag';
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown | null>(null);
 
   useEffect(() => {
-    const title = type === 'category' ? 'Delete Category' : 'Delete Tag';
+    const title = type === 'category' ? tDesktop('windows.deleteCategory') : tDesktop('windows.deleteTag');
     void getCurrentWindow().setTitle(title);
-  }, [type]);
+  }, [tDesktop, type]);
 
   // Reset error when item changes (singleton reuse)
   useEffect(() => {
@@ -50,7 +54,7 @@ export function ConfirmDialogScreen() {
       }
       await dismissDialogWindow();
     } catch (err) {
-      setError(formatUserMessageForContext(err, 'torrent-action'));
+      setError(err);
       setIsSubmitting(false);
     }
   }
@@ -61,8 +65,8 @@ export function ConfirmDialogScreen() {
 
   const message =
     type === 'category'
-      ? `Torrents in "${name}" will become uncategorized.`
-      : `"${name}" will be removed from all torrents.`;
+      ? t('desktop.categoryDeleteMessage', { name })
+      : t('desktop.tagDeleteMessage', { name });
 
   return (
     <div className="flex flex-col gap-4 p-5 pb-4 h-full">
@@ -72,19 +76,19 @@ export function ConfirmDialogScreen() {
         </div>
         <div className="flex flex-col gap-1">
           <p className="text-sm font-medium text-text-primary">
-            Delete &ldquo;{name}&rdquo;?
+            {t('desktop.deleteNamed', { name })}
           </p>
           <p className="text-xs text-text-secondary">{message}</p>
         </div>
       </div>
 
-      {error && <p className="text-xs text-error">{error}</p>}
+      {error !== null && <p className="text-xs text-error">{formatError(error, 'torrent-action')}</p>}
 
       <DialogActions
         actions={[
-          { label: 'Cancel', onClick: handleCancel, disabled: isSubmitting },
+          { label: tCommon('actions.cancel'), onClick: handleCancel, disabled: isSubmitting },
           {
-            label: isSubmitting ? 'Deleting...' : 'Delete',
+            label: isSubmitting ? t('desktop.deleting') : tCommon('actions.delete'),
             onClick: () => void handleDelete(),
             variant: 'danger',
             disabled: isSubmitting,

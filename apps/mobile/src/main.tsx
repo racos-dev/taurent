@@ -11,6 +11,9 @@ async function bootstrap(): Promise<void> {
     console.warn('Failed to initialize Taurent mobile logging bridge', error)
   }
 
+  const { initializeLocalization } = await import('@taurent/shared/i18n')
+  await initializeLocalization()
+
   const { default: App } = await import('./App.tsx')
 
   registerOperationFailedNotifier((callback) => {

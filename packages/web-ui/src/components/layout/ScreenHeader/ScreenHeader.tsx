@@ -6,6 +6,7 @@ import {
   useControlDensity,
   HEADER_ICON_BUTTON_SIZE_CLASSES,
 } from '../../../controlSizing';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 const MOBILE_WIDTH_CLASSES: Record<NonNullable<ScreenHeaderProps['mobileWidth']>, string> = {
   compact: 'max-w-lg',
@@ -21,6 +22,7 @@ export const ScreenHeader = React.memo<ScreenHeaderProps>(({
   leftIcon,
   mobileWidth = 'compact',
 }) => {
+  const { t } = useTaurentTranslation('common');
   const isMobile = variant === 'mobile';
   const density = useControlDensity();
   const iconButtonSize = HEADER_ICON_BUTTON_SIZE_CLASSES[density];
@@ -32,7 +34,7 @@ export const ScreenHeader = React.memo<ScreenHeaderProps>(({
           {onBack ? (
             <IconButton
               onClick={onBack}
-              title="Back"
+              title={t('actions.back')}
               variant="outline"
             >
               <Icon name="arrow-left" size={ICON_SIZES.lg} />
@@ -62,7 +64,7 @@ export const ScreenHeader = React.memo<ScreenHeaderProps>(({
           {onBack ? (
             <IconButton
               onClick={onBack}
-              title="Back"
+              title={t('actions.back')}
               variant="outline"
             >
               <Icon name="arrow-left" size={ICON_SIZES.lg} />

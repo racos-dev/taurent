@@ -1,0 +1,72 @@
+import type { EnglishCatalogs } from '../en';
+import type { CatalogShape } from '../shape';
+
+export const romanianDesktop = {
+    windows: {
+      addTorrent: 'Adaugă torrent', altDownloadLimit: 'Limită alternativă de descărcare',
+      altUploadLimit: 'Limită alternativă de încărcare', category: 'Selectează categoria', confirm: 'Confirmare', create: 'Creează',
+      createCategory: 'Creează categoria', createTag: 'Creează eticheta',
+      deleteCategory: 'Șterge categoria', deleteTag: 'Șterge eticheta',
+      deleteServer: 'Șterge serverul', deleteTorrent: 'Șterge torrentul', dialog: 'Dialog',
+      editCategory: 'Editează categoria', editCategoryNamed: 'Editează categoria — {{name}}',
+      globalSpeedLimits: 'Limite globale de viteză', settings: 'Setări',
+      shareLimits: 'Limite de partajare', limitShareRatio: 'Limitează raportul de partajare', statistics: 'Statistici', tags: 'Adaugă/elimină etichete',
+      torrentDialog: 'Dialog torrent', torrentLimit: 'Limită torrent', transferLimit: 'Limită de transfer',
+      downloadLimit: 'Limită de descărcare', uploadLimit: 'Limită de încărcare',
+    },
+    menu: {
+      app: 'Taurent', about: 'Despre Taurent', addTorrent: 'Adaugă torrent…', copy: 'Copiază',
+      copyHash: 'Copiază hash-ul', copyName: 'Copiază numele', copyMagnet: 'Copiază URI-ul magnet', cut: 'Taie',
+      delete: 'Șterge', edit: 'Editare', file: 'Fișier', forceStart: 'Pornire forțată', help: 'Ajutor',
+      hideMenuBar: 'Ascunde bara de meniu',
+      hide: 'Ascunde Taurent', hideOthers: 'Ascunde celelalte', moveBottom: 'Mută la sfârșit',
+      moveTop: 'Mută la început', openFolder: 'Deschide dosarul', paste: 'Lipește', pause: 'Întrerupe', queueDown: 'Coboară în coadă',
+      queueUp: 'Urcă în coadă', quit: 'Închide Taurent', reannounce: 'Reanunță', recheck: 'Reverifică',
+      redo: 'Refă', resume: 'Reia', rss: 'RSS…', search: 'Caută…', selectAll: 'Selectează tot',
+      setCategory: 'Setează categoria…', setTags: 'Setează etichetele…', settings: 'Setări…',
+      showAll: 'Afișează toate', showMenuBar: 'Afișează bara de meniu', statistics: 'Statistici…',
+      toggleDetails: 'Comută panoul de detalii', toggleSidebar: 'Comută bara laterală', tools: 'Instrumente',
+      torrent: 'Torrent', undo: 'Anulează', view: 'Vizualizare',
+    },
+    accessibility: {
+      applicationMenu: 'Meniul aplicației',
+      resizeSidebar: 'Redimensionează bara laterală',
+    },
+    dragDrop: {
+      title: 'Plasează fișierele .torrent aici',
+      description: 'Trage și plasează fișiere torrent pentru a le adăuga',
+    },
+    tray: {
+      addTorrent: 'Adaugă fișier/link torrent…', alternativeSpeed: 'Limite alternative de viteză',
+      globalSpeedLimits: 'Setează limitele globale de viteză…', hide: 'Ascunde', quit: 'Închide', show: 'Afișează',
+    },
+    columns: {
+      priority: 'Prioritate', name: 'Nume', size: 'Dimensiune', progress: 'Progres', seeds: 'Surse', peers: 'Parteneri',
+      downloadSpeed: 'Viteză descărcare', uploadSpeed: 'Viteză încărcare', eta: 'Timp rămas', ratio: 'Raport',
+      category: 'Categorie', tags: 'Etichete', addedOn: 'Data adăugării', status: 'Stare',
+      totalSize: 'Dimensiune totală', tracker: 'Tracker', downloadLimit: 'Limită descărcare',
+      uploadLimit: 'Limită încărcare', downloaded: 'Descărcat', uploaded: 'Încărcat',
+      sessionDownload: 'Descărcat în sesiune', sessionUpload: 'Încărcat în sesiune', remaining: 'Rămas',
+      timeActive: 'Timp activ', seedingTime: 'Timp de partajare', savePath: 'Cale de salvare',
+      completed: 'Finalizat', ratioLimit: 'Limită raport', completedOn: 'Data finalizării',
+      lastSeenComplete: 'Ultima disponibilitate completă', lastActivity: 'Ultima activitate',
+      availability: 'Disponibilitate', popularity: 'Popularitate', incompleteSavePath: 'Cale de salvare incompletă',
+      infoHashV1: 'Hash informații v1', infoHashV2: 'Hash informații v2', reannounceIn: 'Reanunțare peste',
+      private: 'Privat', forceStart: 'Pornire forțată', seedsTotal: 'Surse (total)', peersTotal: 'Parteneri (total)',
+    },
+    table: {
+      dragToReorder: 'Trage pentru reordonare', sortableDragTitle: '{{column}} — trage pentru reordonare',
+      resizeColumn: 'Redimensionează coloana {{column}}', resizeToFit: 'Potrivește dimensiunea',
+      resizeAllToFit: 'Potrivește toate dimensiunile', moveFirst: 'Mută prima', moveLeft: 'Mută la stânga',
+      moveRight: 'Mută la dreapta', moveLast: 'Mută ultima', restoreDefaults: 'Restabilește valorile implicite',
+    },
+    toolbar: {
+      transfers: 'Transferuri', search: 'Căutare', rss: 'RSS', main: 'Bara principală de instrumente',
+      addTorrent: 'Adaugă torrent', removeSelected: 'Elimină selecția', resumeSelected: 'Reia selecția',
+      pauseSelected: 'Întrerupe selecția', forceStartSelected: 'Pornește forțat selecția',
+      queueUp: 'Urcă în coadă', queueDown: 'Coboară în coadă', moveTop: 'Mută la început',
+      moveBottom: 'Mută la sfârșit', hideSidebar: 'Ascunde bara laterală', showSidebar: 'Arată bara laterală',
+      toggleSidebar: 'Comută bara laterală', settings: 'Setări', hideMenuBar: 'Ascunde bara de meniu',
+      showMenuBar: 'Arată bara de meniu', filterPlaceholder: 'Filtrează torrentele…',
+    },
+  } satisfies CatalogShape<EnglishCatalogs['desktop']>;

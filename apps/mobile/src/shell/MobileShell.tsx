@@ -13,6 +13,7 @@ import { WorkspaceFrame } from '@taurent/web-ui';
 import { Icon } from '../ui/Icon';
 import { MobileConnectionBanner } from './MobileConnectionBanner';
 import { useMagnetLinkOpen } from '../hooks/useMagnetLinkOpen';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 const MOBILE_TAB_BAR_SAFE_HEIGHT = 'calc(4rem + var(--sab, 0px))';
 
@@ -26,10 +27,10 @@ const mobileTabBarStyle: CSSProperties = {
 };
 
 const TAB_ITEMS = [
-  { to: '/', label: 'Torrents', icon: 'layers' as const },
-  { to: '/search', label: 'Search', icon: 'search' as const },
-  { to: '/rss', label: 'RSS', icon: 'rss' as const },
-  { to: '/settings', label: 'Settings', icon: 'settings' as const },
+  { to: '/', labelKey: 'navigation.home', icon: 'layers' as const },
+  { to: '/search', labelKey: 'navigation.search', icon: 'search' as const },
+  { to: '/rss', labelKey: 'navigation.rss', icon: 'rss' as const },
+  { to: '/settings', labelKey: 'navigation.settings', icon: 'settings' as const },
 ];
 
 function TabBarItem({ to, label, icon }: { to: string; label: string; icon: 'layers' | 'search' | 'rss' | 'settings' }) {
@@ -51,13 +52,14 @@ function TabBarItem({ to, label, icon }: { to: string; label: string; icon: 'lay
 }
 
 function MobileTabBar() {
+  const { t } = useTaurentTranslation('mobile');
   return (
     <nav
       className="flex items-center justify-around border-t border-border bg-surface px-2 pt-1"
       style={mobileTabBarStyle}
     >
       {TAB_ITEMS.map((item) => (
-        <TabBarItem key={item.to} to={item.to} label={item.label} icon={item.icon} />
+        <TabBarItem key={item.to} to={item.to} label={t(item.labelKey)} icon={item.icon} />
       ))}
     </nav>
   );

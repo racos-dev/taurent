@@ -6,6 +6,7 @@ import { SidebarFilterItem } from '@taurent/web-ui';
 import { SidebarSection } from './SidebarSection';
 import { TrackerContextMenu } from '../../components/ContextMenu';
 import type { useSidebarActions } from './useSidebarActions';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 interface TrackersSectionProps {
   items: SidebarTrackerEntry[];
@@ -25,6 +26,7 @@ export function TrackersSection({
   totalFilteredCount,
   capabilities,
 }: TrackersSectionProps) {
+  const { t } = useTaurentTranslation('torrents');
   const capStatus = getCapabilityStatus(capabilities, 'supportsTrackerEditing');
 
   const [expanded, setExpanded] = useState(true);
@@ -49,13 +51,13 @@ export function TrackersSection({
   return (
     <>
       <SidebarSection
-        title="Trackers"
+        title={t('sidebar.trackers')}
         expanded={expanded}
         onToggle={() => setExpanded((current) => !current)}
       >
         <SidebarFilterItem
           icon={<Globe />}
-          label="All Trackers"
+          label={t('sidebar.allTrackers')}
           count={totalFilteredCount}
           active={activeTracker === null}
           onClick={() => onTrackerClick(null)}
@@ -79,7 +81,7 @@ export function TrackersSection({
             );
           })
         ) : (
-          <p className="px-2 py-1 text-xs text-text-muted">No trackers available</p>
+          <p className="px-2 py-1 text-xs text-text-muted">{t('sidebar.noTrackers')}</p>
         )}
       </SidebarSection>
 

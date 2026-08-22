@@ -10,6 +10,7 @@ import { useTrackerEntries } from '../hooks/useTrackerEntries';
 import { useFiltersScreenController } from '@taurent/web-core/screens';
 import { Icon } from '../ui/Icon';
 import { mobileScreenRootClassName } from '../ui/mobileScreenLayout';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 // Mobile-specific: add icons to the shared base options.
 const FILTER_ICONS: Record<string, import('../ui/Icon').AppIconName> = {
@@ -29,15 +30,16 @@ const FILTER_ICONS: Record<string, import('../ui/Icon').AppIconName> = {
 
 const TORRENT_FILTER_OPTIONS: readonly {
   value: string;
-  label: string;
+  labelKey: (typeof BASE_TORRENT_FILTER_OPTIONS)[number]['labelKey'];
   icon: import('../ui/Icon').AppIconName;
 }[] = BASE_TORRENT_FILTER_OPTIONS.map((opt) => ({
   value: opt.value,
-  label: opt.label,
+  labelKey: opt.labelKey,
   icon: FILTER_ICONS[opt.value] ?? 'list',
 }));
 
 export function FiltersScreen() {
+  const { t } = useTaurentTranslation('torrents');
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -102,11 +104,11 @@ export function FiltersScreen() {
   const statusOptions: FilterStatusListOption[] = useMemo(
     () =>
       TORRENT_FILTER_OPTIONS.map((filter) => ({
-        label: filter.label,
+        label: t(filter.labelKey),
         value: filter.value,
         icon: <Icon name={filter.icon} iconSize="md" />,
       })),
-    []
+    [t]
   );
 
   const icons = useMemo(
@@ -125,7 +127,7 @@ export function FiltersScreen() {
   return (
     <div className={mobileScreenRootClassName({ className: 'flex h-full min-h-0 flex-col overflow-hidden' })}>
       <ScreenHeader
-        title="Filters"
+        title={t('workspace.filters')}
         variant="mobile"
         onBack={controller.handleClose}
         rightAction={
@@ -134,10 +136,10 @@ export function FiltersScreen() {
               variant="secondary"
               size="sm"
               onClick={controller.handleClearFilters}
-              aria-label="Clear filters"
+              aria-label={t('workspace.clearFilters')}
             >
               {icons.x}
-              Clear
+              {t('workspace.clearSelection')}
             </Button>
           ) : null
         }

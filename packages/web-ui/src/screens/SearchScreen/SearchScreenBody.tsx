@@ -1,17 +1,17 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { cn, formatBytes, Icon } from '@taurent/shared';
+import { cn, Icon } from '@taurent/shared';
 import { ExternalLink } from '../../components/shared/ExternalLink';
 import { StateSurface } from '../../components/shared/StateSurface';
 import { SkeletonBlock } from '../../components/shared/SkeletonBlock';
 import { ConfirmDialog } from '../../components/dialogs/ConfirmDialog';
 import { Input } from '../../components/primitives/Input';
 import { Select } from '../../components/primitives/Select';
-import type { SelectOption } from '../../components/primitives/Select';
 import { PluginInstallDialog } from '../../components/dialogs/PluginInstallDialog';
 import {
   filledVariantClasses,
   surfaceVariantClasses,
 } from '../../components/primitives/buttonStyles';
+import { useLocalizedFormatters, useTaurentTranslation } from '@taurent/shared/i18n';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -39,12 +39,12 @@ export interface NormalizedSearchResult {
 export type SearchSortKey = 'seeders' | 'leechers' | 'size' | 'name';
 export type SearchSortDirection = 'asc' | 'desc';
 
-const SORT_KEY_OPTIONS: SelectOption<SearchSortKey>[] = [
-  { value: 'seeders', label: 'Seeders' },
-  { value: 'leechers', label: 'Leechers' },
-  { value: 'size', label: 'Size' },
-  { value: 'name', label: 'Name' },
-];
+const SORT_KEY_OPTIONS = [
+  { value: 'seeders', labelKey: 'seeders' },
+  { value: 'leechers', labelKey: 'leechers' },
+  { value: 'size', labelKey: 'size' },
+  { value: 'name', labelKey: 'name' },
+] as const;
 
 export interface SearchScreenProps {
   variant?: 'desktop' | 'mobile';
@@ -95,7 +95,10 @@ interface SearchResultRowProps {
   onAdd: () => void;
 }
 
-const SearchResultRow = React.memo<SearchResultRowProps>(({ result, onAdd }) => (
+const SearchResultRow = React.memo<SearchResultRowProps>(({ result, onAdd }) => {
+  const { t } = useTaurentTranslation('search');
+  const format = useLocalizedFormatters();
+  return (
   <div className="flex items-start gap-2 rounded-sm border border-border bg-surface px-3 py-2 transition-colors hover:bg-surface-interactive">
     <div className="min-w-0 flex-1">
       <div className="flex items-start justify-between gap-2">
@@ -104,7 +107,7 @@ const SearchResultRow = React.memo<SearchResultRowProps>(({ result, onAdd }) => 
           style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}
           title={result.fileName}
         >
-          {result.fileName || 'Unknown'}
+          {result.fileName || t('unknownResult')}
         </h3>
         <button
           onClick={onAdd}
@@ -118,13 +121,13 @@ const SearchResultRow = React.memo<SearchResultRowProps>(({ result, onAdd }) => 
             ),
           )}
         >
-          Add
+          {t('add')}
         </button>
       </div>
       <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-text-secondary">
-        <span>{formatBytes(result.fileSize)}</span>
-        <span>Seeders: {result.nbSeeders}</span>
-        <span>Leechers: {result.nbLeechers}</span>
+        <span>{format.formatBytes(result.fileSize)}</span>
+        <span>{t('seedersValue', { count: format.formatCount(result.nbSeeders) })}</span>
+        <span>{t('leechersValue', { count: format.formatCount(result.nbLeechers) })}</span>
       </div>
       {result.siteUrl ? (
         <ExternalLink
@@ -137,7 +140,8 @@ const SearchResultRow = React.memo<SearchResultRowProps>(({ result, onAdd }) => 
       ) : null}
     </div>
   </div>
-));
+  );
+});
 
 SearchResultRow.displayName = 'SearchResultRow';
 
@@ -150,22 +154,23 @@ interface SortControlProps {
 
 const SortControl = React.memo<SortControlProps>(
   ({ sortKey, sortDirection, onSortKeyChange, onSortDirectionChange }) => {
+    const { t } = useTaurentTranslation('search');
     const isDescending = sortDirection === 'desc';
     return (
       <div className="flex shrink-0 items-center gap-2">
-        <span className="text-xs text-text-muted">Sort</span>
+        <span className="text-xs text-text-muted">{t('sort')}</span>
         <Select<SearchSortKey>
-          options={SORT_KEY_OPTIONS}
+          options={SORT_KEY_OPTIONS.map((option) => ({ value: option.value, label: t(option.labelKey) }))}
           value={sortKey}
           onChange={onSortKeyChange}
           containerClassName="w-28"
-          aria-label="Sort results by"
+          aria-label={t('sortBy')}
         />
         <button
           type="button"
           onClick={() => onSortDirectionChange(isDescending ? 'asc' : 'desc')}
-          aria-label={isDescending ? 'Sort descending (highest first)' : 'Sort ascending (lowest first)'}
-          title={isDescending ? 'Descending' : 'Ascending'}
+          aria-label={t(isDescending ? 'descendingDescription' : 'ascendingDescription')}
+          title={t(isDescending ? 'descending' : 'ascending')}
           className={cn(
             'flex shrink-0 items-center justify-center rounded-sm p-2 text-text-secondary',
             surfaceVariantClasses({ border: 'border-border', hoverBg: 'bg-surface-interactive' }),
@@ -188,14 +193,16 @@ interface PluginCardProps {
   isPending: boolean;
 }
 
-const PluginCard = React.memo<PluginCardProps>(({ plugin, isEnabled, onToggle, onUninstall, isPending }) => (
+const PluginCard = React.memo<PluginCardProps>(({ plugin, isEnabled, onToggle, onUninstall, isPending }) => {
+  const { t } = useTaurentTranslation('search');
+  return (
   <div className="flex items-center gap-2 rounded-sm border border-border bg-surface px-3 py-2">
     <div className="min-w-0 flex-1">
       <div className="flex items-center gap-2">
         <span title={plugin.fullName || plugin.name} className="text-sm font-medium text-text-primary truncate">{plugin.fullName || plugin.name}</span>
         {plugin.version ? (
           <span className="shrink-0 rounded-sm bg-surface-interactive px-1 text-xs text-text-secondary">
-            v{plugin.version}
+            {t('version', { version: plugin.version })}
           </span>
         ) : null}
       </div>
@@ -221,18 +228,19 @@ const PluginCard = React.memo<PluginCardProps>(({ plugin, isEnabled, onToggle, o
           isPending && 'opacity-50'
         )}
       >
-        {isEnabled ? 'Enabled' : 'Disabled'}
+        {t(isEnabled ? 'enabled' : 'disabled')}
       </button>
       <button
         onClick={onUninstall}
         disabled={isPending}
         className="rounded-sm bg-error/10 px-2 py-1 text-xs font-medium text-error enabled:hover:bg-error/20 disabled:bg-bg-disabled disabled:text-text-disabled disabled:border-border-disabled disabled:cursor-not-allowed"
       >
-        Remove
+        {t('remove')}
       </button>
     </div>
   </div>
-));
+  );
+});
 
 PluginCard.displayName = 'PluginCard';
 
@@ -272,6 +280,7 @@ export const SearchScreenBody = React.memo<SearchScreenProps>(({
   onUpdatePlugins,
   onAddResult,
 }) => {
+  const { t } = useTaurentTranslation('search');
   const [showPlugins, setShowPlugins] = useState(false);
   const [showInstallDialog, setShowInstallDialog] = useState(false);
   const [uninstallTarget, setUninstallTarget] = useState<string | null>(null);
@@ -291,8 +300,8 @@ export const SearchScreenBody = React.memo<SearchScreenProps>(({
     return (
       <StateSurface
         tone="loading"
-        title="Checking search capability..."
-        message="Please wait while we check if your server supports search."
+        title={t('checking')}
+        message={t('checkingMessage')}
         icon={<Icon name="search" className="h-6 w-6" />}
       />
     );
@@ -302,8 +311,8 @@ export const SearchScreenBody = React.memo<SearchScreenProps>(({
     return (
       <StateSurface
         tone="unsupported"
-        title="Search not available"
-        message="Your qBittorrent server does not support search plugins, or they have been disabled."
+        title={t('unsupported')}
+        message={t('unsupportedMessage')}
         icon={<Icon name="search" className="h-6 w-6" />}
       />
     );
@@ -313,8 +322,8 @@ export const SearchScreenBody = React.memo<SearchScreenProps>(({
     return (
       <StateSurface
         tone="offline"
-        title="Search unavailable"
-        message="Connect to a server to access search."
+        title={t('unavailable')}
+        message={t('unavailableMessage')}
         icon={<Icon name="search" className="h-6 w-6" />}
       />
     );
@@ -348,7 +357,7 @@ export const SearchScreenBody = React.memo<SearchScreenProps>(({
                 clearable
                 value={localQuery}
                 onChange={setLocalQuery}
-                placeholder="Search for torrents..."
+                placeholder={t('placeholder')}
                 icon={<Icon name="search" className="h-4 w-4 text-text-muted" />}
               />
             </div>
@@ -365,7 +374,7 @@ export const SearchScreenBody = React.memo<SearchScreenProps>(({
                 ),
               )}
             >
-              {isSearching ? 'Searching...' : 'Search'}
+              {isSearching ? t('searching') : t('search')}
             </button>
             {isSearching && (
               <button
@@ -376,14 +385,14 @@ export const SearchScreenBody = React.memo<SearchScreenProps>(({
                   surfaceVariantClasses({ border: 'border-border', hoverBg: 'bg-surface-interactive' }),
                 )}
               >
-                Stop
+                {t('stop')}
               </button>
             )}
           </div>
 
           {searchError && (
             <div className="rounded-sm bg-error/10 px-2 py-1 text-xs text-error">
-              {searchError}
+              {t('searchFailed')}
             </div>
           )}
 
@@ -395,10 +404,10 @@ export const SearchScreenBody = React.memo<SearchScreenProps>(({
               className="flex items-center gap-1 text-xs text-text-secondary hover:text-text-primary"
             >
               <Icon name={showPlugins ? 'chevron-up' : 'chevron-down'} className="h-4 w-4" />
-              {showPlugins ? 'Hide plugins' : 'Manage plugins'}
+              {t(showPlugins ? 'hidePlugins' : 'managePlugins')}
             </button>
             {plugins.length > 0 && (
-              <span className="text-xs text-text-muted">{plugins.length} plugin(s) available</span>
+              <span className="text-xs text-text-muted">{t('pluginsAvailable', { count: plugins.length })}</span>
             )}
           </div>
         </form>
@@ -408,27 +417,27 @@ export const SearchScreenBody = React.memo<SearchScreenProps>(({
       {showPlugins && (
         <div className={cn('border-b border-border bg-surface/50', isCompact ? 'px-4 py-3' : 'p-4')}>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-text-primary">Search Plugins</h3>
+            <h3 className="text-sm font-semibold text-text-primary">{t('pluginsTitle')}</h3>
           <div className="flex gap-2">
               <button
                 onClick={() => setShowInstallDialog(true)}
                 className="rounded-sm bg-primary/10 px-2 py-1 text-xs font-medium text-primary enabled:hover:bg-primary/20 disabled:bg-bg-disabled disabled:text-text-disabled disabled:border-border-disabled disabled:cursor-not-allowed"
               >
-                Install
+                {t('install')}
               </button>
               <button
                 onClick={onUpdatePlugins}
                 disabled={isPluginActionPending}
                 className="rounded-sm bg-surface-interactive px-2 py-1 text-xs font-medium text-text-secondary enabled:hover:bg-surface-elevated disabled:bg-bg-disabled disabled:text-text-disabled disabled:border-border-disabled disabled:cursor-not-allowed"
               >
-                Update All
+                {t('updateAll')}
               </button>
             </div>
           </div>
 
           {pluginsError && (
             <div className="mb-2 rounded-sm bg-error/10 px-2 py-1 text-xs text-error">
-              {pluginsError}
+              {t('pluginsFailed')}
             </div>
           )}
 
@@ -441,7 +450,7 @@ export const SearchScreenBody = React.memo<SearchScreenProps>(({
           ) : plugins.length === 0 ? (
             <div className="rounded-sm border border-dashed border-border py-4 text-center">
               <Icon name="search" className="mx-auto h-6 w-6 text-text-muted" />
-              <p className="mt-2 text-xs text-text-secondary">No search plugins installed</p>
+              <p className="mt-2 text-xs text-text-secondary">{t('noPlugins')}</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -472,12 +481,12 @@ export const SearchScreenBody = React.memo<SearchScreenProps>(({
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Icon name="search" className="h-8 w-8 text-text-muted" />
             <p className="mt-3 text-sm text-text-secondary">
-              {isSearching ? 'Searching...' : 'No results yet'}
+              {isSearching ? t('searching') : t('noResults')}
             </p>
             <p className="mt-1 text-xs text-text-muted">
               {isSearching
-                ? `Found ${currentResultsTotal} result${currentResultsTotal === 1 ? '' : 's'} so far`
-                : 'Enter a query and click Search to find torrents'}
+                ? t('resultsSoFar', { count: currentResultsTotal })
+                : t('queryHint')}
             </p>
           </div>
         ) : (
@@ -485,7 +494,7 @@ export const SearchScreenBody = React.memo<SearchScreenProps>(({
             <div className="mb-2 flex items-center justify-between gap-2">
               {currentResultsTotal > 0 && !isSearching ? (
                 <p className="text-xs text-text-muted">
-                  {currentResultsTotal} result{currentResultsTotal === 1 ? '' : 's'} found
+                  {t('resultsFound', { count: currentResultsTotal })}
                 </p>
               ) : (
                 <span aria-hidden="true" />
@@ -520,9 +529,9 @@ export const SearchScreenBody = React.memo<SearchScreenProps>(({
       {/* Uninstall Confirm Dialog */}
       {uninstallTarget && (
         <ConfirmDialog
-          title="Uninstall Plugin"
-          message={`Are you sure you want to uninstall "${uninstallTarget}"? This cannot be undone.`}
-          confirmLabel="Uninstall"
+          title={t('uninstallTitle')}
+          message={t('uninstallMessage', { name: uninstallTarget })}
+          confirmLabel={t('uninstall')}
           onConfirm={() => {
             onUninstallPlugin(uninstallTarget);
             setUninstallTarget(null);

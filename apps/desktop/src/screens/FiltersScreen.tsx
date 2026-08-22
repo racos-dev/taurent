@@ -27,6 +27,7 @@ import {
 import { useTrackerEntries } from '../hooks/useTrackerEntries';
 import { ScreenHeader } from '@taurent/web-ui';
 import { openConfirmDialogWindow } from '../windows/dialogs/confirmDialogWindow';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 const FILTER_ICONS: Record<TorrentFilterType, React.ComponentType<{ className?: string }>> = {
   all: Filter,
@@ -44,6 +45,7 @@ const FILTER_ICONS: Record<TorrentFilterType, React.ComponentType<{ className?: 
 };
 
 export function FiltersScreen() {
+  const { t } = useTaurentTranslation('torrents');
   const navigate = useNavigate();
 
   const { categories } = useCategories();
@@ -117,12 +119,12 @@ export function FiltersScreen() {
       TORRENT_FILTER_OPTIONS.map((filter) => {
         const IconComp = FILTER_ICONS[filter.value as TorrentFilterType];
         return {
-          label: filter.label,
+          label: t(filter.labelKey),
           value: filter.value,
           icon: <IconComp className="w-5 h-5" />,
         };
       }),
-    []
+    [t]
   );
 
   const icons = useMemo(
@@ -138,7 +140,7 @@ export function FiltersScreen() {
 
   return (
     <div className="h-full flex flex-col bg-background">
-      <ScreenHeader title="Filters" variant="desktop" onBack={() => navigate('/')} />
+      <ScreenHeader title={t('workspace.filters')} variant="desktop" onBack={() => navigate('/')} />
 
       <div className="flex-1 overflow-auto p-4">
         <div className="max-w-2xl mx-auto">
