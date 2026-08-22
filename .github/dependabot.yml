@@ -4,6 +4,11 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      playwright:
+        patterns:
+          - "playwright"
+          - "@playwright/test"
 
   - package-ecosystem: "cargo"
     directory: "/"
@@ -14,3 +19,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      codeql-actions:
+        patterns:
+          - "github/codeql-action/*"
