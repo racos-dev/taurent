@@ -645,6 +645,10 @@ All platforms:
 - Desktop and mobile production frontend builds pass.
 - Rust formatting, workspace check, workspace tests, and all-target clippy pass. Rust tests include
   525 `qb-core`, 6 capability-parity, 51 `qb-tauri`, and 15 desktop application tests.
+- Revalidated on 2026-08-22 after merging `main` at `e3ffb2b`. Upstream changed dependency
+  manifests/lockfiles, CI and release workflows, and repository guidance, but no production UI
+  source. No catalog adjustment was required: the audit remained at zero with a zero baseline.
+  The merged dependency set passes all gates above plus 125 desktop browser tests.
 - The remaining Phase 8 gate is hands-on native release smoke on macOS, Windows, and Linux. It
   cannot be replaced by renderer mocks and must be signed off on each target platform before the
   phase and overall localization plan are marked complete. The native smoke checklist records that
