@@ -47,6 +47,7 @@ packages/bridge/src/
 - **Shared helper factories** (`sharedBridge.ts`): `createSessionHelpers`, `createServerHelpers`, `createQbClientHelpers`, and `createSyncHelpers` are used by both adapters. `probeEndpoint` normalizes try/catch → tri-state `ProbeResult`. `makeInvoke`/`makeInvokeNoArgs` provide generic invoke wrappers for shared helper composition.
 - **Session lifecycle at root**: Both `DesktopBridge` and `MobileBridge` extend `SessionLifecycleBridge` — session methods live at the root of the bridge object, not under a nested `session` property.
 - **Canonical vs compatibility**: Desktop uses direct `transport.invoke` calls (previously `cmd_*` prefixed, now unified unprefixed names); mobile uses unprefixed names. Both map to the same Tauri command names.
+- **Local add behavior**: `AddTorrentOptions.deleteSourceFilesAfterAdd` is a Taurent-only flag mapped to the native add command; it is not forwarded to qBittorrent's Web API.
 - **Capability flags**: `BridgeCapabilities` exposed as `bridge.capabilities` on both adapters.
 - **Probe tri-state**: `probeSearch()`/`probeRss()` return `{ supported: boolean | null, error?: string }` where `null` = probe failure, `true`/`false` = explicit support detection.
 - **Rust-owned sync lifecycle**: `createSyncHelpers` wraps maindata snapshot/status/start/stop commands and provides a synchronous-unsubscribe event listener (`addMaindataSyncListener`) that handles async registration races safely.

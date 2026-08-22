@@ -6,7 +6,7 @@ Desktop-specific settings UI components for the Settings window. Contains naviga
 
 ## Design
 
-- **Navigation config**: `SettingsNavConfig.ts` defines two groups — `APP_NAV_ITEMS` (desktop-specific: window behavior, theme, about, servers, path mappings) and `REMOTE_SECTION_NAV` (qBittorrent remote settings: behavior, downloads, connection, speed, BitTorrent, WebUI, advanced).
+- **Navigation config**: `SettingsNavConfig.ts` defines two groups — `APP_NAV_ITEMS` (desktop-specific: window behavior, downloads, theme, about, servers, path mappings) and `REMOTE_SECTION_NAV` (qBittorrent remote settings: behavior, downloads, connection, speed, BitTorrent, WebUI, advanced).
 - **Sidebar component**: `SettingsSidebar` renders grouped navigation with active section highlighting and dirty-section indicators (dot badges).
 - **Section components**: Each section is a self-contained React.memo component that reads its data from hooks and renders a settings panel from `@taurent/web-ui`.
 
@@ -15,6 +15,7 @@ Desktop-specific settings UI components for the Settings window. Contains naviga
 - **SettingsNavConfig.ts** — Type definitions for `SectionId`, `SettingsNavItem`, `SettingsNavGroup`, and constants `REMOTE_SECTION_NAV`, `APP_NAV_ITEMS`.
 - **SettingsSidebar.tsx** — Memoized sidebar with grouped navigation buttons, active state, and dirty indicators.
 - **WindowBehaviorSettings.tsx** — Close-to-tray, start-minimized, auto-start, download completion notifications toggles.
+- **TaurentDownloadsSettings.tsx** — Taurent-local, default-off toggle for deleting source `.torrent` files after qBittorrent accepts an upload; distinct from the similarly named qBittorrent server preference.
 - **DesktopThemeSettings.tsx** — Theme mode/palette/variant selection via `ThemeSettingsPanel`. Uses `useTheme` from `@taurent/web-ui/theme` with `config`, `setMode`, `setSystemPalette`, `setManualPalette`, `setManualVariant`, `setAccent`.
 - **DesktopAboutSettings.tsx** — App version, author, and GitHub link.
 - **ServerOverviewSettings.tsx** — Multi-server management (add, edit, remove, switch, test connection) with delete confirmation dialog. Uses `useServerManager` and `useQBClient` from `../../connection`, `BridgeAdapter.servers` for test connection, and emits `server-list-changed` events on server removal.

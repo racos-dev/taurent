@@ -1,12 +1,13 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { pickTorrentFiles } from '../platform';
+import { pickTorrentFiles, storage } from '../platform';
 import { useCategories } from '../hooks/useCategories';
 import { useTags } from '../hooks/useTags';
 import { useAddTorrent } from '../hooks';
 import { usePreferences } from '../hooks/useSettings';
 import { AddTorrentScreenBody, ScreenHeader } from '@taurent/web-ui';
 import { useAddTorrentScreenController } from '@taurent/web-core';
+import { useDeleteAddedTorrentFilesPreference } from '@taurent/web-core/hooks';
 import { mobileScreenRootClassName } from '../ui/mobileScreenLayout';
 import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 
@@ -23,12 +24,24 @@ export function AddTorrentScreen() {
   const { tags } = useTags();
   const { preferences } = usePreferences();
   const { addByUrl, addByFiles, isPending } = useAddTorrent();
+  const {
+    deleteAddedTorrentFiles,
+    setDeleteAddedTorrentFiles,
+  } = useDeleteAddedTorrentFilesPreference(storage);
+
+  const addByFilesWithLocalCleanup = useCallback(
+    (files: string[], options?: Parameters<typeof addByFiles>[1]) => addByFiles(files, {
+      ...options,
+      deleteSourceFilesAfterAdd: deleteAddedTorrentFiles,
+    }),
+    [addByFiles, deleteAddedTorrentFiles],
+  );
 
   // Controller owns form state and submit orchestration.
   // Mobile provides string paths since pickTorrentFiles returns string paths.
   const controller = useAddTorrentScreenController({
     addByUrl,
-    addByFiles,
+    addByFiles: addByFilesWithLocalCleanup,
     mode,
     onSubmitSuccess: () => navigate(-1),
     onSubmitError: () => {
@@ -95,6 +108,10 @@ export function AddTorrentScreen() {
           fileItems={controller.fileItems}
           onPickFiles={handlePickFiles}
           onRemoveFile={(id) => controller.handleRemoveFile(id)}
+          deleteSourceFilesAfterAdd={deleteAddedTorrentFiles}
+          onDeleteSourceFilesAfterAddChange={(value) => {
+            void setDeleteAddedTorrentFiles(value);
+          }}
           savePath={controller.savePath}
           onSavePathChange={controller.setSavePath}
           category={controller.category}

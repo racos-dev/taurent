@@ -2,11 +2,12 @@ import { useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AddTorrentScreenBody } from '@taurent/web-ui';
 import { getCapabilityStatus } from '@taurent/web-core/capabilities';
+import { useDeleteAddedTorrentFilesPreference } from '@taurent/web-core/hooks';
 import { useAddTorrent, useCategories, useTags } from '../hooks';
 import { useAddTorrentScreenController } from '@taurent/web-core';
 import { useQBClient } from '../connection';
 import { closeAuxWindow } from '../windows/auxWindowManager';
-import { pickTorrentFiles } from '../platform';
+import { pickTorrentFiles, storage } from '../platform';
 import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 
 type AddTorrentMode = 'magnet' | 'file';
@@ -25,6 +26,10 @@ export function AddTorrentScreen({ variant = 'main' }: AddTorrentScreenProps) {
   const mode: AddTorrentMode = 'magnet';
 
   const { addByUrl, addByFiles, isPending: isSubmitting } = useAddTorrent();
+  const {
+    deleteAddedTorrentFiles,
+    setDeleteAddedTorrentFiles,
+  } = useDeleteAddedTorrentFilesPreference(storage);
   const { capabilities } = useQBClient();
   const metadataApiStatus = getCapabilityStatus(capabilities, 'supportsMetadataApi');
 
@@ -53,9 +58,17 @@ export function AddTorrentScreen({ variant = 'main' }: AddTorrentScreenProps) {
 
   // Controller owns form state and submit orchestration.
   // desktopUnifiedMode=true makes the controller submit from lastUsedSource.
+  const addByFilesWithLocalCleanup = useCallback(
+    (files: string[], options?: Parameters<typeof addByFiles>[1]) => addByFiles(files, {
+      ...options,
+      deleteSourceFilesAfterAdd: deleteAddedTorrentFiles,
+    }),
+    [addByFiles, deleteAddedTorrentFiles],
+  );
+
   const controller = useAddTorrentScreenController({
     addByUrl,
-    addByFiles,
+    addByFiles: addByFilesWithLocalCleanup,
     mode,
     desktopUnifiedMode: true,
     onSubmitSuccess: handleSuccess,
@@ -183,6 +196,10 @@ export function AddTorrentScreen({ variant = 'main' }: AddTorrentScreenProps) {
           fileItems={controller.fileItems}
           onPickFiles={handlePickFiles}
           onRemoveFile={handleRemoveFile}
+          deleteSourceFilesAfterAdd={deleteAddedTorrentFiles}
+          onDeleteSourceFilesAfterAddChange={(value) => {
+            void setDeleteAddedTorrentFiles(value);
+          }}
           savePath={controller.savePath}
           onSavePathChange={controller.setSavePath}
           category={controller.category}

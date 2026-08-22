@@ -84,6 +84,12 @@ export const englishSettings = {
       closeToTray: 'Close to system tray', startToTray: 'Start to tray', notifications: 'Notifications',
       completionNotifications: 'Download completion notifications', startup: 'Startup', autoStart: 'Auto-start on boot',
     },
+    localDownloads: {
+      product: 'Taurent', loading: 'Loading…', loadingAria: 'Loading Taurent download settings',
+      unavailable: 'Taurent download settings unavailable', afterAdding: 'After adding a torrent',
+      deleteAfterUpload: 'Delete files selected in Taurent after a successful upload',
+      deleteAfterUploadDescription: 'Deletes the original .torrent files from this device. Files are kept when the upload fails or qBittorrent reports a rejected batch.',
+    },
     aboutSettings: {
       iconAlt: 'Taurent app icon', builtBy: 'Built by racos.dev', viewGithub: 'View on GitHub', updates: 'Updates',
       checking: 'Checking for updates…', available: 'Taurent v{{version}} is available.', upToDate: 'Taurent is up to date.',

@@ -9,7 +9,7 @@ Server connection and onboarding flow components for adding, logging into, and t
 - **ServerConnectionFields**: Shared form fields (name, URL, username, password, remember checkbox) used by both login and add-server forms. Accepts validation errors per field.
 - **LoginFormBody**: Login form with URL, username, password fields and a Connect button. Shows location and connection errors. Detects CORS errors for browser mode.
 - **AddServerFormBody**: Two-step add server form with name, URL, username, password fields, test connection, and add button. Desktop variant shows `StepIndicator` and separate test/add buttons. Mobile variant shows a single "Add & Connect" button.
-- **AddTorrentScreenBody**: Full add-torrent form with magnet link/file upload modes, destination settings (save path, category, tags), and advanced options (sequential, skip hash, paused, root folder, rate limits, content layout, stop condition). Desktop variant shows all options in a unified form. Mobile variant shows collapsible sections.
+- **AddTorrentScreenBody**: Full add-torrent form with magnet link/file upload modes, destination settings (save path, category, tags), advanced options, and Taurent's source-file cleanup preference alongside file selection. Desktop shows all options in a unified form; mobile hides file-only controls in magnet mode.
 - **AuthLoadingScreen**: Full-screen loading spinner with customizable text for authentication/connection states.
 - **StepIndicator**: Horizontal step progress indicator with active/completed/pending states.
 - **TestConnectionFeedback**: Inline feedback banner for connection test states (idle, testing, success, error with optional suggestion).

@@ -258,6 +258,7 @@ export function createDesktopBridge(transport?: Transport): DesktopBridge {
       options: {
         urls: options.urls,
         torrent_files: options.torrentFiles,
+        delete_source_files_after_add: options.deleteSourceFilesAfterAdd,
         savepath: options.savepath,
         category: options.category,
         tags: options.tags,

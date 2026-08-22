@@ -181,6 +181,8 @@ export const englishTorrents = {
       zeroUnlimited: '0 = unlimited', pasteMagnet: 'Paste a magnet link', selectTorrentFiles: 'Select torrent files',
       savePathRequired: 'Please enter a save path', magnetRequired: 'Please enter a URL or magnet link',
       invalidMagnet: 'Invalid URL or magnet format', fileRequired: 'Please select at least one torrent file',
+      deleteSourceFilesAfterAdd: 'Delete files selected in Taurent after a successful upload',
+      deleteSourceFilesAfterAddDescription: 'Deletes the original .torrent files from this device. Files are kept when the upload fails or qBittorrent reports a rejected batch.',
     },
     details: {
       screen: {

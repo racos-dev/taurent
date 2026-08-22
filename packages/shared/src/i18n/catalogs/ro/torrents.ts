@@ -127,6 +127,8 @@ export const romanianTorrents = {
       pasteMagnet: 'Lipește un link magnet', selectTorrentFiles: 'Selectează fișiere torrent',
       savePathRequired: 'Introdu o cale de salvare', magnetRequired: 'Introdu o adresă URL sau un link magnet',
       invalidMagnet: 'Format URL sau magnet nevalid', fileRequired: 'Selectează cel puțin un fișier torrent',
+      deleteSourceFilesAfterAdd: 'Șterge fișierele selectate în Taurent după o încărcare reușită',
+      deleteSourceFilesAfterAddDescription: 'Șterge fișierele .torrent originale de pe acest dispozitiv. Fișierele sunt păstrate dacă încărcarea eșuează sau qBittorrent respinge lotul.',
     },
     details: {
       screen: {

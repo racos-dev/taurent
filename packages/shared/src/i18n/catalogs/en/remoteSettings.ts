@@ -174,7 +174,8 @@ export const englishRemoteSettings = {
       'label': 'Merge trackers to existing torrent'
     },
     'delete_torrent_files_afterwards': {
-      'label': 'Delete .torrent files afterwards'
+      'label': 'Delete server-local .torrent files afterwards',
+      'description': 'Deletes .torrent files opened directly by qBittorrent after adding. This does not delete files selected in Taurent.'
     },
     'preallocate_all': {
       'label': 'Pre-allocate disk space for all files'

@@ -19,6 +19,8 @@ export interface AddTorrentScreenBodyProps {
   fileItems: AddTorrentFileItem[];
   onPickFiles: () => void;
   onRemoveFile: (id: string) => void;
+  deleteSourceFilesAfterAdd: boolean;
+  onDeleteSourceFilesAfterAddChange: (value: boolean) => void;
   // Destination
   savePath: string;
   onSavePathChange: (value: string) => void;

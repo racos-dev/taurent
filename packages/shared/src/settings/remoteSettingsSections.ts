@@ -296,10 +296,10 @@ export const REMOTE_SETTINGS_SECTIONS: Record<
         ],
         { group: 'adding' },
       ),
+      bool('delete_torrent_files_afterwards', { group: 'adding' }),
 
       // Duplicate handling
       bool('merge_trackers', { group: 'duplicate' }),
-      bool('delete_torrent_files_afterwards', { group: 'duplicate' }),
 
       // Disk
       bool('preallocate_all', { group: 'disk' }),

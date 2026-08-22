@@ -91,6 +91,13 @@ interface MobileSettingsScreenBodyProps {
   onManualPaletteChange: (palette: ThemePalette) => void;
   onManualVariantChange: (variant: ThemeVariant) => void;
   onAccentChange: (accent: AccentPreference) => void;
+  localDownloadsSetting: {
+    deleteAddedTorrentFiles: boolean;
+    isLoading: boolean;
+    error: string | null;
+    onChange: (value: boolean) => void;
+    onRetry: () => void;
+  };
   stagedValues: MobileRemoteSnapshots;
   baselineValues: MobileRemoteSnapshots;
   dirtyKeys: Partial<Record<RemoteSettingsSectionKey, string[]>>;
@@ -135,6 +142,7 @@ export function MobileSettingsScreenBody({
   onManualPaletteChange,
   onManualVariantChange,
   onAccentChange,
+  localDownloadsSetting,
   stagedValues,
   baselineValues,
   dirtyKeys,
@@ -191,6 +199,7 @@ export function MobileSettingsScreenBody({
             onManualPaletteChange={onManualPaletteChange}
             onManualVariantChange={onManualVariantChange}
             onAccentChange={onAccentChange}
+            localDownloadsSetting={localDownloadsSetting}
             stagedValues={stagedValues}
             baselineValues={baselineValues}
             dirtyKeys={dirtyKeys}
@@ -448,6 +457,7 @@ function SectionEditor(props: {
   onManualPaletteChange: (palette: ThemePalette) => void;
   onManualVariantChange: (variant: ThemeVariant) => void;
   onAccentChange: (accent: AccentPreference) => void;
+  localDownloadsSetting: MobileSettingsScreenBodyProps['localDownloadsSetting'];
   stagedValues: MobileRemoteSnapshots;
   baselineValues: MobileRemoteSnapshots;
   dirtyKeys: Partial<Record<RemoteSettingsSectionKey, string[]>>;
@@ -458,6 +468,38 @@ function SectionEditor(props: {
 }) {
   const { section } = props;
   const { t } = useTaurentTranslation('settings');
+
+  const wrapWithLocalDownloadsSetting = (content: React.ReactNode) => {
+    if (section !== 'downloads') return content;
+
+    return (
+      <div className="space-y-5">
+        <SettingsList label={t('localDownloads.product')}>
+          <SettingControlRow
+            title={t('localDownloads.deleteAfterUpload')}
+            description={t('localDownloads.deleteAfterUploadDescription')}
+            control={
+              props.localDownloadsSetting.isLoading ? (
+                <span className="text-sm text-text-muted">{t('localDownloads.loading')}</span>
+              ) : (
+                <ToggleSwitch
+                  checked={props.localDownloadsSetting.deleteAddedTorrentFiles}
+                  onChange={props.localDownloadsSetting.onChange}
+                />
+              )
+            }
+          />
+          {props.localDownloadsSetting.error ? (
+            <div className="px-4 py-3">
+              <p className="text-sm text-error">{props.localDownloadsSetting.error}</p>
+              <RetryButton onClick={props.localDownloadsSetting.onRetry} className="mt-2" />
+            </div>
+          ) : null}
+        </SettingsList>
+        {content}
+      </div>
+    );
+  };
 
   if (section === 'appearance') {
     return (
@@ -477,26 +519,28 @@ function SectionEditor(props: {
   }
 
   if (!props.connection.isConnected) {
-    return (
+    return wrapWithLocalDownloadsSetting(
       <StateCard
         title={t('screen.notConnected')}
         message={t('screen.connectBeforeEditing')}
         action={<Button onClick={props.onOpenServerSwitcher}>{t('screen.openServers')}</Button>}
-      />
+      />,
     );
   }
 
   if (props.isLoading) {
-    return <StateCard title={t('screen.loadingPreferences')} message={t('screen.pullingPreferences')} />;
+    return wrapWithLocalDownloadsSetting(
+      <StateCard title={t('screen.loadingPreferences')} message={t('screen.pullingPreferences')} />,
+    );
   }
 
   if (props.error || !props.preferences || !props.effectivePreferences) {
-    return (
+    return wrapWithLocalDownloadsSetting(
       <StateCard
         title={t('screen.couldNotLoadPreferences')}
         message={props.error ? t('remoteStatus.couldNotFetch') : t('screen.unavailablePayload')}
         action={<RetryButton onClick={props.onRetry} />}
-      />
+      />,
     );
   }
 
@@ -507,7 +551,7 @@ function SectionEditor(props: {
     }
   };
 
-  return (
+  return wrapWithLocalDownloadsSetting(
     <RemoteSectionEditor
       section={section}
       effectivePreferences={props.effectivePreferences}
@@ -515,7 +559,7 @@ function SectionEditor(props: {
       onFieldChange={(key, value) => props.onRemoteFieldChange(section, key, value)}
       onOpenNumberEditor={props.onOpenNumberEditor}
       onRevert={handleRevert}
-    />
+    />,
   );
 }
 

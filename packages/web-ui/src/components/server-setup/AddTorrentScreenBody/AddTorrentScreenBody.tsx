@@ -24,6 +24,8 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
       fileItems,
       onPickFiles,
       onRemoveFile,
+      deleteSourceFilesAfterAdd,
+      onDeleteSourceFilesAfterAddChange,
       savePath,
       onSavePathChange,
       category,
@@ -140,7 +142,7 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
                 />
               </div>
             ) : (
-              <div>
+              <div className="space-y-3">
                 {!fileItems.length ? (
                   <button
                     onClick={onPickFiles}
@@ -184,6 +186,12 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
                     </button>
                   </div>
                 )}
+                <ToggleRow
+                  label={t('addForm.deleteSourceFilesAfterAdd')}
+                  description={t('addForm.deleteSourceFilesAfterAddDescription')}
+                  checked={deleteSourceFilesAfterAdd}
+                  onChange={onDeleteSourceFilesAfterAddChange}
+                />
               </div>
             )}
           </section>
@@ -434,6 +442,18 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
                     ))}
                   </div>
                 )}
+                <label className="flex cursor-pointer items-start gap-2 rounded-sm bg-background px-3 py-2">
+                  <Checkbox
+                    checked={deleteSourceFilesAfterAdd}
+                    onChange={onDeleteSourceFilesAfterAddChange}
+                  />
+                  <span className="min-w-0">
+                    <span className="block text-sm text-text-primary">{t('addForm.deleteSourceFilesAfterAdd')}</span>
+                    <span className="mt-1 block text-xs text-text-muted">
+                      {t('addForm.deleteSourceFilesAfterAddDescription')}
+                    </span>
+                  </span>
+                </label>
                 </div>
               </section>
 
@@ -695,10 +715,25 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
   }
 );
 
-function ToggleRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+function ToggleRow({
+  label,
+  description,
+  checked,
+  onChange,
+}: {
+  label: string;
+  description?: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
   return (
     <label className="flex min-h-11 items-center justify-between gap-4">
-      <span className="text-sm font-medium text-text-primary">{label}</span>
+      <span className="min-w-0">
+        <span className="block text-sm font-medium text-text-primary">{label}</span>
+        {description && (
+          <span className="mt-1 block text-xs font-normal text-text-muted">{description}</span>
+        )}
+      </span>
       <ToggleSwitch checked={checked} onChange={onChange} />
     </label>
   );

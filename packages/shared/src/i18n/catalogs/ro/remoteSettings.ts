@@ -174,7 +174,8 @@ export const romanianRemoteSettings = {
       'label': 'Combină trackerele cu torrentul existent'
     },
     'delete_torrent_files_afterwards': {
-      'label': 'Șterge apoi fișierele .torrent'
+      'label': 'Șterge apoi fișierele .torrent de pe server',
+      'description': 'Șterge fișierele .torrent deschise direct de qBittorrent după adăugare. Această opțiune nu șterge fișierele selectate în Taurent.'
     },
     'preallocate_all': {
       'label': 'Prealocă spațiu pe disc pentru toate fișierele'

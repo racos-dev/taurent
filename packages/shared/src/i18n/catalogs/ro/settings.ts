@@ -68,6 +68,12 @@ export const romanianSettings = {
       completionNotifications: 'Notificări la finalizarea descărcărilor', startup: 'Pornire',
       autoStart: 'Pornește automat odată cu sistemul',
     },
+    localDownloads: {
+      product: 'Taurent', loading: 'Se încarcă…', loadingAria: 'Se încarcă setările Taurent pentru descărcări',
+      unavailable: 'Setările Taurent pentru descărcări nu sunt disponibile', afterAdding: 'După adăugarea unui torrent',
+      deleteAfterUpload: 'Șterge fișierele selectate în Taurent după o încărcare reușită',
+      deleteAfterUploadDescription: 'Șterge fișierele .torrent originale de pe acest dispozitiv. Fișierele sunt păstrate dacă încărcarea eșuează sau qBittorrent respinge lotul.',
+    },
     aboutSettings: {
       iconAlt: 'Pictograma aplicației Taurent', builtBy: 'Creat de racos.dev', viewGithub: 'Vezi pe GitHub',
       updates: 'Actualizări', checking: 'Se caută actualizări…', available: 'Taurent v{{version}} este disponibil.',
