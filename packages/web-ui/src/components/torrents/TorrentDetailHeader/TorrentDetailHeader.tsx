@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatBytes, formatCountFraction, formatSpeed, formatEta, formatProgress, formatRatio } from '@taurent/shared/utils/formatters';
+import { useLocalizedFormatters, useTaurentTranslation } from '@taurent/shared/i18n';
 import {
   Icon,
   StatusBadge,
@@ -14,6 +14,8 @@ export const TorrentDetailHeader = React.memo<TorrentDetailHeaderProps>(({
   progressBarClass,
   renderBadges,
 }) => {
+  const { t } = useTaurentTranslation('torrents');
+  const format = useLocalizedFormatters();
   const progress = (torrent.progress || 0) * 100;
   const displayStatus = getTorrentDisplayStatus(torrent);
 
@@ -29,7 +31,7 @@ export const TorrentDetailHeader = React.memo<TorrentDetailHeaderProps>(({
             {renderBadges ? renderBadges(torrent) : null}
           </div>
         </div>
-        <Pill>{formatProgress(torrent.progress)}</Pill>
+        <Pill>{format.formatPercent(torrent.progress)}</Pill>
       </div>
 
       <div className="mt-2 h-1 overflow-hidden rounded-full bg-surface-interactive">
@@ -41,46 +43,46 @@ export const TorrentDetailHeader = React.memo<TorrentDetailHeaderProps>(({
 
       <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-text-secondary">
         <span>
-          {formatBytes(torrent.completed ?? properties?.total_downloaded ?? 0)} / {formatBytes(torrent.size ?? properties?.total_size ?? 0)}
+          {format.formatBytes(torrent.completed ?? properties?.total_downloaded ?? 0)} / {format.formatBytes(torrent.size ?? properties?.total_size ?? 0)}
         </span>
-        <span>ETA {formatEta(torrent.eta)}</span>
+        <span>{t('fields.eta')} {format.formatEta(torrent.eta)}</span>
       </div>
 
         <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <div className="rounded-sm bg-surface-interactive px-2 py-1">
           <div className="flex items-center gap-1 text-text-secondary">
             <Icon name="download" className="h-3 w-3" />
-            <span className="text-xs font-medium">DL</span>
+            <span className="text-xs font-medium">{t('details.overview.dlSpeed')}</span>
           </div>
           <div className="mt-1 text-xs font-semibold text-text-primary">
-            {formatSpeed(torrent.dlspeed ?? properties?.dl_speed ?? 0)}
+            {format.formatSpeed(torrent.dlspeed ?? properties?.dl_speed ?? 0)}
           </div>
         </div>
         <div className="rounded-sm bg-surface-interactive px-2 py-1">
           <div className="flex items-center gap-1 text-text-secondary">
             <Icon name="upload" className="h-3 w-3" />
-            <span className="text-xs font-medium">UL</span>
+            <span className="text-xs font-medium">{t('details.overview.ulSpeed')}</span>
           </div>
           <div className="mt-1 text-xs font-semibold text-text-primary">
-            {formatSpeed(torrent.upspeed ?? properties?.up_speed ?? 0)}
+            {format.formatSpeed(torrent.upspeed ?? properties?.up_speed ?? 0)}
           </div>
         </div>
         <div className="rounded-sm bg-surface-interactive px-2 py-1">
           <div className="flex items-center gap-1 text-text-secondary">
             <Icon name="ratio" className="h-3 w-3" />
-            <span className="text-xs font-medium">Ratio</span>
+            <span className="text-xs font-medium">{t('fields.ratio')}</span>
           </div>
           <div className="mt-1 text-xs font-semibold text-text-primary">
-            {formatRatio(torrent.ratio ?? properties?.share_ratio)}
+            {format.formatRatio(torrent.ratio ?? properties?.share_ratio)}
           </div>
         </div>
         <div className="rounded-sm bg-surface-interactive px-2 py-1">
           <div className="flex items-center gap-1 text-text-secondary">
             <Icon name="users" className="h-3 w-3" />
-            <span className="text-xs font-medium">Peers</span>
+            <span className="text-xs font-medium">{t('fields.peers')}</span>
           </div>
           <div className="mt-1 text-xs font-semibold text-text-primary">
-            {formatCountFraction(torrent.num_leechs, torrent.num_seeds)}
+            {format.formatCount(torrent.num_leechs)} / {format.formatCount(torrent.num_seeds)}
           </div>
         </div>
       </div>

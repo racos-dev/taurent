@@ -4,14 +4,16 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 import { emit } from '@tauri-apps/api/event';
 import { BridgeAdapter } from '@taurent/bridge/adapters/desktop'
 import { Checkbox, DialogActions } from '@taurent/web-ui';
-import { formatUserMessageForContext } from '@taurent/shared/utils/error';
 import { useQBClient } from '../connection/QBClientProvider';
 import { AlertCircle, ICON_SIZES } from '@taurent/shared';
 import { dismissDialogWindow } from '../windows/dialogs/dialogHostWindow';
-import { useTaurentTranslation } from '@taurent/shared/i18n';
+import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 
 export function TorrentDeleteDialogScreen() {
   const { t } = useTaurentTranslation('desktop');
+  const { t: tTorrent } = useTaurentTranslation('torrents');
+  const { t: tCommon } = useTaurentTranslation('common');
+  const formatError = useLocalizedErrorFormatter();
   const [searchParams] = useSearchParams();
   const { serverId, sessionGeneration } = useQBClient();
 
@@ -45,7 +47,7 @@ export function TorrentDeleteDialogScreen() {
       });
       await dismissDialogWindow();
     } catch (err) {
-      setError(formatUserMessageForContext(err, 'torrent-action'));
+      setError(formatError(err, 'torrent-action'));
       setIsSubmitting(false);
     }
   }
@@ -53,8 +55,6 @@ export function TorrentDeleteDialogScreen() {
   function handleCancel() {
     void dismissDialogWindow();
   }
-
-  const torrentLabel = count === 1 ? 'this torrent' : `${count} torrents`;
 
   return (
     <div className="flex flex-col gap-4 p-5 pb-4 h-full">
@@ -64,12 +64,12 @@ export function TorrentDeleteDialogScreen() {
         </div>
         <div className="flex flex-col gap-1">
           <p className="text-sm font-medium text-text-primary">
-            Delete {torrentLabel}?
+            {tTorrent('dialogs.delete.confirm', { count })}
           </p>
           <p className="text-xs text-text-secondary">
             {deleteFiles
-              ? 'Torrents and their files will be permanently deleted.'
-              : 'Torrents will be removed. Downloaded files will be kept.'}
+              ? tTorrent('dialogs.delete.filesDeleted')
+              : tTorrent('dialogs.delete.filesKept')}
           </p>
         </div>
       </div>
@@ -79,7 +79,7 @@ export function TorrentDeleteDialogScreen() {
           checked={deleteFiles}
           onChange={setDeleteFiles}
         />
-        Also delete files
+        {tTorrent('dialogs.delete.alsoDeleteFiles')}
       </label>
 
       {error && (
@@ -90,9 +90,9 @@ export function TorrentDeleteDialogScreen() {
 
       <DialogActions
         actions={[
-          { label: 'Cancel', onClick: handleCancel, disabled: isSubmitting },
+          { label: tCommon('actions.cancel'), onClick: handleCancel, disabled: isSubmitting },
           {
-            label: isSubmitting ? 'Deleting...' : 'Delete',
+            label: isSubmitting ? tTorrent('actions.deleting') : tCommon('actions.delete'),
             onClick: () => void handleDelete(),
             variant: 'danger',
             disabled: isSubmitting,

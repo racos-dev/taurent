@@ -12,6 +12,7 @@ import {
   INPUT_CONTROL_ICON_OFFSET,
   INPUT_CONTROL_CLEAR_OFFSET,
 } from '../../../controlSizing/controlSizeClasses';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 const InputComponent: React.FC<InputWebProps & { ref?: React.Ref<HTMLInputElement> }> = React.memo(({
   id,
@@ -35,6 +36,7 @@ const InputComponent: React.FC<InputWebProps & { ref?: React.Ref<HTMLInputElemen
   autoFocus = false,
   ref,
 }) => {
+  const { t } = useTaurentTranslation('common');
   const [internalValue, setInternalValue] = useState(defaultValue || '');
 
   const isControlled = value !== undefined;
@@ -105,7 +107,7 @@ const InputComponent: React.FC<InputWebProps & { ref?: React.Ref<HTMLInputElemen
             type="button"
             onClick={handleClear}
             tabIndex={-1}
-            aria-label="Clear input"
+            aria-label={t('accessibility.clearInput')}
             className={cn(
               'absolute top-1/2 -translate-y-1/2 cursor-pointer text-text-muted hover:text-text-primary transition-colors',
               clearRightOffset,

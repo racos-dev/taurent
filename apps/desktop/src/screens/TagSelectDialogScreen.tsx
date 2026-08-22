@@ -4,16 +4,19 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 import { emit } from '@tauri-apps/api/event';
 import { BridgeAdapter } from '@taurent/bridge/adapters/desktop'
 import { Checkbox, DialogActions } from '@taurent/web-ui';
-import { extractHttpReason, formatUserMessageForContext } from '@taurent/shared/utils/error';
+import { extractHttpReason } from '@taurent/shared/utils/error';
 import { parseTorrentTags } from '@taurent/shared';
 import { useQBClient } from '../connection/QBClientProvider';
 import { useTags } from '../hooks/platform/useTags';
 import { useLiveTorrentByHash } from '../hooks/torrents/useLiveTorrentByHash';
 import { dismissDialogWindow } from '../windows/dialogs/dialogHostWindow';
-import { useTaurentTranslation } from '@taurent/shared/i18n';
+import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 
 export function TagSelectDialogScreen() {
   const { t } = useTaurentTranslation('desktop');
+  const { t: tDialogs } = useTaurentTranslation('dialogs');
+  const { t: tCommon } = useTaurentTranslation('common');
+  const formatError = useLocalizedErrorFormatter();
   const [searchParams] = useSearchParams();
   const { serverId, sessionGeneration } = useQBClient();
 
@@ -26,7 +29,7 @@ export function TagSelectDialogScreen() {
   const singleTorrent = useLiveTorrentByHash(hashes.length === 1 ? hashes[0] : null);
 
   // Persist error until explicitly dismissed — no auto-clear on new action
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown | null>(null);
   // Track add and remove pending states independently
   const [addTagsPending, setAddTagsPending] = useState(false);
   const [removeTagsPending, setRemoveTagsPending] = useState(false);
@@ -69,7 +72,7 @@ export function TagSelectDialogScreen() {
       await dismissDialogWindow();
     } catch (err) {
       console.error('Failed to add tags:', extractHttpReason(err));
-      setError(formatUserMessageForContext(err, 'torrent-action'));
+      setError(err);
     } finally {
       setAddTagsPending(false);
     }
@@ -93,7 +96,7 @@ export function TagSelectDialogScreen() {
       await dismissDialogWindow();
     } catch (err) {
       console.error('Failed to remove tags:', extractHttpReason(err));
-      setError(formatUserMessageForContext(err, 'torrent-action'));
+      setError(err);
     } finally {
       setRemoveTagsPending(false);
     }
@@ -124,15 +127,13 @@ export function TagSelectDialogScreen() {
     <div className="flex flex-col h-full">
       <div className="border-b border-border px-3 py-2">
         <p className="text-xs font-medium text-text-secondary">
-          {hashes.length === 1
-            ? 'Select tags to add or remove from 1 torrent'
-            : `Select tags to add or remove from ${hashes.length} torrents`}
+          {tDialogs('desktop.selectTags', { count: hashes.length })}
         </p>
       </div>
 
-      {error && (
+      {error !== null && (
         <div className="px-3 py-2 bg-error-20 border-b border-error text-xs text-error">
-          {error}
+          {formatError(error, 'torrent-action')}
         </div>
       )}
 
@@ -155,14 +156,14 @@ export function TagSelectDialogScreen() {
                   {tag}
                 </span>
                 {isAssigned && (
-                  <span className="ml-auto text-xs text-text-muted">assigned</span>
+                  <span className="ml-auto text-xs text-text-muted">{tDialogs('desktop.assigned')}</span>
                 )}
               </label>
             );
           })
         ) : (
           <div className="px-3 py-4 text-xs text-text-muted text-center">
-            No tags defined
+            {tDialogs('desktop.noTags')}
           </div>
         )}
       </div>
@@ -170,19 +171,19 @@ export function TagSelectDialogScreen() {
       <DialogActions
         actions={[
           {
-            label: addTagsPending ? 'Adding...' : 'Add Tags',
+            label: addTagsPending ? tDialogs('desktop.adding') : tDialogs('desktop.addTags'),
             onClick: handleAddTags,
             variant: 'primary',
             disabled: !canAdd,
           },
           {
-            label: removeTagsPending ? 'Removing...' : 'Remove Tags',
+            label: removeTagsPending ? tDialogs('desktop.removing') : tDialogs('desktop.removeTags'),
             onClick: handleRemoveTags,
             variant: 'outline',
             disabled: !canRemove,
             className: 'border-error/30 bg-error/5 text-error hover:border-error/30 hover:bg-error/10',
           },
-          { label: 'Cancel', onClick: handleCancel, disabled: isPending },
+          { label: tCommon('actions.cancel'), onClick: handleCancel, disabled: isPending },
         ]}
         className="border-t border-border px-3 py-2"
       />

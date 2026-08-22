@@ -4,11 +4,18 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 import { emit } from '@tauri-apps/api/event';
 import { BridgeAdapter } from '@taurent/bridge/adapters/desktop'
 import { DialogActions, Input } from '@taurent/web-ui';
-import { isConflictError, formatUserMessageForContext } from '@taurent/shared/utils/error';
+import { isConflictError } from '@taurent/shared/utils/error';
 import { useQBClient } from '../connection/QBClientProvider';
 import { dismissDialogWindow } from '../windows/dialogs/dialogHostWindow';
+import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
+
+type CreateDialogError = { kind: 'duplicate' } | { kind: 'operation'; error: unknown };
 
 export function CreateDialogScreen() {
+  const { t } = useTaurentTranslation('dialogs');
+  const { t: tCommon } = useTaurentTranslation('common');
+  const { t: tDesktop } = useTaurentTranslation('desktop');
+  const formatError = useLocalizedErrorFormatter();
   const [searchParams] = useSearchParams();
   const type = (searchParams.get('type') ?? 'category') as 'category' | 'tag';
   const hashesParam = searchParams.get('hashes') ?? '';
@@ -17,7 +24,7 @@ export function CreateDialogScreen() {
 
   const [name, setName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<CreateDialogError | null>(null);
   const [existingNames, setExistingNames] = useState<string[]>([]);
   const [isLoadingExisting, setIsLoadingExisting] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -62,20 +69,17 @@ export function CreateDialogScreen() {
       !isLoadingExisting &&
       existingNames.some((n) => n === trimmedName)
     ) {
-      setError(
-        type === 'category'
-          ? 'A category with this name already exists'
-          : 'A tag with this name already exists',
-      );
-    } else if (error && !existingNames.some((n) => n === name.trim())) {
+      if (error?.kind === 'duplicate') return;
+      setError({ kind: 'duplicate' });
+    } else if (error?.kind === 'duplicate' && !existingNames.some((n) => n === name.trim())) {
       setError(null);
     }
   }, [name, existingNames, isLoadingExisting, type, error]);
 
   useEffect(() => {
-    const title = type === 'category' ? 'Create Category' : 'Create Tag';
+    const title = type === 'category' ? tDesktop('windows.createCategory') : tDesktop('windows.createTag');
     void getCurrentWindow().setTitle(title);
-  }, [type]);
+  }, [tDesktop, type]);
 
   const canSubmit =
     name.trim().length > 0 &&
@@ -127,9 +131,9 @@ export function CreateDialogScreen() {
       await dismissDialogWindow();
     } catch (err) {
       if (isConflictError(err)) {
-        setError(type === 'category' ? 'A category with this name already exists' : 'A tag with this name already exists');
+        setError({ kind: 'duplicate' });
       } else {
-        setError(formatUserMessageForContext(err, 'torrent-action'));
+        setError({ kind: 'operation', error: err });
       }
       setIsSubmitting(false);
     }
@@ -139,14 +143,19 @@ export function CreateDialogScreen() {
     void dismissDialogWindow();
   }
 
-  const label = type === 'category' ? 'Category name' : 'Tag name';
+  const label = type === 'category' ? t('desktop.categoryName') : t('desktop.tagName');
   const submitLabel = isSubmitting
-    ? 'Creating...'
+    ? t('desktop.creating')
     : hashes.length > 0
       ? type === 'category'
-        ? 'Create & Assign'
-        : 'Create & Add'
-      : 'Create';
+        ? t('desktop.createAssign')
+        : t('desktop.createAdd')
+      : t('desktop.create');
+  const errorMessage = error?.kind === 'duplicate'
+    ? t(type === 'category' ? 'desktop.duplicateCategory' : 'desktop.duplicateTag')
+    : error?.kind === 'operation'
+      ? formatError(error.error, 'torrent-action')
+      : null;
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto p-5 pb-4">
@@ -166,16 +175,16 @@ export function CreateDialogScreen() {
             if (e.key === 'Escape') handleCancel();
           }}
         />
-        {error && (
+        {errorMessage && (
           <p className="max-h-16 overflow-y-auto break-words whitespace-pre-wrap text-xs text-error">
-            {error}
+            {errorMessage}
           </p>
         )}
       </div>
 
       <DialogActions
         actions={[
-          { label: 'Cancel', onClick: handleCancel, disabled: isSubmitting },
+          { label: tCommon('actions.cancel'), onClick: handleCancel, disabled: isSubmitting },
           {
             label: submitLabel,
             onClick: () => void handleSubmit(),

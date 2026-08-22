@@ -6,17 +6,20 @@ import { useLoginScreenController } from '@taurent/web-core';
 import type { Server } from '@taurent/shared/types/server';
 import { Button } from '@taurent/web-ui';
 import { cn, Icon } from '@taurent/shared';
-import { classifyError, formatUserMessageForContext } from '@taurent/shared/utils/error';
+import { classifyError } from '@taurent/shared/utils/error';
 import { openServerDeleteDialogWindow } from '../windows/dialogs/serverDeleteDialogWindow';
+import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 
 export function LoginScreen() {
+  const { t } = useTaurentTranslation('auth');
+  const formatError = useLocalizedErrorFormatter();
   const navigate = useNavigate();
   const location = useLocation();
   const { connect, isConnecting, isConnected, isHydrated, error: connectError, serverId: connectedServerId } = useQBClient();
   const { servers, removeServer } = useServerManager();
   const locationState = location.state as { error?: string; errorCategory?: string; suppressConnectedRedirect?: boolean } | null;
   const rawError = locationState?.error ?? connectError ?? null;
-  const visibleError = rawError ? formatUserMessageForContext(rawError, 'connection') : null;
+  const visibleError = rawError ? formatError(rawError, 'connection') : null;
 
   const [dismissedWarning, setDismissedWarning] = useState(false);
 
@@ -57,8 +60,8 @@ export function LoginScreen() {
           <div className="w-16 h-16 rounded-md bg-primary/10 flex items-center justify-center mx-auto mb-4 shadow-sm">
             <Icon name="server" className="h-8 w-8 text-primary" />
           </div>
-          <h1 className="text-xl font-semibold text-text-primary">Connect to Server</h1>
-          <p className="text-sm text-text-secondary mt-1">Select your qBittorrent instance to continue</p>
+          <h1 className="text-xl font-semibold text-text-primary">{t('server.connect')}</h1>
+          <p className="text-sm text-text-secondary mt-1">{t('server.selectInstance')}</p>
         </div>
 
         {/* Error Section */}
@@ -73,6 +76,7 @@ export function LoginScreen() {
           <div className="mb-4">
             <CredentialWarningBanner
               warning={credentialWarning}
+              credentialStatus={warningServer?.credentialStatus}
               onDismiss={() => setDismissedWarning(true)}
             />
           </div>
@@ -83,8 +87,8 @@ export function LoginScreen() {
           {servers.length === 0 ? (
             <div className="bg-surface border border-border rounded-md p-6 shadow-sm">
               <StateCard
-                title="No Servers Found"
-                message="Add your first qBittorrent server to get started"
+                title={t('server.noneFound')}
+                message={t('server.firstToStart')}
                 className="flex-1 border-none shadow-none bg-transparent"
               />
             </div>
@@ -126,7 +130,7 @@ export function LoginScreen() {
                           </span>
                           {isActive && (
                             <span className="text-xs uppercase tracking-wider font-bold text-primary bg-primary/10 px-2 py-1 rounded-sm">
-                              {status}
+                              {t(status === 'connected' ? 'server.connected' : 'loading.connecting')}
                             </span>
                           )}
                         </div>
@@ -166,7 +170,7 @@ export function LoginScreen() {
                               ? "bg-primary text-text-on-primary" 
                               : "bg-surface-elevated text-text-secondary group-hover:bg-primary group-hover:text-text-on-primary"
                           )}>
-                            Connect
+                            {t('form.connect')}
                           </div>
                         </>
                       )}
@@ -184,7 +188,7 @@ export function LoginScreen() {
             data-testid="login-add-server-button"
           >
             <Icon name="plus" className="mr-2 h-4 w-4" />
-            Add New Server
+            {t('server.addNew')}
           </Button>
         </div>
       </div>

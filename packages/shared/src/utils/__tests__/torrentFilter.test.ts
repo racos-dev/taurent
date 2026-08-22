@@ -388,10 +388,9 @@ describe('TORRENT_FILTER_OPTIONS', () => {
     }
   });
 
-  it('has label for every option', () => {
+  it('has a semantic label key for every option', () => {
     for (const opt of TORRENT_FILTER_OPTIONS) {
-      expect(typeof opt.label).toBe('string');
-      expect(opt.label.length).toBeGreaterThan(0);
+      expect(opt.labelKey).toMatch(/^filters\./);
     }
   });
 });

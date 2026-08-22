@@ -1,6 +1,7 @@
 import { AlertCircle, ICON_SIZES } from '@taurent/shared';
 import { DialogActions } from '@taurent/web-ui';
 import { OverlayPrompt } from '../OverlayPrompt';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 interface SettingsCloseOverlayProps {
   dirtyLabels: string[];
@@ -22,23 +23,24 @@ export function SettingsCloseOverlay({
   onDiscard,
   onSave,
 }: SettingsCloseOverlayProps) {
+  const { t } = useTaurentTranslation('settings');
   const description = dirtyLabels.length > 0
-    ? `The following sections have unsaved changes:\n${dirtyLabels.map((l) => `• ${l}`).join('\n')}`
-    : 'You have unsaved changes.';
+    ? t('closeOverlay.sections', { sections: dirtyLabels.map((label) => `• ${label}`).join('\n') })
+    : t('closeOverlay.generic');
 
   return (
     <OverlayPrompt
       icon={<AlertCircle size={ICON_SIZES.md} />}
-      title="Unsaved Changes"
+      title={t('closeOverlay.title')}
       description={description}
       error={saveError}
     >
       <DialogActions
         actions={[
-          { label: 'Stay', onClick: onStay, disabled: isSaving },
-          { label: 'Discard & Close', onClick: onDiscard, variant: 'danger', disabled: isSaving },
+          { label: t('closeOverlay.stay'), onClick: onStay, disabled: isSaving },
+          { label: t('closeOverlay.discard'), onClick: onDiscard, variant: 'danger', disabled: isSaving },
           {
-            label: isSaving ? 'Saving…' : 'Save & Close',
+            label: isSaving ? t('closeOverlay.saving') : t('closeOverlay.save'),
             onClick: onSave,
             variant: 'primary',
             loading: isSaving,

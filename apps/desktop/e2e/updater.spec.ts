@@ -39,7 +39,6 @@ test.describe('desktop updater', () => {
       appScenario: 'connected',
     });
     await expect(page.getByRole('heading', { name: 'About', exact: true })).toBeVisible();
-
     await page.evaluate(() => {
       window.__TAURENT_AUTOMATION__?.setUpdateAvailable({ version: '1.2.0' });
       window.__TAURENT_AUTOMATION__?.clearRecordedCalls();

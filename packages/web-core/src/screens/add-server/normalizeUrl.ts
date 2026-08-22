@@ -11,12 +11,14 @@
  * the full URL structure. Without a scheme, only checks that the input is
  * non-empty (auto-detect will handle scheme during test connection).
  *
- * @returns null if valid, or a human-readable error string if invalid.
+ * @returns null if valid, or a semantic validation code if invalid.
  */
-export function validateUrl(url: string): string | null {
+export type ServerUrlValidationError = 'urlRequired' | 'urlHostnameMissing' | 'invalidUrl';
+
+export function validateUrl(url: string): ServerUrlValidationError | null {
   const trimmed = url.trim();
   if (!trimmed) {
-    return 'URL is required';
+    return 'urlRequired';
   }
 
   // If URL has a scheme, validate the full structure
@@ -24,11 +26,11 @@ export function validateUrl(url: string): string | null {
     try {
       const parsed = new URL(trimmed);
       if (!parsed.hostname || parsed.hostname.length === 0) {
-        return 'URL hostname is missing';
+        return 'urlHostnameMissing';
       }
       return null;
     } catch {
-      return 'Invalid URL format';
+      return 'invalidUrl';
     }
   }
 

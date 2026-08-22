@@ -56,28 +56,32 @@ export function DropdownMenu({
 
   const isOpen = isControlled ? open : hookIsOpen;
 
-  // Track previous hookIsOpen to detect true→false transitions
+  // Track hook transitions so internal dismissals (Escape, outside click,
+  // blur) propagate back to a controlled parent.
   const prevHookIsOpenRef = React.useRef(hookIsOpen);
   React.useEffect(() => {
+    const wasOpen = prevHookIsOpenRef.current;
     prevHookIsOpenRef.current = hookIsOpen;
-  });
-
-  // Hook → parent sync: only propagate when hook actually closes itself
-  React.useEffect(() => {
-    if (isControlled && prevHookIsOpenRef.current && !hookIsOpen && open) {
+    if (isControlled && wasOpen && !hookIsOpen && open) {
       onOpenChange(false);
     }
   }, [hookIsOpen, isControlled, open, onOpenChange]);
 
-  // Parent → hook sync: bring hook state in line with controlled prop
+  // Parent → hook sync only when the controlled prop itself changes. This
+  // avoids reopening the hook between an internal dismissal and the parent's
+  // matching onOpenChange(false) render.
+  const prevControlledOpenRef = React.useRef<boolean | undefined>(undefined);
   React.useEffect(() => {
     if (!isControlled) return;
-    if (open && !hookIsOpen) {
+    const previousOpen = prevControlledOpenRef.current;
+    prevControlledOpenRef.current = open;
+    if (previousOpen === open) return;
+    if (open) {
       openDropdown(-1);
-    } else if (!open && hookIsOpen) {
+    } else {
       closeDropdown();
     }
-  }, [open, hookIsOpen, isControlled, openDropdown, closeDropdown]);
+  }, [open, isControlled, openDropdown, closeDropdown]);
 
   // Clicking a menu item: fire the action, then close.
   const handleItemClick = (item: MenuItem) => {

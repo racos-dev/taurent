@@ -4,6 +4,7 @@ import type { ServerCardProps } from './types';
 import { CredentialHealthIndicator } from '../CredentialHealthIndicator';
 import { IconButton } from '../primitives/IconButton';
 import { Spinner } from '../shared/Spinner';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export const ServerCard = React.memo<ServerCardProps>(({
   server,
@@ -15,6 +16,7 @@ export const ServerCard = React.memo<ServerCardProps>(({
   deletingServerId,
   variant = 'desktop',
 }) => {
+  const { t } = useTaurentTranslation('auth');
   const isDeleting = deletingServerId === server.id;
   const isMobile = variant === 'mobile';
   const actionPadding = isMobile
@@ -58,13 +60,13 @@ export const ServerCard = React.memo<ServerCardProps>(({
                 {status === 'connected' ? (
                   <span className="inline-flex shrink-0 items-center gap-1 rounded-sm bg-success/10 px-2 py-1 text-xs font-medium text-success">
                     <Icon name="check" iconSize="sm" />
-                    Connected
+                    {t('server.connected')}
                   </span>
                 ) : null}
                 {status === 'connecting' ? (
                   <span className="inline-flex shrink-0 items-center gap-1 rounded-sm bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
                     <Spinner variant="ring" size="sm" />
-                    Connecting
+                    {t('loading.connecting')}
                   </span>
                 ) : null}
               </div>
@@ -126,7 +128,7 @@ export const ServerCard = React.memo<ServerCardProps>(({
             <IconButton
               onClick={() => onEdit(server)}
               disabled={disabled || isDeleting}
-              title="Edit server"
+              title={t('server.editAction')}
               variant="ghost"
             >
               <Icon name="pencil" className="h-4 w-4" />
@@ -137,7 +139,7 @@ export const ServerCard = React.memo<ServerCardProps>(({
               onClick={() => onDelete(server.id, server.name)}
               loading={isDeleting}
               disabled={disabled || isDeleting}
-              title="Delete server"
+              title={t('server.deleteAction')}
               tone="danger"
               variant="ghost"
             >

@@ -8,6 +8,7 @@ import { TagContextMenu } from '../../components/ContextMenu';
 import { openCreateDialogWindow } from '../../windows/dialogs/createDialogWindow';
 import { openConfirmDialogWindow } from '../../windows/dialogs/confirmDialogWindow';
 import type { useSidebarActions } from './useSidebarActions';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 interface TagsSectionProps {
   items: SidebarTagItem[];
@@ -19,14 +20,6 @@ interface TagsSectionProps {
   capabilities: AppCapabilities;
 }
 
-function buildCapabilityTooltip(status: ReturnType<typeof getCapabilityStatus>): string | undefined {
-  if (status.enabled) return undefined;
-  if (status.isRemoved && status.removedIn) return `Removed in qBittorrent ${status.removedIn}+`;
-  if (status.isUnreleased) return 'Requires a future qBittorrent release.';
-  if (status.requiresVersion) return `Requires qBittorrent ${status.requiresVersion}+`;
-  return undefined;
-}
-
 export function TagsSection({
   items,
   activeTag,
@@ -35,8 +28,17 @@ export function TagsSection({
   totalFilteredCount,
   capabilities,
 }: TagsSectionProps) {
+  const { t } = useTaurentTranslation('torrents');
   const capStatus = getCapabilityStatus(capabilities, 'supportsTags');
-  const capTooltip = buildCapabilityTooltip(capStatus);
+  const capTooltip = capStatus.enabled
+    ? undefined
+    : capStatus.isRemoved && capStatus.removedIn
+      ? t('sidebar.removedIn', { version: capStatus.removedIn })
+      : capStatus.isUnreleased
+        ? t('sidebar.futureRelease')
+        : capStatus.requiresVersion
+          ? t('sidebar.requiresVersion', { version: capStatus.requiresVersion })
+          : undefined;
 
   const [expanded, setExpanded] = useState(true);
 
@@ -60,7 +62,7 @@ export function TagsSection({
   return (
     <>
       <SidebarSection
-        title="Tags"
+        title={t('sidebar.tags')}
         expanded={expanded}
         onToggle={() => setExpanded((current) => !current)}
         disabled={!capStatus.enabled}
@@ -68,15 +70,15 @@ export function TagsSection({
       >
         <SidebarFilterItem
           icon={<Tag />}
-          label="All Tags"
+          label={t('sidebar.allTags')}
           count={totalCount}
           active={activeTag === null}
           onClick={() => onTagClick(null)}
           ariaPressed={activeTag === null}
-          title="All Tags"
+          title={t('sidebar.allTags')}
         />
         {items.length === 0 ? (
-          <div className="px-3 py-2 text-sm text-text-muted">No tags</div>
+          <div className="px-3 py-2 text-sm text-text-muted">{t('sidebar.noTags')}</div>
         ) : (
           items.map(({ tag, count }) => (
             <SidebarFilterItem
@@ -107,7 +109,7 @@ export function TagsSection({
           className="h-auto w-full justify-start rounded-none px-2 py-1 font-normal text-text-secondary"
         >
           <Plus className="h-3 w-3 shrink-0" />
-          <span className="min-w-0 truncate text-left text-xs">Add Tag</span>
+          <span className="min-w-0 truncate text-left text-xs">{t('sidebar.addTag')}</span>
         </CapabilityButton>
       </SidebarSection>
 

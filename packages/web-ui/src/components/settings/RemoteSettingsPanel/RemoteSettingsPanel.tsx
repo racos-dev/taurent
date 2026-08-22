@@ -11,6 +11,7 @@ import { cn } from '@taurent/shared';
 import { NumberInput } from '../../primitives/NumberInput';
 import { Select } from '../../primitives/Select';
 import { Input } from '../../primitives/Input';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -42,6 +43,7 @@ export const RemoteSettingsPanel = React.memo<RemoteSettingsPanelProps>(({
 
   return (
     <DesktopRemoteSection
+      section={section}
       sectionDef={sectionDef}
       fields={fields}
       preferences={preferences}
@@ -58,11 +60,8 @@ RemoteSettingsPanel.displayName = 'RemoteSettingsPanel';
 // ─── Desktop panel (internal) ─────────────────────────────────────────────────
 
 interface DesktopRemoteSectionProps {
-  sectionDef: {
-    title: string;
-    description?: string;
-    groups?: Array<{ key: string; title: string; description?: string }>;
-  };
+  section: RemoteSettingsSectionKey;
+  sectionDef: { groups?: Array<{ key: string }> };
   fields: RemoteSettingsField[];
   preferences: Record<string, unknown> | null;
   /** When defined, the panel is controlled and uses these values instead of internal staged state */
@@ -76,6 +75,7 @@ interface DesktopRemoteSectionProps {
 }
 
 function DesktopRemoteSection({
+  section,
   sectionDef,
   fields,
   preferences,
@@ -84,6 +84,7 @@ function DesktopRemoteSection({
   dirtyKeys,
   baselineValues,
 }: DesktopRemoteSectionProps) {
+  const { t } = useTaurentTranslation('settings');
   const [internalStaged, setInternalStaged] = useState<Record<string, unknown>>(() => {
     const initial: Record<string, unknown> = {};
     for (const field of fields) {
@@ -143,10 +144,9 @@ function DesktopRemoteSection({
           if (groupFields.length === 0) return null;
           return (
             <div key={group.key} className="rounded-sm border border-border bg-surface px-2 py-2">
-              <p className="mb-2 text-xs font-medium text-text-muted">{group.title}</p>
-              {group.description ? (
-                <p className="mb-3 text-xs text-text-secondary">{group.description}</p>
-              ) : null}
+              <p className="mb-2 text-xs font-medium text-text-muted">
+                {t(`remoteSettings.sections.${section}.groups.${group.key}.title`)}
+              </p>
               <div className="space-y-2">
                 {groupFields.map((field) => (
                   <DesktopFieldRow
@@ -164,9 +164,9 @@ function DesktopRemoteSection({
         })
       ) : (
         <div className="rounded-sm border border-border bg-surface px-2 py-2">
-          {sectionDef.description ? (
-            <p className="mb-2 text-xs text-text-secondary">{sectionDef.description}</p>
-          ) : null}
+          <p className="mb-2 text-xs text-text-secondary">
+            {t(`remoteSettings.sections.${section}.description`)}
+          </p>
           <div className="space-y-2">
             {visibleFields.map((field) => (
               <DesktopFieldRow
@@ -194,13 +194,17 @@ interface DesktopFieldRowProps {
 }
 
 function DesktopFieldRow({ field, value, onChange, isDirty, onRevert }: DesktopFieldRowProps) {
+  const { t } = useTaurentTranslation('settings');
   const id = `field-${field.key}`;
+  const label = t(field.labelKey);
+  const descriptionText = field.descriptionKey ? t(field.descriptionKey) : undefined;
+  const revertLabel = t('remoteSettings.common.revert');
 
   if (field.kind === 'boolean') {
     return (
       <DesktopToggle
-        label={field.label ?? field.key}
-        description={field.description}
+        label={label}
+        description={descriptionText}
         checked={Boolean(value)}
         onChange={(v) => onChange(field.key, v)}
         isDirty={isDirty}
@@ -225,7 +229,7 @@ function DesktopFieldRow({ field, value, onChange, isDirty, onRevert }: DesktopF
           <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
             <div className="flex min-w-0 flex-1 items-center gap-2">
               <label htmlFor={id} className="block text-xs font-medium text-text-secondary">
-                {field.label ?? field.key}
+                {label}
               </label>
               {isDirty && <span className="inline-block h-2 w-2 rounded-full bg-primary" />}
             </div>
@@ -235,7 +239,7 @@ function DesktopFieldRow({ field, value, onChange, isDirty, onRevert }: DesktopF
                 onClick={() => onRevert(field.key)}
                 className="shrink-0 rounded-sm px-2 py-1 text-xs text-text-muted hover:bg-surface-interactive hover:text-text-primary"
               >
-                Revert
+                {revertLabel}
               </button>
             )}
           </div>
@@ -258,8 +262,8 @@ function DesktopFieldRow({ field, value, onChange, isDirty, onRevert }: DesktopF
             />
           </div>
         </div>
-        {field.description ? (
-          <p className="pr-3 text-xs text-text-secondary">{field.description}</p>
+        {descriptionText ? (
+          <p className="pr-3 text-xs text-text-secondary">{descriptionText}</p>
         ) : null}
       </div>
     );
@@ -269,11 +273,12 @@ function DesktopFieldRow({ field, value, onChange, isDirty, onRevert }: DesktopF
     const numericValue = toUiNumberValue(field, value);
     const isEnabled = numericValue !== field.disabledValue;
     const inputValue = isEnabled ? numericValue : field.defaultEnabledValue;
+    const disabledLabel = t(field.disabledLabelKey);
     const description = isEnabled
-      ? field.description
-      : field.description
-        ? `${field.description} ${field.disabledLabel}.`
-        : field.disabledLabel;
+      ? descriptionText
+      : descriptionText
+        ? `${descriptionText} ${disabledLabel}.`
+        : disabledLabel;
 
     return (
       <div className="space-y-1">
@@ -291,7 +296,7 @@ function DesktopFieldRow({ field, value, onChange, isDirty, onRevert }: DesktopF
           <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
             <div className="flex min-w-0 flex-1 items-center gap-2">
               <label htmlFor={id} className="block text-xs font-medium text-text-secondary">
-                {field.label ?? field.key}
+                {label}
               </label>
               {isDirty && <span className="inline-block h-2 w-2 rounded-full bg-primary" />}
             </div>
@@ -301,7 +306,7 @@ function DesktopFieldRow({ field, value, onChange, isDirty, onRevert }: DesktopF
                 onClick={() => onRevert(field.key)}
                 className="shrink-0 rounded-sm px-2 py-1 text-xs text-text-muted hover:bg-surface-interactive hover:text-text-primary"
               >
-                Revert
+                {revertLabel}
               </button>
             )}
           </div>
@@ -345,7 +350,7 @@ function DesktopFieldRow({ field, value, onChange, isDirty, onRevert }: DesktopF
           <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
             <div className="flex min-w-0 flex-1 items-center gap-2">
               <label htmlFor={id} className="block text-xs font-medium text-text-secondary">
-                {field.label ?? field.key}
+                {label}
               </label>
               {isDirty && <span className="inline-block h-2 w-2 rounded-full bg-primary" />}
             </div>
@@ -355,7 +360,7 @@ function DesktopFieldRow({ field, value, onChange, isDirty, onRevert }: DesktopF
                 onClick={() => onRevert(field.key)}
                 className="shrink-0 rounded-sm px-2 py-1 text-xs text-text-muted hover:bg-surface-interactive hover:text-text-primary"
               >
-                Revert
+                {revertLabel}
               </button>
             )}
           </div>
@@ -370,8 +375,8 @@ function DesktopFieldRow({ field, value, onChange, isDirty, onRevert }: DesktopF
             />
           </div>
         </div>
-        {field.description ? (
-          <p className="pr-3 text-xs text-text-secondary">{field.description}</p>
+        {descriptionText ? (
+          <p className="pr-3 text-xs text-text-secondary">{descriptionText}</p>
         ) : null}
       </div>
     );
@@ -385,7 +390,7 @@ function DesktopFieldRow({ field, value, onChange, isDirty, onRevert }: DesktopF
       )}>
         <div className="mb-1 flex items-center justify-between gap-2">
           <label htmlFor={id} className="flex items-center gap-2 text-xs font-medium text-text-secondary">
-            {field.label ?? field.key}
+            {label}
             {isDirty && <span className="inline-block h-2 w-2 rounded-full bg-primary" />}
           </label>
           {isDirty && onRevert && (
@@ -394,7 +399,7 @@ function DesktopFieldRow({ field, value, onChange, isDirty, onRevert }: DesktopF
               onClick={() => onRevert(field.key)}
               className="shrink-0 rounded-sm px-2 py-1 text-xs text-text-muted hover:bg-surface-interactive hover:text-text-primary"
             >
-              Revert
+              {revertLabel}
             </button>
           )}
         </div>
@@ -408,8 +413,8 @@ function DesktopFieldRow({ field, value, onChange, isDirty, onRevert }: DesktopF
             'focus-visible:ring-1 focus-visible:ring-border-focus focus-visible:outline-none'
           )}
         />
-        {field.description ? (
-          <p className="mt-1 text-xs text-text-secondary">{field.description}</p>
+        {descriptionText ? (
+          <p className="mt-1 text-xs text-text-secondary">{descriptionText}</p>
         ) : null}
       </div>
     );
@@ -425,7 +430,7 @@ function DesktopFieldRow({ field, value, onChange, isDirty, onRevert }: DesktopF
           <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
             <div className="flex min-w-0 flex-1 items-center gap-2">
               <label htmlFor={id} className="block text-xs font-medium text-text-secondary">
-                {field.label ?? field.key}
+                {label}
               </label>
               {isDirty && <span className="inline-block h-2 w-2 rounded-full bg-primary" />}
             </div>
@@ -435,14 +440,14 @@ function DesktopFieldRow({ field, value, onChange, isDirty, onRevert }: DesktopF
                 onClick={() => onRevert(field.key)}
                 className="shrink-0 rounded-sm px-2 py-1 text-xs text-text-muted hover:bg-surface-interactive hover:text-text-primary"
               >
-                Revert
+                {revertLabel}
               </button>
             )}
           </div>
           <Select
             id={id}
             value={value as (number | string) | undefined}
-            options={field.selectOptions.map(opt => ({ value: opt.value, label: opt.label }))}
+            options={field.selectOptions.map((option) => ({ value: option.value, label: t(option.labelKey) }))}
             onChange={(value) => onChange(field.key, value)}
             label={undefined}
             className="w-32 h-8 px-2 text-xs"
@@ -450,8 +455,8 @@ function DesktopFieldRow({ field, value, onChange, isDirty, onRevert }: DesktopF
             alignment="right"
           />
         </div>
-        {field.description ? (
-          <p className="pr-3 text-xs text-text-secondary">{field.description}</p>
+        {descriptionText ? (
+          <p className="pr-3 text-xs text-text-secondary">{descriptionText}</p>
         ) : null}
       </div>
     );
@@ -477,6 +482,7 @@ function DesktopToggle({
   onRevert?: () => void;
   fieldKey?: string;
 }) {
+  const { t } = useTaurentTranslation('settings');
   const toggleId = fieldKey ? `settings-toggle-${fieldKey}` : undefined;
   return (
     <div
@@ -508,7 +514,7 @@ function DesktopToggle({
             onClick={onRevert}
             className="shrink-0 rounded-sm px-2 py-1 text-xs text-text-muted hover:bg-surface-interactive hover:text-text-primary"
           >
-            Revert
+            {t('remoteSettings.common.revert')}
           </button>
         )}
       </div>

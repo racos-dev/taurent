@@ -21,8 +21,8 @@ import { CSS } from '@dnd-kit/utilities';
 import { ChevronDown, ChevronUp, cn, count, isPerfAuditEnabled } from '@taurent/shared';
 import type { Torrent } from '@taurent/shared';
 import type { SortField, SortDirection } from '@taurent/shared/stores';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 import {
-  COLUMN_MAP,
   COLUMN_REGISTRY,
   DEFAULT_COLUMN_ORDER,
   DEFAULT_COLUMN_VISIBILITY,
@@ -209,11 +209,13 @@ const CONTENT_ALIGNMENT_CLASS_NAMES: Record<ColumnDefinition['align'], string> =
   right: 'justify-end',
 };
 
+type LocalizedColumnDefinition = ColumnDefinition & { label: string };
+
 const measureTextWidth = (text: string, context: CanvasRenderingContext2D | null) => (
   context ? context.measureText(text).width : text.length * FALLBACK_CHAR_WIDTH
 );
 
-const getColumnAutoFitWidth = (column: ColumnDefinition, torrents: Torrent[]) => {
+const getColumnAutoFitWidth = (column: LocalizedColumnDefinition, torrents: Torrent[]) => {
   const canvas = typeof document !== 'undefined' ? document.createElement('canvas') : null;
   const context = canvas?.getContext('2d') ?? null;
 
@@ -235,7 +237,7 @@ const getColumnAutoFitWidth = (column: ColumnDefinition, torrents: Torrent[]) =>
 };
 
 interface SortableThProps {
-  column: ColumnDefinition;
+  column: LocalizedColumnDefinition;
   columnWidth: number;
   sortField: SortField;
   sortDirection: SortDirection;
@@ -255,6 +257,7 @@ function SortableThInner({
   onResizeToFit,
   onColumnContextMenu,
 }: SortableThProps) {
+  const { t } = useTaurentTranslation('desktop');
   const {
     attributes,
     isDragging,
@@ -296,7 +299,9 @@ function SortableThInner({
       scope="col"
       data-testid="torrent-header-cell"
       data-column-id={column.id}
-      title={column.sortable ? `${column.label} — drag to reorder` : 'Drag to reorder'}
+      title={column.sortable
+        ? t('table.sortableDragTitle', { column: column.label })
+        : t('table.dragToReorder')}
       onClick={handleSort}
       onContextMenu={handleContextMenu}
       className={cn(
@@ -323,7 +328,7 @@ function SortableThInner({
       {column.resizable ? (
         <button
           type="button"
-          aria-label={`Resize ${column.label} column`}
+          aria-label={t('table.resizeColumn', { column: column.label })}
           onClick={(event) => {
             event.stopPropagation();
           }}
@@ -389,6 +394,7 @@ export const TorrentTable: React.FC<TorrentTableProps> = ({
   onRightClick,
   onBlankSpaceClick,
 }) => {
+  const { t } = useTaurentTranslation('desktop');
   const parentRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const shellColumnVisibility = useShellStore((state) => state.columnVisibility);
@@ -408,9 +414,14 @@ export const TorrentTable: React.FC<TorrentTableProps> = ({
 
   // Columns available for display — suppress priority column when queueing is disabled
   const queueingEnabled = preferences?.queueing_enabled ?? true;
-  const availableColumns = useMemo(
-    () => (queueingEnabled ? COLUMN_REGISTRY : COLUMN_REGISTRY.filter((col) => col.id !== 'priority')),
-    [queueingEnabled]
+  const availableColumns = useMemo<LocalizedColumnDefinition[]>(
+    () => (queueingEnabled ? COLUMN_REGISTRY : COLUMN_REGISTRY.filter((col) => col.id !== 'priority'))
+      .map((column) => ({ ...column, label: t(column.labelKey) })),
+    [queueingEnabled, t]
+  );
+  const localizedColumnMap = useMemo(
+    () => Object.fromEntries(availableColumns.map((column) => [column.id, column])) as Record<string, LocalizedColumnDefinition>,
+    [availableColumns],
   );
 
   // Header context menu state
@@ -433,14 +444,14 @@ export const TorrentTable: React.FC<TorrentTableProps> = ({
 
   const visibleColumns = useMemo(
     () => columnOrder
-      .map((columnId) => COLUMN_MAP[columnId])
-      .filter((column): column is ColumnDefinition =>
+      .map((columnId) => localizedColumnMap[columnId])
+      .filter((column): column is LocalizedColumnDefinition =>
         Boolean(column) &&
         columnVisibility[column.id] &&
         // Suppress priority column when queueing is disabled
         (column.id !== 'priority' || queueingEnabled)
       ),
-    [columnOrder, columnVisibility, queueingEnabled]
+    [columnOrder, columnVisibility, localizedColumnMap, queueingEnabled]
   );
 
   // Visible column IDs for context menu — also excludes priority when queueing disabled
@@ -544,11 +555,11 @@ export const TorrentTable: React.FC<TorrentTableProps> = ({
 
   const handleResizeToFit = useCallback((columnId: string) => {
     if (torrents.length === 0) return;
-    const column = COLUMN_MAP[columnId];
+    const column = localizedColumnMap[columnId];
     if (!column) return;
 
     setColumnWidth(columnId, getColumnAutoFitWidth(column, torrents));
-  }, [torrents, setColumnWidth]);
+  }, [localizedColumnMap, torrents, setColumnWidth]);
 
   const handleResizeAllToFit = useCallback(() => {
     if (torrents.length === 0) return;
@@ -792,7 +803,7 @@ export const TorrentTable: React.FC<TorrentTableProps> = ({
         </DragOverlay>
         {contextMenu && createPortal(
           <HeaderContextMenu
-            activeColumn={COLUMN_MAP[contextMenu.columnId] ?? null}
+            activeColumn={localizedColumnMap[contextMenu.columnId] ?? null}
             allColumns={availableColumns}
             columnVisibility={columnVisibility}
             visibleColumnIds={availableVisibleColumnIds}
@@ -931,7 +942,7 @@ export const TorrentTable: React.FC<TorrentTableProps> = ({
       </DragOverlay>
       {contextMenu && createPortal(
         <HeaderContextMenu
-          activeColumn={COLUMN_MAP[contextMenu.columnId] ?? null}
+          activeColumn={localizedColumnMap[contextMenu.columnId] ?? null}
           allColumns={availableColumns}
           columnVisibility={columnVisibility}
           visibleColumnIds={availableVisibleColumnIds}

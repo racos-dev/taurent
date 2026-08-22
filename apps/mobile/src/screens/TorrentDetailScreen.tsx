@@ -21,7 +21,7 @@ import { TorrentDetailScreenBody } from '@taurent/web-ui';
 import { getCapabilityStatus } from '@taurent/web-core/capabilities';
 import { StateCard, ScreenHeader, Button } from '@taurent/web-ui';
 import { toast } from '@taurent/web-ui/components/shared/Toast/toast';
-import { formatUserMessageForContext } from '@taurent/shared/utils/error';
+import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 import type { WebSeed } from '@taurent/shared/types/qbittorrent';
 import { getTorrentDisplayStatus, getStatusColorClass } from '@taurent/shared/utils/torrentStatus';
 import {
@@ -31,6 +31,8 @@ import {
 } from '../ui/mobileScreenLayout';
 
 export function TorrentDetailScreen() {
+  const { t } = useTaurentTranslation('torrents');
+  const formatError = useLocalizedErrorFormatter();
   const { hash } = useParams<{ hash: string }>();
   const navigate = useNavigate();
   const { torrents, isLoading: torrentsLoading } = useTorrents();
@@ -89,34 +91,34 @@ export function TorrentDetailScreen() {
     try {
       await addHttpSourcesMutation.mutateAsync(urls);
     } catch (err) {
-      toast.error(formatUserMessageForContext(err, 'torrent-action'), {
+      toast.error(formatError(err, 'torrent-action'), {
         dedupeKey: 'mobile-detail:add-http-sources',
       });
       throw err;
     }
-  }, [addHttpSourcesMutation]);
+  }, [addHttpSourcesMutation, formatError]);
 
   const handleEditHttpSource = useCallback(async (seed: WebSeed, newUrl: string) => {
     try {
       await editHttpSourceMutation.mutateAsync({ seed, newUrl });
     } catch (err) {
-      toast.error(formatUserMessageForContext(err, 'torrent-action'), {
+      toast.error(formatError(err, 'torrent-action'), {
         dedupeKey: 'mobile-detail:edit-http-source',
       });
       throw err;
     }
-  }, [editHttpSourceMutation]);
+  }, [editHttpSourceMutation, formatError]);
 
   const handleRemoveHttpSource = useCallback(async (seed: WebSeed) => {
     try {
       await removeHttpSourceMutation.mutateAsync(seed);
     } catch (err) {
-      toast.error(formatUserMessageForContext(err, 'torrent-action'), {
+      toast.error(formatError(err, 'torrent-action'), {
         dedupeKey: 'mobile-detail:remove-http-source',
       });
       throw err;
     }
-  }, [removeHttpSourceMutation]);
+  }, [formatError, removeHttpSourceMutation]);
 
   const controller = useTorrentDetailController({
     hash: hash ?? '',
@@ -152,7 +154,11 @@ export function TorrentDetailScreen() {
     return (
       <div className={mobileScreenRootClassName()}>
         <div className={mobileCenteredStateClassName()}>
-          <StateCard title="Invalid torrent" message="Open a torrent from the list to view its details." action={<Button variant="primary" onClick={() => navigate('/')}>Back to torrents</Button>} />
+          <StateCard
+            title={t('details.screen.invalid')}
+            message={t('details.screen.invalidMessage')}
+            action={<Button variant="primary" onClick={() => navigate('/')}>{t('details.screen.backToTorrents')}</Button>}
+          />
         </div>
       </div>
     );
@@ -162,7 +168,7 @@ export function TorrentDetailScreen() {
     return (
       <div className={mobileScreenRootClassName()}>
         <div className={mobileCenteredStateClassName()}>
-          <StateCard title="Loading torrent" message="Fetching the latest torrent list and details." />
+          <StateCard title={t('details.screen.loading')} message={t('details.screen.loadingMessage')} />
         </div>
       </div>
     );
@@ -172,12 +178,16 @@ export function TorrentDetailScreen() {
     return (
       <div className={mobileScreenRootClassName()}>
         <ScreenHeader
-          title="Torrent details"
+          title={t('details.screen.title')}
           variant="mobile"
           onBack={() => navigate('/')}
         />
         <main className={mobileScreenContentClassName({ bottomSpacing: 'content', className: 'py-6' })}>
-          <StateCard title="Torrent not found" message={`The torrent with hash ${hash} is not available in the current session.`} action={<Button variant="secondary" onClick={() => navigate('/')}>Back to torrents</Button>} />
+          <StateCard
+            title={t('details.screen.notFound')}
+            message={t('details.screen.notFoundMessage', { hash })}
+            action={<Button variant="secondary" onClick={() => navigate('/')}>{t('details.screen.backToTorrents')}</Button>}
+          />
         </main>
       </div>
     );
@@ -186,7 +196,7 @@ export function TorrentDetailScreen() {
   return (
     <div className={mobileScreenRootClassName({ bottomSpacing: 'content' })}>
       <ScreenHeader
-        title="Torrent details"
+        title={t('details.screen.title')}
         variant="mobile"
         onBack={() => navigate('/')}
       />

@@ -125,15 +125,15 @@ useful throughout the migration.
 | Phase | Scope | Status | Exit evidence |
 | --- | --- | --- | --- |
 | Foundation | Runtime, bootstraps, selector, formatting, desktop native sync | Complete | Existing unit, E2E, build, and Rust validation |
-| 0 | Inventory and enforcement | In progress | Audit command, baseline report, CI policy |
-| 1 | Catalog structure and typed authoring | Pending | Namespace split, strict keys, catalog tests |
-| 2 | Static registries and model factories | Pending | No captured display text in shared/static models |
-| 3 | Common, authentication, and server lifecycle | Pending | All onboarding/server flows complete in Romanian |
-| 4 | Torrent workspace and torrent-detail journeys | Pending | Desktop/mobile torrent routes complete in Romanian |
-| 5 | Application and remote settings | Pending | All local/remote settings complete in Romanian |
-| 6 | Management, dialogs, statistics, search, and RSS | Pending | All secondary routes complete in Romanian |
-| 7 | Platform shells, errors, notifications, and accessibility | Pending | App-specific audit reaches zero |
-| 8 | Full audit, regression suite, builds, and native release smoke | Pending | Definition of done satisfied |
+| 0 | Inventory and enforcement | Complete | 1,644 findings / 26 approved literals / 136 files; script tests, audit CI, lint, typecheck pass |
+| 1 | Catalog structure and typed authoring | Complete | 12 namespace modules/locale, typed keys, 936 unit tests, both lazy `ro` builds |
+| 2 | Static registries and model factories | Complete | 1,139 audit findings remain; static/shared/web-core models migrated; lint, typecheck, 963 tests, audit, and both builds pass |
+| 3 | Common, authentication, and server lifecycle | Complete | Focused audit zero; 966 unit + 12 renderer E2E tests; lint, typecheck, audit, builds pass |
+| 4 | Torrent workspace and torrent-detail journeys | Complete | Phase audit zero; 454 findings remain; 966 unit tests, Romanian/state-preservation E2E, builds, lint/typecheck/audit pass |
+| 5 | Application and remote settings | Complete | Phase audit zero; 352 findings remain; full Romanian remote catalog and settings control E2E pass |
+| 6 | Management, dialogs, statistics, search, and RSS | Complete | Phase audit zero; 46 findings remain; Romanian secondary-route E2E and all phase gates pass |
+| 7 | Platform shells, errors, notifications, and accessibility | Complete | Zero production findings; localized shell/error/a11y/native-sync tests and gates pass |
+| 8 | Full audit, regression suite, builds, and native release smoke | In progress | Automated validation complete; native platform smoke pending |
 
 ## Phase 0 — Inventory and enforcement
 
@@ -176,6 +176,15 @@ Turn localization completeness into a deterministic, repeatable repository check
 - `pnpm test:scripts`, `pnpm lint`, and `pnpm typecheck` pass.
 - Baseline counts and suppressions are recorded in this document.
 
+### Completion evidence
+
+- Added a TypeScript-AST audit covering JSX text/attributes, display-model fields,
+  rendered conditional text, visible calls, desktop window titles, and inline suppressions.
+- Added exact-literal policy, human/CI/baseline commands, and script tests.
+- Authoritative baseline: 1,644 findings, 26 approved literals, 136 affected files.
+- Workspace baseline: web-ui 776, desktop 384, shared 367, mobile 100, web-core 17.
+- `pnpm test:scripts`, `pnpm i18n:audit:ci`, `pnpm lint`, and `pnpm typecheck` pass.
+
 ## Phase 1 — Catalog structure and typed authoring
 
 ### Goal
@@ -216,6 +225,19 @@ Make a large catalog reviewable, strictly typed, and safe to extend across phase
 - Shared localization tests pass.
 - Both frontend builds still emit Romanian separately from the eager English resources.
 - No Tauri imports enter shared/web-core/web-ui.
+
+### Completion evidence
+
+- English and Romanian are assembled from one module per typed namespace.
+- Added `dialogs`, `management`, `search`, `rss`, and `statistics` migration namespaces.
+- Added i18next resource typing and typed torrent-state keys.
+- Added localized number/count/percent/date/date-time/byte/speed/duration/ETA/ratio/
+  boolean/priority/state formatters and standalone-callback coverage.
+- Added pseudo-localization that preserves interpolation tokens and markup.
+- Catalog completeness, placeholder, plural, pseudo, runtime, and formatter tests pass.
+- Full unit result: 48 files / 936 tests. Lint, typecheck, and audit CI pass.
+- Desktop and mobile production builds pass and each emits the full Romanian resource
+  graph as an approximately 7 kB lazy `ro` chunk.
 
 ## Phase 2 — Static registries and localized model factories
 
@@ -266,6 +288,24 @@ the consuming screens.
   protocol/unit/internal literals.
 - Shared, web-core, bridge, desktop, and mobile typechecks and focused tests pass.
 
+### Completion evidence
+
+- Remote settings, filter/sort options, theme metadata, table columns, action models,
+  transfer commands, status badges, filter summaries, and auxiliary-window configurations
+  now carry semantic keys or resolve translations inside runtime hooks/factories.
+- Remote setting labels, descriptions, group headings, editor titles/units, select options,
+  and unlimited-state labels are derived from stable section, group, and preference IDs.
+- Auxiliary titles resolve from the active desktop catalog when a window opens or is
+  reconfigured; existing renderer effects continue updating already-open titles.
+- Removed unused English `displayLabel`/`helpText` metadata rather than retaining a second
+  presentation catalog in domain configuration.
+- Audit reduced from 1,644 to 1,139 findings. Remaining findings are app/surface copy for
+  Phases 3-7; shared static-model findings are eliminated apart from documented CSS literals.
+- Lint, full typecheck, 936 shared/workspace unit tests, 27 mobile tests, audit CI,
+  desktop build, and mobile build pass.
+- Romanian remote-settings keys are present and lazy-loaded; full terminology translation
+  and review is part of the Phase 5 remote-settings surface gate.
+
 ## Phase 3 — Common, authentication, and server lifecycle
 
 ### Goal
@@ -299,6 +339,23 @@ recover from connection problems, and navigate shared primitives.
   complete in Romanian on desktop and mobile.
 - Focused unit tests and English/Romanian renderer tests pass.
 - Audit is zero for Phase 3 directories.
+
+### Completion evidence
+
+- Localized desktop/mobile login, first-run add-server, saved-server management,
+  editing, switching, deletion, unavailable-server recovery, credential health, and
+  credential-warning surfaces while preserving server names, URLs, and usernames.
+- Add-server validation now returns semantic codes; display messages resolve in the
+  active locale and update without recreating the controller or losing entered values.
+- Known lifecycle failures use stable localized summaries instead of rendering English
+  helper/backend strings. Raw failures remain available as diagnostic inputs only.
+- Reusable primitive defaults, loading skeleton accessibility names, retry/clear/search/
+  number/scheme controls, and root renderer failure UI are localized.
+- Runtime-switch coverage verifies translated server UI rerenders while retaining a
+  populated input. Romanian first-run and recovery journeys pass in both renderer suites.
+- Phase-focused audit is zero. Repository audit is reduced to 937 findings, all in later
+  phases. Lint, typecheck, 939 workspace unit tests, 27 mobile unit tests, 12 focused
+  renderer E2E tests, audit CI, and desktop/mobile production builds pass.
 
 ## Phase 4 — Torrent workspace and detail journeys
 
@@ -335,6 +392,25 @@ Complete the main product experience on both platforms.
 - No user/domain values are translated.
 - Audit is zero for Phase 4 directories.
 
+### Completion evidence
+
+- Localized the desktop/mobile workspace, torrent table, filtering/sorting, selection,
+  toolbar/context actions, sidebar filters, status bar, add-torrent form, and all torrent
+  detail sections without translating torrent names, paths, URLs, categories, tags, or trackers.
+- Torrent states and static models remain semantic; active-locale formatters now cover detail
+  numbers, percentages, bytes, speeds, ratios, dates, durations, and locale-aware sorting.
+- Add-torrent validation and operation failures retain semantic/raw state and resolve visible
+  summaries in the active locale, so switching language preserves pending inputs and updates copy.
+- Localized torrent delete, rename, relocate, speed/share limits, file priority, peer ban,
+  tracker, HTTP-source, and auxiliary-window flows, including runtime title updates.
+- Added Romanian desktop/mobile core-journey E2E. Runtime switching preserves desktop search,
+  selection, and active detail tab plus the mobile pending add-torrent value; domain data stays raw.
+- Phase-focused audit is zero. Repository audit is reduced from 937 to 454 findings, with
+  37 approved literals across 45 files; remaining findings belong to Phases 5-7.
+- Lint and full typecheck pass; 939 shared/workspace and 27 mobile unit tests pass. The complete
+  mobile renderer suite (26 tests), the affected desktop torrent suite (32 tests), localization
+  audit CI, and both production builds pass.
+
 ## Phase 5 — Application and remote settings
 
 ### Goal
@@ -368,6 +444,23 @@ Localize every app-owned and qBittorrent remote settings surface.
   conditional, and unlimited-value controls in Romanian.
 - Audit is zero for Phase 5 directories.
 
+### Completion evidence
+
+- Localized desktop behavior, appearance, language, about/updater, server status, path
+  mappings, remote save states, and close-with-unsaved-changes flows.
+- Localized mobile settings loading/errors, appearance/language, section editors, save
+  states, and every remote settings field, group, option, description, editor title, and
+  unit note in Romanian.
+- Remote editor state stores semantic title/unit keys, so an open numeric editor updates
+  language without losing its typed value.
+- Settings errors retain language-neutral diagnostic state and derive stable localized
+  summaries at render time. Failed global/path-mapping saves no longer report success or
+  close the window.
+- Phase-scoped audit is zero; repository audit is 352 findings with 40 approved literals.
+- `pnpm lint`, `pnpm typecheck`, `pnpm test:unit` (939 tests), `pnpm mobile:test`
+  (27 tests), `pnpm i18n:audit:ci`, both frontend builds, desktop renderer E2E
+  (94 tests), and mobile renderer E2E (27 tests) pass.
+
 ## Phase 6 — Management, dialogs, statistics, search, and RSS
 
 ### Goal
@@ -399,6 +492,25 @@ Finish all secondary and management surfaces explicitly left on English fallback
 - Every secondary route and dialog opens fully localized in Romanian.
 - Search/RSS unsupported and error states are translated.
 - Audit is zero for Phase 6 directories.
+
+### Completion evidence
+
+- Localized category, tag, tracker, and filter management while retaining all user-authored
+  names and URLs as raw domain data; static models now store translation keys.
+- Localized generic and route-hosted confirmation, input, numeric, priority, selection,
+  plugin-install, speed-limit, create, edit, and transfer-limit dialogs.
+- Localized statistics values with active-locale number, byte, ratio, count, percent, and
+  duration formatting; localized all search and RSS capability, content, editor, empty,
+  error, and destructive-action states.
+- Stored errors and form state remain language-neutral, so runtime changes do not lose
+  pending values or preserve stale English messages.
+- Added Romanian desktop coverage for filters, search, RSS, statistics, and route dialogs,
+  plus Romanian mobile coverage for filters, search, and RSS.
+- Phase-focused audit is zero; repository audit is reduced from 352 to 46 findings across
+  eight Phase 7 files, with 43 reviewed approved literals.
+- `pnpm lint`, `pnpm typecheck`, `pnpm test:unit` (939 tests), `pnpm mobile:test`
+  (27 tests), `pnpm i18n:audit:ci`, focused desktop/mobile renderer E2E, and both
+  production builds pass.
 
 ## Phase 7 — Platform shells, errors, notifications, and accessibility
 
@@ -435,6 +547,25 @@ Close cross-cutting gaps that feature-by-feature migration can miss.
 - Suppressions have individual rationales and pass review.
 - Automated accessibility checks and keyboard-focused smoke tests pass in both locales.
 - Cross-window and native-label synchronization tests pass.
+
+### Completion evidence
+
+- Localized the desktop in-window menubar, updater banner, drag-and-drop overlay, shell
+  resize control, and shared screen-header back action; remaining route/window label
+  literals are narrowly documented stable Tauri identifiers.
+- Converted the menubar's static display registry to semantic keys, so open menus update
+  immediately when the locale changes.
+- Unknown background failures now use the localized generic error instead of an English
+  fallback formatter; common native network codes map to the translated network category.
+- Extended the desktop renderer mock to record current-window titles. Automated coverage
+  verifies Romanian native labels on first-run screens, settings-title updates, incoming
+  event echo prevention, localized updater UI, open-menu runtime translation, and keyboard
+  dismissal. The controlled dropdown synchronization bug exposed by the keyboard smoke was fixed.
+- Mobile coverage verifies the back control changes its accessible name and remains keyboard
+  activatable after a system-language change.
+- Production audit is zero with 45 individually reviewed approved literals. `pnpm lint`,
+  `pnpm typecheck`, `pnpm test:unit` (940 tests), `pnpm mobile:test` (27 tests),
+  `pnpm i18n:audit:ci`, focused desktop/mobile renderer E2E, and both production builds pass.
 
 ## Phase 8 — Full validation and release smoke
 
@@ -477,6 +608,10 @@ copy and `document.documentElement.lang`; desktop tests also assert title and na
 
 ### Manual native smoke
 
+Use the reproducible, evidence-bearing checklist in
+[`localization-native-smoke.md`](./localization-native-smoke.md). Its platform table is the
+authoritative manual signoff record; a native build alone is not a smoke-test pass.
+
 macOS:
 
 - App/submenu labels, regular/check items, predefined Edit actions, accelerators, enabled and
@@ -498,6 +633,23 @@ All platforms:
 - Audit baseline is removed or set to zero; CI rejects any new unsuppressed literal.
 - `docs/localization.md` describes the final contributor workflow.
 - This status table marks every phase Complete and records final validation results.
+
+### Automated completion evidence
+
+- Production audit: zero findings, 45 reviewed approved literals, and a checked-in zero baseline.
+- Script tests: 50 passed. Lint and full TypeScript typecheck pass.
+- Unit tests: 940 shared/web-core/web-ui/desktop tests and 27 mobile tests pass.
+- Desktop browser tests: 125 passed. Desktop renderer E2E: 99 passed. Mobile renderer E2E:
+  29 passed, including English/Romanian route coverage, runtime switching, state preservation,
+  auxiliary titles, native-label payloads, and event echo prevention.
+- Desktop and mobile production frontend builds pass.
+- Rust formatting, workspace check, workspace tests, and all-target clippy pass. Rust tests include
+  525 `qb-core`, 6 capability-parity, 51 `qb-tauri`, and 15 desktop application tests.
+- The remaining Phase 8 gate is hands-on native release smoke on macOS, Windows, and Linux. It
+  cannot be replaced by renderer mocks and must be signed off on each target platform before the
+  phase and overall localization plan are marked complete. The native smoke checklist records that
+  an arm64 development build launched on macOS 26.6, but UI interaction could not be inspected
+  because this host has not granted Accessibility or Screen Recording permission.
 
 ## Risks and mitigations
 

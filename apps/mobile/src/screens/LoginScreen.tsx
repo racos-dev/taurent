@@ -14,15 +14,19 @@ import {
 import { useLoginScreenController } from '@taurent/web-core';
 import type { Server } from '@taurent/shared/types/server';
 import { Icon } from '../ui/Icon';
-import { classifyError, formatUserMessageForContext } from '@taurent/shared/utils/error';
+import { classifyError } from '@taurent/shared/utils/error';
 import { motion } from '@taurent/shared/theme';
 import {
   mobileCenteredStateClassName,
   mobileScreenContentClassName,
   mobileScreenRootClassName,
 } from '../ui/mobileScreenLayout';
+import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 
 export function LoginScreen() {
+  const { t } = useTaurentTranslation('auth');
+  const { t: commonT } = useTaurentTranslation('common');
+  const formatError = useLocalizedErrorFormatter();
   const navigate = useNavigate();
   const location = useLocation();
   const { connect, isConnecting, isConnected, isHydrated, error: connectError, serverId } = useQBClient();
@@ -65,7 +69,7 @@ export function LoginScreen() {
     if (!editingServerId) return;
 
     if (!editName.trim() || !editUrl.trim() || !editUsername.trim()) {
-      setEditError('Name, URL, and username are required.');
+      setEditError(t('form.editRequired'));
       return;
     }
 
@@ -83,7 +87,7 @@ export function LoginScreen() {
       });
       cancelEditServer();
     } catch (error) {
-      setEditError(formatUserMessageForContext(error, 'settings-save'));
+      setEditError(formatError(error, 'settings-save'));
     } finally {
       setSavingServerId(null);
     }
@@ -109,7 +113,7 @@ export function LoginScreen() {
     return (
       <div className={mobileCenteredStateClassName()}>
         <StateCard
-          title="Loading servers..."
+          title={t('loading.servers')}
           icon={<Icon name="server" iconSize="lg" />}
           className="max-w-sm"
         />
@@ -119,7 +123,7 @@ export function LoginScreen() {
 
   return (
     <div className={mobileScreenRootClassName({ className: 'flex flex-col' })}>
-      <ScreenHeader title="Servers" variant="mobile" onBack={() => navigate(-1)} />
+      <ScreenHeader title={t('server.title')} variant="mobile" onBack={() => navigate(-1)} />
 
       <main className={mobileScreenContentClassName({ bottomSpacing: 'content', className: 'flex-1' })}>
         <div>
@@ -130,10 +134,12 @@ export function LoginScreen() {
                 <Icon name="alert" iconSize="md" className="mt-1 flex-shrink-0 text-error" />
                 <div>
                   <p className="text-sm font-medium text-error">
-                    {rawError && typeof rawError === 'string' && rawError.toLowerCase().includes('auth') ? 'Authentication Failed' : 'Connection Failed'}
+                    {rawError && typeof rawError === 'string' && rawError.toLowerCase().includes('auth')
+                      ? t('authenticationFailed')
+                      : t('connectionFailed')}
                   </p>
                   <p className="mt-1 text-xs text-error/80">
-                    {formatUserMessageForContext(rawError, 'connection')}
+                    {formatError(rawError, 'connection')}
                   </p>
                 </div>
               </div>
@@ -145,6 +151,7 @@ export function LoginScreen() {
             <div className="mb-4">
               <CredentialWarningBanner
                 warning={credentialWarning}
+                credentialStatus={warningServer?.credentialStatus}
                 onDismiss={() => setDismissedWarning(true)}
               />
             </div>
@@ -152,8 +159,8 @@ export function LoginScreen() {
 
           {servers.length === 0 ? (
             <StateCard
-              title="No Servers Yet"
-              message="Add your first qBittorrent server to start managing your downloads"
+              title={t('server.noneYet')}
+              message={t('server.firstToManage')}
               icon={<Icon name="server" iconSize="lg" />}
               className="max-w-sm"
             />
@@ -202,7 +209,7 @@ export function LoginScreen() {
             onClick={() => navigate('/add-server')}
             className={`mt-4 w-full ${motion.scale.button}`}
           >
-            Add New Server
+            {t('server.addNew')}
           </Button>
         </div>
       </main>
@@ -210,9 +217,9 @@ export function LoginScreen() {
       {/* Confirm Delete Dialog */}
       {controller.deleteDialog && (
         <ConfirmDialog
-          title="Delete Server"
-          message={`Are you sure you want to delete "${controller.deleteDialog.serverName}"? This action cannot be undone.`}
-          confirmLabel="Delete"
+          title={t('deleteServerTitle')}
+          message={t('deleteServerMessage', { name: controller.deleteDialog.serverName })}
+          confirmLabel={commonT('actions.delete')}
           onConfirm={() => {
             void controller.confirmDelete();
           }}
@@ -251,18 +258,20 @@ function ServerEditForm({
   onSave: () => void;
   onCancel: () => void;
 }) {
+  const { t } = useTaurentTranslation('auth');
+  const { t: commonT } = useTaurentTranslation('common');
   return (
     <div className="space-y-3 border-t border-border bg-surface-elevated px-4 py-4">
       <Input
         id="server-edit-name"
-        label="Server Name"
+        label={t('server.name')}
         value={name}
         onChange={onNameChange}
         autoComplete="off"
       />
       <Input
         id="server-edit-url"
-        label="Server URL"
+        label={t('server.url')}
         type="url"
         value={url}
         onChange={onUrlChange}
@@ -270,27 +279,27 @@ function ServerEditForm({
       />
       <Input
         id="server-edit-username"
-        label="Username"
+        label={t('server.username')}
         value={username}
         onChange={onUsernameChange}
         autoComplete="username"
       />
       <Input
         id="server-edit-password"
-        label="Password"
+        label={t('server.password')}
         type="password"
         value={password}
         onChange={onPasswordChange}
         autoComplete="current-password"
-        helperText="Leave blank to keep the saved password."
+        helperText={t('form.keepSavedPassword')}
       />
       {error ? <p className="text-sm text-error">{error}</p> : null}
       <div className="grid grid-cols-2 gap-2">
         <Button variant="outline" size="md" onClick={onCancel} disabled={isSaving}>
-          Cancel
+          {commonT('actions.cancel')}
         </Button>
         <Button variant="primary" size="md" onClick={onSave} loading={isSaving}>
-          Save
+          {commonT('actions.save')}
         </Button>
       </div>
     </div>

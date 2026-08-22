@@ -2,7 +2,7 @@ import { openDialogHostWindow } from './dialogHostWindow';
 
 export const TRANSFER_LIMIT_DIALOG_WINDOW_CONFIG = {
   route: '/transfer-limit-dialog-window',
-  title: 'Transfer Limit',
+  titleKey: 'windows.transferLimit',
   width: 400,
   height: 220,
   minWidth: 400,
@@ -15,7 +15,7 @@ export const TRANSFER_LIMIT_DIALOG_WINDOW_CONFIG = {
 
 const TRANSFER_GLOBAL_SPEED_DIALOG_WINDOW_CONFIG = {
   route: '/transfer-limit-dialog-window',
-  title: 'Global Speed Limits',
+  titleKey: 'windows.globalSpeedLimits',
   width: 400,
   height: 340,
   minWidth: 400,

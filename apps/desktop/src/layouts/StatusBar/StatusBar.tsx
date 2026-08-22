@@ -1,13 +1,16 @@
 import { useQBClient, useMaindataSelector } from '../../connection';
 import { useUIStore } from '@taurent/shared/stores';
 import { useTorrentWorkspaceSummaryController, useToggleSpeedLimitsMode } from '../../hooks';
-import { formatSpeed, formatBytes, cn, TorrentConnectionStatus } from '@taurent/shared';
+import { cn, TorrentConnectionStatus } from '@taurent/shared';
 import { openTransferLimitDialogWindow } from '../../windows/dialogs/transferLimitDialogWindow';
 import { Gauge } from '@taurent/shared';
 import { toast } from '@taurent/web-ui/components/shared/Toast/toast';
-import { formatUserMessageForContext } from '@taurent/shared/utils/error';
+import { useLocalizedErrorFormatter, useLocalizedFormatters, useTaurentTranslation } from '@taurent/shared/i18n';
 
 export function StatusBar() {
+  const { t } = useTaurentTranslation('torrents');
+  const format = useLocalizedFormatters();
+  const formatError = useLocalizedErrorFormatter();
   const { isConnecting, isConnected } = useQBClient();
   const ss = useMaindataSelector((s) => s.server_state);
   const { filteredCount, totalCount, isFiltered } = useTorrentWorkspaceSummaryController();
@@ -49,11 +52,11 @@ export function StatusBar() {
                 /{totalCount}
               </span>
             ) : (
-              <span>{totalCount} torrent{totalCount !== 1 ? 's' : ''}</span>
+              <span>{t('statusBar.count', { count: totalCount })}</span>
             )
           ) : (
             <span className={isConnecting ? 'text-warning' : 'text-text-muted'}>
-              {isConnecting ? 'Connecting...' : 'Disconnected'}
+              {t(isConnecting ? 'statusBar.connecting' : 'statusBar.disconnected')}
             </span>
           )}
         </div>
@@ -61,19 +64,19 @@ export function StatusBar() {
 
       <span className="shrink-0 text-text-muted">|</span>
       <span className="shrink-0 whitespace-nowrap">
-        {isConnected && freeSpace !== undefined ? `Free Space: ${formatBytes(freeSpace)}` : ''}
+        {isConnected && freeSpace !== undefined ? t('statusBar.freeSpace', { value: format.formatBytes(freeSpace) }) : ''}
       </span>
 
       {/* Alt speed toggle — always present when connected, fixed width */}
       <span className="shrink-0 text-text-muted">|</span>
       <button
         type="button"
-        title={useAltSpeeds ? 'Alternative speed limits: ON (click to disable)' : 'Alternative speed limits: OFF (click to enable)'}
+        title={t(useAltSpeeds ? 'statusBar.altOn' : 'statusBar.altOff')}
         disabled={isToggling || !isConnected}
         onClick={() => {
           if (!isConnected) return;
           toggleSpeedLimitsMode().catch((err) => {
-            toast.error(formatUserMessageForContext(err, 'speed-limits'));
+            toast.error(formatError(err, 'speed-limits'));
           });
         }}
         className={cn(
@@ -106,9 +109,9 @@ export function StatusBar() {
             dlSpeed > 0 ? 'text-download' : 'text-text-muted',
           )}
         >
-          ↓ {formatSpeed(dlSpeed)}
-          {dlLimit > 0 && <span className="text-text-muted"> [{formatSpeed(dlLimit)}]</span>}
-          <span className="text-text-muted"> ({formatBytes(dlData)})</span>
+          ↓ {format.formatSpeed(dlSpeed)}
+          {dlLimit > 0 && <span className="text-text-muted"> [{format.formatSpeed(dlLimit)}]</span>}
+          <span className="text-text-muted"> ({format.formatBytes(dlData)})</span>
         </button>
         <span className="shrink-0 text-text-muted">|</span>
         <button
@@ -127,9 +130,9 @@ export function StatusBar() {
             ulSpeed > 0 ? 'text-upload' : 'text-text-muted',
           )}
         >
-          ↑ {formatSpeed(ulSpeed)}
-          {ulLimit > 0 && <span className="text-text-muted"> [{formatSpeed(ulLimit)}]</span>}
-          <span className="text-text-muted"> ({formatBytes(ulData)})</span>
+          ↑ {format.formatSpeed(ulSpeed)}
+          {ulLimit > 0 && <span className="text-text-muted"> [{format.formatSpeed(ulLimit)}]</span>}
+          <span className="text-text-muted"> ({format.formatBytes(ulData)})</span>
         </button>
       </div>
 

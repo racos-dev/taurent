@@ -6,7 +6,7 @@ import { useQBClient } from '../connection/QBClientProvider';
 import { useServerManager } from '../connection/ServerManager';
 import { usePreferences, useSetPreferences, useToggleSpeedLimitsMode } from '../hooks/useSettings';
 import type { RemoteSettingsSectionKey } from '@taurent/shared/settings';
-import { formatUserMessageForContext } from '@taurent/shared/utils/error';
+import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 import { useTheme } from '@taurent/web-ui/theme';
 import {
   findRemoteSettingsSectionForField,
@@ -30,6 +30,8 @@ const MOBILE_REMOTE_SECTION_KEYS: RemoteSettingsSectionKey[] = [
 ];
 
 export function SettingsScreen() {
+  const { t } = useTaurentTranslation('settings');
+  const formatError = useLocalizedErrorFormatter();
   const navigate = useNavigate();
   const { isConnected, isHydrated, serverId, serverName, serverUrl, disconnect } = useQBClient();
   const { servers, removeServer, updateServer, switchServer } = useServerManager();
@@ -40,7 +42,7 @@ export function SettingsScreen() {
   const { toggleSpeedLimitsMode } = useToggleSpeedLimitsMode();
   const openServerPicker = useCallback(() => navigate('/manage-servers'), [navigate]);
 
-  const [remoteSaveError, setRemoteSaveError] = useState<string | null>(null);
+  const [remoteSaveError, setRemoteSaveError] = useState<unknown | null>(null);
   const [isSavingRemote, setIsSavingRemote] = useState(false);
   const remoteDraft = useRemoteSettingsDraft({
     preferences: preferences ?? null,
@@ -74,7 +76,7 @@ export function SettingsScreen() {
       await setPreferencesMutation.mutateAsync(updates);
       remoteDraft.markSaved();
     } catch (err) {
-      setRemoteSaveError(formatUserMessageForContext(err, 'settings-save'));
+      setRemoteSaveError(err);
     } finally {
       setIsSavingRemote(false);
     }
@@ -115,8 +117,8 @@ export function SettingsScreen() {
     return (
       <div className={mobileCenteredStateClassName({ height: 'full' })}>
         <StateCard
-          title="Loading settings"
-          message="Preparing your saved server and appearance settings."
+          title={t('screen.loadingSettings')}
+          message={t('screen.preparingSettings')}
           icon={<Icon name="settings" iconSize="lg" />}
         />
       </div>
@@ -131,7 +133,7 @@ export function SettingsScreen() {
         preferences={preferences ?? null}
         effectivePreferences={remoteDraft.effectivePreferences as Record<string, unknown> | null}
         isLoading={isLoading}
-        error={error ? formatUserMessageForContext(error, 'settings-load') : null}
+        error={error ? formatError(error, 'settings-load') : null}
         onRetry={refetch}
         themeSummary={controller.themeSummary}
         sectionSummaries={mobileSectionSummaries}
@@ -152,7 +154,7 @@ export function SettingsScreen() {
         dirtyKeys={remoteDraft.dirtyKeys}
         isRemoteDirty={remoteDraft.isDirty}
         isSavingRemote={isSavingRemote}
-        remoteSaveError={remoteSaveError}
+        remoteSaveError={remoteSaveError === null ? null : formatError(remoteSaveError, 'settings-save')}
         onRemoteFieldChange={handleRemoteStagedChange}
         onSaveRemote={() => void handleSaveAllRemote()}
         onDiscardRemote={handleDiscardAllRemote}

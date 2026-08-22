@@ -21,7 +21,7 @@ test.describe('desktop add torrent flows', () => {
     const magnet = 'magnet:?xt=urn:btih:0123456789ABCDEF0123456789ABCDEF01234567';
     await fillMagnet(page, magnet);
     await page.getByPlaceholder('Default download path').fill('/data/watch');
-    await page.getByPlaceholder('tag1, tag2, ...').fill('nightly');
+    await page.getByPlaceholder('tag1, tag2, …').fill('nightly');
     await page.keyboard.press('Enter');
     await page.getByRole('checkbox', { name: 'Start torrent' }).uncheck();
 

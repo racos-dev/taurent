@@ -140,7 +140,10 @@ export default defineConfig(async () => ({
           if (id.includes(pkg)) {
             // Preserve lazy locale boundaries instead of hoisting non-English
             // catalogs into the eager shared chunk.
-            if (id.includes('/packages/shared/src/i18n/catalogs/ro.ts')) return;
+            if (
+              id.includes('/packages/shared/src/i18n/catalogs/ro.ts')
+              || id.includes('/packages/shared/src/i18n/catalogs/ro/')
+            ) return;
             if (id.includes('/packages/shared/src')) return 'shared';
             if (id.includes('/packages/bridge/src')) return 'bridge';
             if (id.includes('/packages/web-core/src')) return 'web-core';

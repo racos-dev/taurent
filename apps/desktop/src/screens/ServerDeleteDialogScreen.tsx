@@ -3,14 +3,16 @@ import { useSearchParams } from 'react-router-dom';
 import { emit } from '@tauri-apps/api/event';
 import { Window, getCurrentWindow } from '@tauri-apps/api/window';
 import { AlertCircle, ICON_SIZES } from '@taurent/shared';
-import { formatUserMessageForContext } from '@taurent/shared/utils/error';
 import { DialogActions } from '@taurent/web-ui';
 import { useQBClient, useServerManager } from '../connection';
 import { dismissDialogWindow } from '../windows/dialogs/dialogHostWindow';
-import { useTaurentTranslation } from '@taurent/shared/i18n';
+import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 
 export function ServerDeleteDialogScreen() {
-  const { t } = useTaurentTranslation('desktop');
+  const { t: tDesktop } = useTaurentTranslation('desktop');
+  const { t: tAuth } = useTaurentTranslation('auth');
+  const { t: tCommon } = useTaurentTranslation('common');
+  const formatError = useLocalizedErrorFormatter();
   const [searchParams] = useSearchParams();
   const serverId = searchParams.get('serverId') ?? '';
   const serverName = searchParams.get('serverName') ?? '';
@@ -20,8 +22,8 @@ export function ServerDeleteDialogScreen() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void getCurrentWindow().setTitle(t('windows.deleteServer'));
-  }, [t]);
+    void getCurrentWindow().setTitle(tDesktop('windows.deleteServer'));
+  }, [tDesktop]);
 
   useEffect(() => {
     setError(null);
@@ -52,7 +54,7 @@ export function ServerDeleteDialogScreen() {
 
       await dismissDialogWindow();
     } catch (err) {
-      setError(formatUserMessageForContext(err, 'settings-save'));
+      setError(formatError(err, 'settings-save'));
       setIsSubmitting(false);
     }
   }
@@ -69,10 +71,12 @@ export function ServerDeleteDialogScreen() {
         </div>
         <div className="flex flex-col gap-1">
           <p className="text-sm font-medium text-text-primary">
-            Delete {serverName ? `"${serverName}"` : 'this server'}?
+            {serverName
+              ? tAuth('deleteServerQuestion', { name: serverName })
+              : tAuth('deleteUnnamedServerQuestion')}
           </p>
           <p className="text-xs text-text-secondary">
-            This removes the saved server profile and cannot be undone.
+            {tAuth('deleteServerDescription')}
           </p>
         </div>
       </div>
@@ -85,9 +89,9 @@ export function ServerDeleteDialogScreen() {
 
       <DialogActions
         actions={[
-          { label: 'Cancel', onClick: handleCancel, disabled: isSubmitting },
+          { label: tCommon('actions.cancel'), onClick: handleCancel, disabled: isSubmitting },
           {
-            label: isSubmitting ? 'Deleting...' : 'Delete',
+            label: isSubmitting ? tAuth('deletingServer') : tCommon('actions.delete'),
             onClick: () => void handleDelete(),
             variant: 'danger',
             disabled: isSubmitting || !serverId,

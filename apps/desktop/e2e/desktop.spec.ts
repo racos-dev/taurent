@@ -269,7 +269,7 @@ test.describe('toolbar search', () => {
     await expectTableWithRows(page, 1);
 
     const rows = getTorrentRowLocator(page);
-    const searchInput = page.getByRole('textbox', { name: 'Filter torrents...' });
+    const searchInput = page.getByRole('textbox', { name: 'Filter torrents…' });
 
     await searchInput.fill('Torrent 100');
     await expect(page.getByRole('cell', { name: 'Torrent 100', exact: true })).toBeVisible();
@@ -350,7 +350,7 @@ test.describe('maindata delta', () => {
     // Bring the backend-refreshed row into the rendered viewport through the
     // real toolbar filter. This proves React consumed the refreshed backend
     // snapshot, while avoiding a virtualization-dependent row-count assertion.
-    const searchInput = page.getByRole('textbox', { name: 'Filter torrents...' });
+    const searchInput = page.getByRole('textbox', { name: 'Filter torrents…' });
     await searchInput.fill('[updated]');
     await expect(page.getByRole('cell', { name: 'Torrent 1 [updated]', exact: true })).toBeVisible({ timeout: 10_000 });
     await expectFirstVisibleTorrentName(page, 'Torrent 1 [updated]');
@@ -606,7 +606,7 @@ test.describe('Phase 9 — reconnect and stale-state recovery', () => {
     // Bring the injected row into the rendered viewport through the real
     // toolbar filter. This proves the backend refresh reached React, not only
     // the mutable automation state.
-    const searchInput = page.getByRole('textbox', { name: 'Filter torrents...' });
+    const searchInput = page.getByRole('textbox', { name: 'Filter torrents…' });
     await searchInput.fill('Fresh After Invalidate');
     await expect(page.getByRole('cell', { name: 'Fresh After Invalidate', exact: true })).toBeVisible({ timeout: 10_000 });
     await expectFirstVisibleTorrentName(page, 'Fresh After Invalidate');

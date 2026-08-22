@@ -1,6 +1,7 @@
 import React from 'react';
 import { cn } from '@taurent/shared';
 import type { SchemeToggleProps } from './types';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 /**
  * Segmented control for selecting HTTP or HTTPS URL scheme.
@@ -11,6 +12,7 @@ export const SchemeToggle = React.memo<SchemeToggleProps>(({
   disabled = false,
   className = '',
 }) => {
+  const { t } = useTaurentTranslation('common');
   return (
     <div
       className={cn(
@@ -18,7 +20,7 @@ export const SchemeToggle = React.memo<SchemeToggleProps>(({
         className,
       )}
       role="radiogroup"
-      aria-label="URL scheme"
+      aria-label={t('accessibility.urlScheme')}
     >
       <button
         type="button"

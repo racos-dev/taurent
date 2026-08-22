@@ -100,7 +100,24 @@ export const TORRENT_DETAILED_STATE_LABELS: Record<string, string> = {
   unknown: 'Unknown',
 };
 
-export const TORRENT_DETAILED_STATE_KEYS: Record<string, string> = {
+export type TorrentDetailedStateKey =
+  | 'status.allocating'
+  | 'status.checking'
+  | 'status.checkingResume'
+  | 'status.downloading'
+  | 'status.downloadingMetadata'
+  | 'status.error'
+  | 'status.forcedDownload'
+  | 'status.forcedUpload'
+  | 'status.missingFiles'
+  | 'status.moving'
+  | 'status.paused'
+  | 'status.queued'
+  | 'status.seeding'
+  | 'status.stalled'
+  | 'status.unknown';
+
+export const TORRENT_DETAILED_STATE_KEYS: Record<string, TorrentDetailedStateKey> = {
   error: 'status.error', missingFiles: 'status.missingFiles', uploading: 'status.seeding',
   stoppedUP: 'status.paused', queuedUP: 'status.queued', stalledUP: 'status.stalled',
   checkingUP: 'status.checking', forcedUP: 'status.forcedUpload', allocating: 'status.allocating',
@@ -110,7 +127,10 @@ export const TORRENT_DETAILED_STATE_KEYS: Record<string, string> = {
   unknown: 'status.unknown',
 };
 
-export function localizeTorrentDetailedState(state: string, translate: (key: string) => string): string {
+export function localizeTorrentDetailedState(
+  state: string,
+  translate: (key: TorrentDetailedStateKey) => string,
+): string {
   const key = TORRENT_DETAILED_STATE_KEYS[state];
   return key ? translate(key) : state;
 }

@@ -7,6 +7,7 @@ import {
 } from './DesktopDetailTable';
 import { StateCard } from '../../shared/StateCard';
 import { RetryButton } from '../../shared/RetryButton';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 // Desktop HTTP sources table
 function DesktopHttpSources({
@@ -26,20 +27,21 @@ function DesktopHttpSources({
   onRefresh?: () => void;
   removeHttpSourceIsPending?: boolean;
 }) {
+  const { t } = useTaurentTranslation('torrents');
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; seed: WebSeed | null } | null>(null);
   const [activeSeedUrl, setActiveSeedUrl] = useState<string | null>(null);
 
   const columns = React.useMemo<DesktopDetailTableColumn<WebSeed>[]>(() => [
     {
       id: 'url',
-      label: 'URL',
+      label: t('details.httpSources.url'),
       width: 9999,
       minWidth: 200,
       renderCell: (seed) => (
         <span className="block break-all text-text-primary">{seed.url}</span>
       ),
     },
-  ], []);
+  ], [t]);
 
   const closeContextMenu = useCallback(() => {
     setContextMenu(null);
@@ -111,6 +113,7 @@ function HttpSourceContextMenuOverlay({
   onRefresh?: () => void;
   removeHttpSourceIsPending?: boolean;
 }) {
+  const { t } = useTaurentTranslation('torrents');
   const menuRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -156,7 +159,7 @@ function HttpSourceContextMenuOverlay({
           onClick={() => { onAddHttpSources(); onClose(); }}
           className="flex w-full items-center px-2 py-1 text-left text-xs text-text-primary hover:bg-surface-interactive select-none"
         >
-          Add HTTP sources...
+          {t('details.httpSources.add')}
         </button>
       ) : null}
       {seed && onEditHttpSource ? (
@@ -166,7 +169,7 @@ function HttpSourceContextMenuOverlay({
           onClick={() => { onEditHttpSource(seed); onClose(); }}
           className="flex w-full items-center px-2 py-1 text-left text-xs text-text-primary hover:bg-surface-interactive select-none"
         >
-          Edit HTTP source URL...
+          {t('details.httpSources.editUrl')}
         </button>
       ) : null}
       {seed && onRemoveHttpSource ? (
@@ -177,7 +180,7 @@ function HttpSourceContextMenuOverlay({
           onClick={() => { onRemoveHttpSource(seed); onClose(); }}
           className="flex w-full items-center px-2 py-1 text-left text-xs text-text-primary hover:bg-surface-interactive disabled:cursor-not-allowed disabled:text-text-disabled select-none"
         >
-          Remove HTTP source
+          {t('details.httpSources.removeSource')}
         </button>
       ) : null}
       {seed && onCopyHttpSourceUrl ? (
@@ -187,7 +190,7 @@ function HttpSourceContextMenuOverlay({
           onClick={() => { onCopyHttpSourceUrl(seed); onClose(); }}
           className="flex w-full items-center px-2 py-1 text-left text-xs text-text-primary hover:bg-surface-interactive select-none"
         >
-          Copy HTTP source URL
+          {t('details.httpSources.copyUrl')}
         </button>
       ) : null}
       {!seed && onRefresh ? (
@@ -197,7 +200,7 @@ function HttpSourceContextMenuOverlay({
           onClick={() => { onRefresh(); onClose(); }}
           className="flex w-full items-center px-2 py-1 text-left text-xs text-text-primary hover:bg-surface-interactive select-none"
         >
-          Refresh HTTP sources
+          {t('details.httpSources.refresh')}
         </button>
       ) : null}
     </div>
@@ -216,6 +219,7 @@ function MobileHttpSourceCard({
   onRemoveHttpSource?: (seed: WebSeed) => void;
   removeHttpSourceIsPending?: boolean;
 }) {
+  const { t } = useTaurentTranslation('torrents');
   return (
     <div className="space-y-3 rounded-sm border border-border bg-surface p-3">
       <div className="text-sm text-text-primary break-all">{seed.url}</div>
@@ -227,7 +231,7 @@ function MobileHttpSourceCard({
               onClick={() => onEditHttpSource(seed)}
               className="rounded-sm border border-border px-2 py-1 text-xs font-medium text-text-secondary transition-colors enabled:active:bg-surface-interactive"
             >
-              Edit
+              {t('details.httpSources.edit')}
             </button>
           ) : null}
           {onRemoveHttpSource ? (
@@ -237,7 +241,7 @@ function MobileHttpSourceCard({
               disabled={removeHttpSourceIsPending}
               className="rounded-sm border border-border px-2 py-1 text-xs font-medium text-text-secondary transition-colors enabled:active:bg-surface-interactive disabled:cursor-not-allowed disabled:text-text-disabled"
             >
-              Remove
+              {t('details.httpSources.remove')}
             </button>
           ) : null}
         </div>
@@ -259,6 +263,7 @@ export const TorrentDetailsHttpSourcesSection = React.memo<TorrentDetailsHttpSou
     onCopyHttpSourceUrl,
     removeHttpSourceIsPending,
   }) => {
+    const { t } = useTaurentTranslation('torrents');
     if (isLoading && !webSeeds) {
       if (variant === 'mobile') {
         return (
@@ -283,7 +288,7 @@ export const TorrentDetailsHttpSourcesSection = React.memo<TorrentDetailsHttpSou
     if (error) {
       return (
         <StateCard
-          title="Could not load HTTP sources"
+          title={t('details.httpSources.loadError')}
           action={onRetry ? <RetryButton onClick={onRetry as () => void} /> : undefined}
         />
       );
@@ -305,7 +310,7 @@ export const TorrentDetailsHttpSourcesSection = React.memo<TorrentDetailsHttpSou
 
     if (!webSeeds || webSeeds.length === 0) {
       return (
-        <StateCard title="No HTTP sources" />
+        <StateCard title={t('details.httpSources.empty')} />
       );
     }
     return (

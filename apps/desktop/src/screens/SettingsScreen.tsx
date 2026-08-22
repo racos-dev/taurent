@@ -30,8 +30,7 @@ import {
 import {
   type RemoteSettingsSectionKey,
 } from '@taurent/shared/settings';
-import { formatUserMessageForContext } from '@taurent/shared/utils/error';
-import { localization, useTaurentTranslation } from '@taurent/shared/i18n';
+import { localization, useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 
 const REMOTE_SECTION_KEYS = REMOTE_SECTION_NAV.map((nav) => nav.key);
 
@@ -39,6 +38,7 @@ const REMOTE_SECTION_KEYS = REMOTE_SECTION_NAV.map((nav) => nav.key);
 
 export function SettingsScreen() {
   const { t } = useTaurentTranslation('settings');
+  const formatError = useLocalizedErrorFormatter();
   const queryClient = useQueryClient();
   const { isConnecting, isConnected, isHydrated, sessionGeneration, serverId, error: qbClientError } = useQBClient();
 
@@ -134,7 +134,7 @@ export function SettingsScreen() {
   }, [scrollToSection]);
 
   // ─── Global save state ──────────────────────────────────────────────────
-  const [globalSaveError, setGlobalSaveError] = useState<string | null>(null);
+  const [globalSaveError, setGlobalSaveError] = useState<unknown | null>(null);
   const [isSavingGlobal, setIsSavingGlobal] = useState(false);
 
   const remoteDraft = useRemoteSettingsDraft({
@@ -166,9 +166,9 @@ export function SettingsScreen() {
 
   const isAnyRemoteDirty = remoteDraft.isDirty;
 
-  const handleSaveAllRemote = useCallback(async () => {
+  const handleSaveAllRemote = useCallback(async (): Promise<boolean> => {
     const updates = remoteDraft.buildUpdates();
-    if (Object.keys(updates).length === 0) return;
+    if (Object.keys(updates).length === 0) return true;
 
     setIsSavingGlobal(true);
     setGlobalSaveError(null);
@@ -176,9 +176,10 @@ export function SettingsScreen() {
     try {
       await setPreferencesMutation.mutateAsync(updates);
       remoteDraft.markSaved();
+      return true;
     } catch (err) {
-      const message = formatUserMessageForContext(err, 'settings-save');
-      setGlobalSaveError(message);
+      setGlobalSaveError(err);
+      return false;
     } finally {
       setIsSavingGlobal(false);
     }
@@ -253,17 +254,9 @@ export function SettingsScreen() {
     setShowCloseOverlay(false);
     setGlobalSaveError(null);
     void (async () => {
-      let saved = false;
-      try {
-        await handleSaveAllRemote();
-        saved = true;
-      } catch (err) {
-        const message = formatUserMessageForContext(err, 'settings-save');
-        setGlobalSaveError(message);
-      } finally {
-        setIsSavingGlobal(false);
-        pendingCloseRef.current = false;
-      }
+      const saved = await handleSaveAllRemote();
+      setIsSavingGlobal(false);
+      pendingCloseRef.current = false;
       if (saved) {
         programmaticCloseRef.current = true;
         await getCurrentWindow().close();
@@ -318,11 +311,9 @@ export function SettingsScreen() {
 
   // ─── Derived state ─────────────────────────────────────────────────────
   const hasActiveServer = Boolean(serverId);
-  let remoteConnectionError: string | null = null;
+  let remoteConnectionError = false;
   if (isHydrated) {
-    remoteConnectionError = !isConnected && !isConnecting
-      ? 'Not connected to a server. Open the main app to connect.'
-      : qbClientError;
+    remoteConnectionError = (!isConnected && !isConnecting) || Boolean(qbClientError);
   }
   const isRemotePreferencesLoading = isConnecting || isRemotePreferencesQueryLoading;
   // Sections stay mounted as long as a server is selected. Initial loads and
@@ -351,7 +342,7 @@ export function SettingsScreen() {
     }));
 
     return [
-      { id: 'app', label: 'App', items: appItems },
+      { id: 'app', label: t('screen.app'), items: appItems },
       { id: 'qbittorrent', label: 'qBittorrent', items: remoteItems },
     ];
   }, [t]);
@@ -372,7 +363,7 @@ export function SettingsScreen() {
             <div className="mb-4">
               <h1 className="text-lg font-semibold text-text-primary">{t('title')}</h1>
               <p className="mt-1 text-sm text-text-secondary">
-                Configure app behavior, appearance, and server connections.
+                {t('screen.description')}
               </p>
             </div>
 
@@ -426,21 +417,21 @@ export function SettingsScreen() {
                 <div className="rounded-md border border-border bg-surface p-3">
                   {!hasActiveServer ? (
                     <div className="text-center">
-                      <p className="text-sm font-medium text-text-primary">No active server</p>
+                      <p className="text-sm font-medium text-text-primary">{t('remoteStatus.noActiveServer')}</p>
                       <p className="mt-1 text-xs text-text-secondary">
-                        Connect to a server to configure remote qBittorrent settings.
+                        {t('screen.connectForRemote')}
                       </p>
                     </div>
                   ) : remoteConnectionError ? (
                     <div>
-                      <p className="text-sm font-medium text-error">Connection failed</p>
-                      <p className="mt-1 text-xs text-text-secondary">{remoteConnectionError}</p>
+                      <p className="text-sm font-medium text-error">{t('remoteStatus.connectionFailed')}</p>
+                      <p className="mt-1 text-xs text-text-secondary">{t('remoteStatus.couldNotReach')}</p>
                       <RetryButton onClick={handleRemoteRetry} className="mt-2" />
                     </div>
                   ) : remotePreferencesError ? (
                     <div>
-                      <p className="text-sm font-medium text-error">Failed to load preferences</p>
-                      <p className="mt-1 text-xs text-text-secondary">{remotePreferencesError.message}</p>
+                      <p className="text-sm font-medium text-error">{t('remoteStatus.loadFailed')}</p>
+                      <p className="mt-1 text-xs text-text-secondary">{t('remoteStatus.couldNotFetch')}</p>
                       <RetryButton onClick={handleRemoteRetry} className="mt-2" />
                     </div>
                   ) : null}
@@ -497,7 +488,7 @@ export function SettingsScreen() {
         <div className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-md border border-border bg-surface-elevated px-4 py-2 shadow-sm">
           <div className="flex items-center gap-2">
             <span className="inline-block h-2 w-2 rounded-full bg-primary" />
-            <span className="text-sm font-medium text-text-primary">Unsaved changes</span>
+            <span className="text-sm font-medium text-text-primary">{t('screen.unsavedChanges')}</span>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -506,7 +497,7 @@ export function SettingsScreen() {
               disabled={isSavingGlobal}
               className="h-8 rounded-sm border border-border px-3 text-sm font-medium text-text-secondary transition-colors enabled:hover:bg-surface-interactive enabled:hover:text-text-primary disabled:text-text-disabled disabled:bg-bg-disabled disabled:text-text-disabled disabled:border-border-disabled"
             >
-              Discard All
+              {t('screen.discardAll')}
             </button>
             <button
               type="button"
@@ -514,12 +505,12 @@ export function SettingsScreen() {
               disabled={isSavingGlobal}
               className="h-8 rounded-sm border border-primary bg-primary px-4 text-sm font-medium text-text-on-primary transition-colors enabled:hover:bg-primary/90 disabled:text-text-disabled disabled:bg-bg-disabled disabled:text-text-disabled disabled:border-border-disabled"
             >
-              {isSavingGlobal ? 'Saving…' : 'Save All'}
+              {isSavingGlobal ? t('screen.saving') : t('screen.saveAll')}
             </button>
           </div>
           {/* Global save error — rendered inside the floating bar so it doesn't scatter across panels */}
-          {globalSaveError && (
-            <span className="text-sm text-error">{globalSaveError}</span>
+          {globalSaveError !== null && (
+            <span className="text-sm text-error">{formatError(globalSaveError, 'settings-save')}</span>
           )}
         </div>
       )}
@@ -529,7 +520,7 @@ export function SettingsScreen() {
         <SettingsCloseOverlay
           dirtyLabels={closeOverlayDirtyLabels}
           isSaving={isSavingGlobal}
-          saveError={globalSaveError}
+          saveError={globalSaveError === null ? null : formatError(globalSaveError, 'settings-save')}
           onStay={handleOverlayStay}
           onDiscard={handleOverlayDiscard}
           onSave={handleOverlaySave}

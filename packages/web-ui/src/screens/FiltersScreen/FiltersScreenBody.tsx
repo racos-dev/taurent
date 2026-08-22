@@ -7,6 +7,7 @@ import {
   SettingsSection,
   ConfirmDialog,
 } from '@taurent/web-ui';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 // ─── FiltersScreenBody ────────────────────────────────────────────────────────
 
@@ -54,13 +55,18 @@ export function FiltersScreenBody({
   onCloseConfirmDialog,
   icons,
 }: FiltersScreenBodyProps) {
+  const { t } = useTaurentTranslation('management');
+  const selectedStatusLabel = statusOptions.find((option) => option.value === selectedFilter)?.label
+    ?? statusOptions.find((option) => option.value === 'all')?.label
+    ?? selectedFilter;
+
   return (
     <>
       {/* Status Filters Section */}
       <SettingsSection
-        title="Status"
+        title={t('status')}
         icon={icons.filter}
-        summary={`${selectedFilter || 'all'} selected`}
+        summary={t('selected', { name: selectedStatusLabel })}
         expanded={expandedSections.filters}
         onToggle={() => onToggleSection('filters')}
       >
@@ -73,14 +79,14 @@ export function FiltersScreenBody({
 
       {/* Categories Section */}
       <SettingsSection
-        title="Categories"
+        title={t('categories')}
         icon={icons.folder}
-        summary={`${categoryList.length} total`}
+        summary={t('total', { count: categoryList.length })}
         expanded={expandedSections.categories}
         onToggle={() => onToggleSection('categories')}
       >
         <FilterCategorySection
-          title="Categories"
+          title={t('categories')}
           categories={categoryList}
           categorySavePaths={categorySavePaths}
           selectedCategory={selectedCategory}
@@ -112,14 +118,14 @@ export function FiltersScreenBody({
 
       {/* Tags Section */}
       <SettingsSection
-        title="Tags"
+        title={t('tags')}
         icon={icons.tag}
-        summary={`${tagList.length} total`}
+        summary={t('total', { count: tagList.length })}
         expanded={expandedSections.tags}
         onToggle={() => onToggleSection('tags')}
       >
         <FilterTagSection
-          title="Tags"
+          title={t('tags')}
           tags={tagList}
           selectedTag={selectedTag}
           onTagChange={onTagChange}
@@ -144,9 +150,9 @@ export function FiltersScreenBody({
 
       {/* Trackers Section */}
       <SettingsSection
-        title="Trackers"
+        title={t('trackers')}
         icon={icons.globe}
-        summary={`${trackerEntries.length} total`}
+        summary={t('total', { count: trackerEntries.length })}
         expanded={expandedSections.trackers}
         onToggle={() => onToggleSection('trackers')}
       >

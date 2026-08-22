@@ -35,12 +35,14 @@
 import { useMemo } from 'react';
 import {
   isTorrentFilterType,
+  getTorrentFilterLabelKey,
   type SortField,
   type TorrentFilterType,
 } from '@taurent/shared';
 import type { Torrent } from '@taurent/shared/types/qbittorrent';
 import type { QBClientContextValue } from '../../session';
 import { formatLabel } from '@taurent/shared';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 // ─── Public types ─────────────────────────────────────────────────────────────
 
@@ -94,6 +96,7 @@ export function createMobileHomeController(
     tracker,
     search,
   }: UseMobileHomeOptions): UseMobileHomeResult {
+    const { t } = useTaurentTranslation('torrents');
     // ─── Result count ─────────────────────────────────────────────
     const resultCount = torrents.length;
 
@@ -104,28 +107,29 @@ export function createMobileHomeController(
       const items: Array<{ label: string; tone?: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'danger' }> = [];
 
       if (statusFilter && isTorrentFilterType(statusFilter)) {
-        items.push({ label: formatLabel(statusFilter as TorrentFilterType), tone: 'primary' });
+        const labelKey = getTorrentFilterLabelKey(statusFilter);
+        items.push({ label: labelKey ? t(labelKey) : formatLabel(statusFilter as TorrentFilterType), tone: 'primary' });
       }
       if (category) {
-        items.push({ label: `Category: ${category}` });
+        items.push({ label: t('summary.category', { value: category }) });
       }
       if (tag) {
-        items.push({ label: `Tag: ${tag}` });
+        items.push({ label: t('summary.tag', { value: tag }) });
       }
       if (tracker) {
         try {
           const hostname = new URL(tracker).hostname;
-          items.push({ label: `Tracker: ${hostname}` });
+          items.push({ label: t('summary.tracker', { value: hostname }) });
         } catch {
-          items.push({ label: `Tracker: ${tracker}` });
+          items.push({ label: t('summary.tracker', { value: tracker }) });
         }
       }
       if (search) {
-        items.push({ label: `Search: ${search}` });
+        items.push({ label: t('summary.search', { value: search }) });
       }
 
       return items;
-    }, [statusFilter, category, tag, tracker, search]);
+    }, [statusFilter, category, search, t, tag, tracker]);
 
     return {
       resultCount,

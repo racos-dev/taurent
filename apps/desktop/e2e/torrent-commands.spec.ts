@@ -256,7 +256,7 @@ test.describe('desktop torrent commands', () => {
     const expectedHash = await readRequiredTorrentRowHash(row);
 
     await openContextMenuForRow(row, page);
-    await clickMenuItem(page, 'Rename...');
+    await clickMenuItem(page, 'Rename…');
 
     await waitForMockWebview(page, { dialog: 'torrent-text', type: 'rename' });
 
@@ -279,7 +279,7 @@ test.describe('desktop torrent commands', () => {
     const expectedHash = await readRequiredTorrentRowHash(row);
 
     await openContextMenuForRow(row, page);
-    await clickMenuItem(page, 'Set Location...');
+    await clickMenuItem(page, 'Set Location…');
 
     await waitForMockWebview(page, { dialog: 'torrent-text', type: 'setLocation' });
 
@@ -310,7 +310,7 @@ test.describe('desktop torrent commands', () => {
 
     await openContextMenuForRow(firstRow, page);
     await hoverMenuItem(page, 'Category');
-    await clickSubMenuItem(page, 'New...');
+    await clickSubMenuItem(page, 'New…');
 
     await waitForMockWebview(page, { dialog: 'create', type: 'category' });
 
@@ -345,7 +345,7 @@ test.describe('desktop torrent commands', () => {
 
     await openContextMenuForRow(tagRow, page);
     await hoverMenuItem(page, 'Tags');
-    await clickSubMenuItem(page, 'Add...');
+    await clickSubMenuItem(page, 'Add…');
 
     await waitForMockWebview(page, { dialog: 'create', type: 'tag' });
   });
@@ -385,7 +385,7 @@ test.describe('desktop torrent commands', () => {
     let expectedHash = await readRequiredTorrentRowHash(row);
 
     await openContextMenuForRow(row, page);
-    await clickMenuItem(page, 'Limit Download Rate...');
+    await clickMenuItem(page, 'Limit Download Rate…');
     await waitForMockWebview(page, { dialog: 'torrent-numeric', type: 'download' });
 
     await openDialogHost(page, 'torrent-numeric', {
@@ -402,7 +402,7 @@ test.describe('desktop torrent commands', () => {
     row = getFirstVisibleTorrentRow(page);
     expectedHash = await readRequiredTorrentRowHash(row);
     await openContextMenuForRow(row, page);
-    await clickMenuItem(page, 'Limit Upload Rate...');
+    await clickMenuItem(page, 'Limit Upload Rate…');
     await waitForMockWebview(page, { dialog: 'torrent-numeric', type: 'upload' });
 
     await openDialogHost(page, 'torrent-numeric', {
@@ -419,7 +419,7 @@ test.describe('desktop torrent commands', () => {
     row = getFirstVisibleTorrentRow(page);
     expectedHash = await readRequiredTorrentRowHash(row);
     await openContextMenuForRow(row, page);
-    await clickMenuItem(page, 'Limit Share Ratio...');
+    await clickMenuItem(page, 'Limit Share Ratio…');
     await waitForMockWebview(page, { dialog: 'torrent-share-limits' });
 
     await openDialogHost(page, 'torrent-share-limits', {

@@ -4,11 +4,14 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 import { emit } from '@tauri-apps/api/event';
 import { BridgeAdapter } from '@taurent/bridge/adapters/desktop'
 import { DialogActions, NumberInput } from '@taurent/web-ui';
-import { formatUserMessageForContext } from '@taurent/shared/utils/error';
+import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 import { useQBClient } from '../connection/QBClientProvider';
 import { dismissDialogWindow } from '../windows/dialogs/dialogHostWindow';
 
 export function TorrentNumericDialogScreen() {
+  const { t } = useTaurentTranslation('torrents');
+  const { t: tCommon } = useTaurentTranslation('common');
+  const formatError = useLocalizedErrorFormatter();
   const [searchParams] = useSearchParams();
   const { serverId, sessionGeneration } = useQBClient();
 
@@ -23,9 +26,9 @@ export function TorrentNumericDialogScreen() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const title = type === 'download' ? 'Download Limit' : 'Upload Limit';
+    const title = t(type === 'download' ? 'details.screen.downloadLimit' : 'details.screen.uploadLimit');
     void getCurrentWindow().setTitle(title);
-  }, [type]);
+  }, [t, type]);
 
   useEffect(() => {
     setInputValue(initialValue);
@@ -55,7 +58,7 @@ export function TorrentNumericDialogScreen() {
       });
       await dismissDialogWindow();
     } catch (err) {
-      setError(formatUserMessageForContext(err, 'torrent-action'));
+      setError(formatError(err, 'torrent-action'));
       setIsSubmitting(false);
     }
   }
@@ -64,11 +67,8 @@ export function TorrentNumericDialogScreen() {
     void dismissDialogWindow();
   }
 
-  const title = type === 'download' ? 'Download Limit' : 'Upload Limit';
-  const description = type === 'download'
-    ? (isSingle ? undefined : `${hashes.length} torrents will be limited`)
-    : (isSingle ? undefined : `${hashes.length} torrents will be limited`);
-  const submitLabel = 'Set';
+  const title = t(type === 'download' ? 'details.screen.downloadLimit' : 'details.screen.uploadLimit');
+  const description = isSingle ? undefined : t('dialogs.numeric.limited', { count: hashes.length });
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-4 overflow-y-auto p-5 pb-4">
@@ -76,7 +76,7 @@ export function TorrentNumericDialogScreen() {
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-text-secondary">{title}</label>
           {description && <p className="text-xs text-text-secondary">{description}</p>}
-          <p className="text-xs text-text-secondary">0 = unlimited</p>
+          <p className="text-xs text-text-secondary">{t('dialogs.numeric.zeroUnlimited')}</p>
         </div>
         <NumberInput
           ref={inputRef}
@@ -104,9 +104,9 @@ export function TorrentNumericDialogScreen() {
 
       <DialogActions
         actions={[
-          { label: 'Cancel', onClick: handleCancel, disabled: isSubmitting },
+          { label: tCommon('actions.cancel'), onClick: handleCancel, disabled: isSubmitting },
           {
-            label: isSubmitting ? 'Saving...' : submitLabel,
+            label: isSubmitting ? t('dialogs.saving') : tCommon('actions.set'),
             onClick: () => void handleSubmit(),
             variant: 'primary',
             disabled: isSubmitting,

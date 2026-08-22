@@ -1,5 +1,6 @@
 import { Play, Square, Trash2 } from '@taurent/shared';
 import type { ContextMenuItem as TContextMenuItem } from '@taurent/web-ui';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 interface TorrentBulkMenuItemsProps {
   hashes: string[];
@@ -20,11 +21,12 @@ export function TorrentBulkMenuItems({
   onRemove,
   onClose,
 }: TorrentBulkMenuItemsProps): TContextMenuItem[] {
+  const { t } = useTaurentTranslation('torrents');
   const disabled = hashes.length === 0;
 
   return [
-    { kind: 'item', id: 'bulk-resume', label: 'Start torrents', icon: Play, disabled, onClick: () => { onResume(hashes); onClose(); } },
-    { kind: 'item', id: 'bulk-stop', label: 'Stop torrents', icon: Square, disabled, onClick: () => { onPause(hashes); onClose(); } },
-    { kind: 'item', id: 'bulk-remove', label: 'Remove torrents', icon: Trash2, disabled, destructive: true, onClick: () => { onRemove(hashes); onClose(); } },
+    { kind: 'item', id: 'bulk-resume', label: t('actions.startTorrents'), icon: Play, disabled, onClick: () => { onResume(hashes); onClose(); } },
+    { kind: 'item', id: 'bulk-stop', label: t('actions.stopTorrents'), icon: Square, disabled, onClick: () => { onPause(hashes); onClose(); } },
+    { kind: 'item', id: 'bulk-remove', label: t('actions.removeTorrents'), icon: Trash2, disabled, destructive: true, onClick: () => { onRemove(hashes); onClose(); } },
   ];
 }

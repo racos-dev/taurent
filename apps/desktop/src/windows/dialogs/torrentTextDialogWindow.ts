@@ -2,7 +2,7 @@ import { openDialogHostWindow } from './dialogHostWindow';
 
 export const TORRENT_TEXT_DIALOG_WINDOW_CONFIG = {
   route: '/torrent-text-dialog-window',
-  title: 'Torrent Dialog',
+  titleKey: 'windows.torrentDialog',
   width: 400,
   height: 220,
   minWidth: 400,

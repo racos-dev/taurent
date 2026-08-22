@@ -4,13 +4,14 @@ import { BridgeAdapter } from '@taurent/bridge/adapters/desktop';
 import type { AppUpdateInfo, AppUpdateProgress } from '@taurent/bridge/contracts';
 import { Button, ExternalLink, ProgressBar } from '@taurent/web-ui';
 import { appBuildMetadata } from '../../buildMetadata';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 type UpdateSettingsState =
   | { status: 'idle' }
   | { status: 'checking' }
   | { status: 'available'; update: AppUpdateInfo }
   | { status: 'not-available' }
-  | { status: 'error'; message: string }
+  | { status: 'error'; operation: 'check' | 'install' }
   | { status: 'installing'; update: AppUpdateInfo; downloaded: number; contentLength: number | null }
   | { status: 'installed'; update: AppUpdateInfo };
 
@@ -22,6 +23,7 @@ function progressRatio(downloaded: number, contentLength: number | null): number
 }
 
 export const DesktopAboutSettings = React.memo(() => {
+  const { t } = useTaurentTranslation('settings');
   const [updateState, setUpdateState] = useState<UpdateSettingsState>({ status: 'idle' });
 
   const handleCheck = useCallback(async () => {
@@ -29,9 +31,8 @@ export const DesktopAboutSettings = React.memo(() => {
     try {
       const update = await BridgeAdapter.checkForUpdate();
       setUpdateState(update ? { status: 'available', update } : { status: 'not-available' });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to check for updates.';
-      setUpdateState({ status: 'error', message });
+    } catch {
+      setUpdateState({ status: 'error', operation: 'check' });
     }
   }, []);
 
@@ -55,60 +56,59 @@ export const DesktopAboutSettings = React.memo(() => {
         setUpdateState({ status: 'installing', update, downloaded: event.downloaded, contentLength: event.contentLength });
       });
       setUpdateState({ status: 'installed', update });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to install update.';
-      setUpdateState({ status: 'error', message });
+    } catch {
+      setUpdateState({ status: 'error', operation: 'install' });
     }
   }, []);
 
   const updateMessage = useMemo(() => {
     switch (updateState.status) {
       case 'checking':
-        return 'Checking for updates...';
+        return t('aboutSettings.checking');
       case 'available':
-        return `Taurent v${updateState.update.version} is available.`;
+        return t('aboutSettings.available', { version: updateState.update.version });
       case 'not-available':
-        return 'Taurent is up to date.';
+        return t('aboutSettings.upToDate');
       case 'error':
-        return updateState.message;
+        return t(updateState.operation === 'check' ? 'aboutSettings.checkFailed' : 'aboutSettings.installFailed');
       case 'installing':
-        return updateState.contentLength ? 'Downloading update package.' : 'Downloading update package...';
+        return t(updateState.contentLength ? 'aboutSettings.downloading' : 'aboutSettings.downloadingUnknown');
       case 'installed':
-        return 'Update installed. Relaunch Taurent to finish.';
+        return t('aboutSettings.installed');
       case 'idle':
       default:
-        return 'Stable GitHub releases only.';
+        return t('aboutSettings.stableOnly');
     }
-  }, [updateState]);
+  }, [t, updateState]);
 
   return (
     <div className="rounded-sm border border-border bg-surface p-3">
       <div className="flex flex-col items-center text-center">
         <img
           src="/logo.svg"
-          alt="Taurent app icon"
+          alt={t('aboutSettings.iconAlt')}
           className="mb-3 h-10 w-10 rounded-sm"
           draggable={false}
         />
         <h2 className="text-sm font-semibold text-text-primary">Taurent</h2>
-        <p className="mt-1 text-xs text-text-secondary">Version {appBuildMetadata.version}</p>
+        <p className="mt-1 text-xs text-text-secondary">{t('screen.version', { version: appBuildMetadata.version })}</p>
         {appBuildMetadata.diagnostics.length > 0 ? (
           <p className="mt-1 text-xs text-text-muted">{appBuildMetadata.diagnostics.join(' · ')}</p>
         ) : null}
         <p className="mt-2 text-xs text-text-muted">
-          Built by racos.dev
+          {t('aboutSettings.builtBy')}
         </p>
         <ExternalLink
           href="https://github.com/racos-dev/taurent"
           className="mt-2 text-xs font-medium text-primary hover:underline"
         >
-          View on GitHub
+          {t('aboutSettings.viewGithub')}
         </ExternalLink>
       </div>
       <div className="mt-4 border-t border-border pt-3">
         <div className="flex flex-col gap-3">
           <div className="text-center">
-            <h3 className="text-xs font-semibold text-text-primary">Updates</h3>
+            <h3 className="text-xs font-semibold text-text-primary">{t('aboutSettings.updates')}</h3>
             <p className="mt-1 text-xs text-text-secondary">{updateMessage}</p>
             {updateState.status === 'installing' ? (
               <ProgressBar
@@ -126,16 +126,16 @@ export const DesktopAboutSettings = React.memo(() => {
                   href={RELEASE_URL}
                   className="inline-flex h-9 items-center rounded-sm px-3 text-xs font-medium text-primary hover:underline"
                 >
-                  View release
+                  {t('aboutSettings.viewRelease')}
                 </ExternalLink>
                 <Button variant="primary" size="sm" onClick={() => void handleInstall(updateState.update)}>
-                  Update
+                  {t('aboutSettings.update')}
                 </Button>
               </>
             ) : null}
             {updateState.status === 'installed' ? (
               <Button variant="primary" size="sm" onClick={() => void BridgeAdapter.relaunchApp()}>
-                Relaunch
+                {t('aboutSettings.relaunch')}
               </Button>
             ) : (
               <Button
@@ -145,7 +145,7 @@ export const DesktopAboutSettings = React.memo(() => {
                 disabled={updateState.status === 'installing'}
                 onClick={() => void handleCheck()}
               >
-                Check for updates
+                {t('aboutSettings.check')}
               </Button>
             )}
           </div>

@@ -3,6 +3,7 @@ import { cn, AlertCircle, ICON_SIZES } from '@taurent/shared';
 import { Dialog } from '../Dialog';
 import { DialogActions } from '../DialogActions';
 import type { ConfirmDialogProps } from './types';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export const ConfirmDialog = React.memo<ConfirmDialogProps>(({
   title,
@@ -11,9 +12,12 @@ export const ConfirmDialog = React.memo<ConfirmDialogProps>(({
   onConfirm,
   onCancel,
   tone = 'danger',
-  confirmLoadingLabel = 'Working...',
-  cancelLabel = 'Cancel',
+  confirmLoadingLabel,
+  cancelLabel,
 }) => {
+  const { t } = useTaurentTranslation('common');
+  const resolvedLoadingLabel = confirmLoadingLabel ?? t('actions.working');
+  const resolvedCancelLabel = cancelLabel ?? t('actions.cancel');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleConfirm() {
@@ -42,9 +46,9 @@ export const ConfirmDialog = React.memo<ConfirmDialogProps>(({
       footer={
         <DialogActions
           actions={[
-            { label: cancelLabel, onClick: onCancel, disabled: isSubmitting },
+            { label: resolvedCancelLabel, onClick: onCancel, disabled: isSubmitting },
             {
-              label: isSubmitting ? confirmLoadingLabel : confirmLabel,
+              label: isSubmitting ? resolvedLoadingLabel : confirmLabel,
               onClick: handleConfirm,
               variant: tone === 'danger' ? 'danger' : 'primary',
               disabled: isSubmitting,

@@ -3,6 +3,7 @@ import { BridgeAdapter } from '@taurent/bridge/adapters/desktop';
 import { useServerManager } from '../connection';
 import { AddServerForm } from '@taurent/web-ui';
 import { useAddServerScreenController } from '@taurent/web-core/screens';
+import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 
 const ServerIcon = ({ className = 'w-6 h-6' }: { className?: string }) => (
   <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -11,12 +12,16 @@ const ServerIcon = ({ className = 'w-6 h-6' }: { className?: string }) => (
 );
 
 export function AddServerScreen() {
+  const { t } = useTaurentTranslation('auth');
+  const formatError = useLocalizedErrorFormatter();
   const navigate = useNavigate();
   const { addServer, removeServer, switchServer, loading } = useServerManager();
 
   const controller = useAddServerScreenController({
     addServer,
     bridgeServers: BridgeAdapter.servers,
+    formatError: (error) => formatError(error, 'add-server'),
+    requiredFieldsMessage: t('form.requiredFields'),
     onSuccess: async (serverId) => {
       try {
         // switchServer authenticates and atomically activates the saved candidate.
@@ -48,9 +53,9 @@ export function AddServerScreen() {
           <div className="p-3 bg-primary/10 rounded-full mb-3">
             <ServerIcon className="w-6 h-6 text-primary" />
           </div>
-          <h1 className="text-xl font-semibold text-text-primary">Add New Server</h1>
+          <h1 className="text-xl font-semibold text-text-primary">{t('server.addNew')}</h1>
           <p className="text-sm text-text-secondary mt-1">
-            Connect your first qBittorrent instance
+            {t('server.connectFirst')}
           </p>
         </div>
 
@@ -80,7 +85,7 @@ export function AddServerScreen() {
         </div>
 
         <div className="mt-4 text-center text-xs text-text-muted">
-          <p>Need help? Make sure qBittorrent Web UI is enabled in your server settings.</p>
+          <p>{t('form.helpWebUi')}</p>
         </div>
       </div>
     </div>

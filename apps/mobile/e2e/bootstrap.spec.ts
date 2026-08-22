@@ -15,6 +15,18 @@ async function expectShellTabBarPresent(page: import('@playwright/test').Page) {
 }
 
 test.describe('mobile bootstrap flows', () => {
+  test('localizes first-run and connection recovery in Romanian', async ({ page }) => {
+    await gotoMobile(page, { appScenario: 'no-saved-servers', language: 'ro' });
+
+    await expect(page).toHaveURL(/\/add-server$/);
+    await expect(page.getByRole('heading', { name: 'Adaugă server' })).toBeVisible();
+
+    await gotoMobile(page, { appScenario: 'saved-server-unavailable', language: 'ro' });
+    await expect(page).toHaveURL(/\/servers$/);
+    await expect(page.getByRole('heading', { name: 'Servere' })).toBeVisible();
+    await expect(page.getByText('Conectarea la server a eșuat. Încearcă din nou.')).toBeVisible();
+  });
+
   test('redirects to /add-server when no saved servers exist', async ({ page }) => {
     await gotoMobile(page, { appScenario: 'no-saved-servers' });
 

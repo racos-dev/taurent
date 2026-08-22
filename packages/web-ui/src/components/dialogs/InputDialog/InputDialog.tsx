@@ -3,6 +3,7 @@ import { Dialog } from '../Dialog';
 import { DialogActions } from '../DialogActions';
 import { Input } from '../../primitives/Input';
 import type { InputDialogProps } from './types';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export const InputDialog = React.memo<InputDialogProps>(({
   title,
@@ -12,10 +13,13 @@ export const InputDialog = React.memo<InputDialogProps>(({
   onSubmit,
   onCancel,
   isPending,
-  submitLabel = 'Save',
-  cancelLabel = 'Cancel',
+  submitLabel,
+  cancelLabel,
   placeholder,
 }) => {
+  const { t } = useTaurentTranslation('common');
+  const resolvedSubmitLabel = submitLabel ?? t('actions.save');
+  const resolvedCancelLabel = cancelLabel ?? t('actions.cancel');
   return (
     <Dialog
       isOpen={true}
@@ -26,9 +30,9 @@ export const InputDialog = React.memo<InputDialogProps>(({
       footer={
         <DialogActions
           actions={[
-            { label: cancelLabel, onClick: onCancel, disabled: isPending },
+            { label: resolvedCancelLabel, onClick: onCancel, disabled: isPending },
             {
-              label: isPending ? 'Saving...' : submitLabel,
+              label: isPending ? t('actions.saving') : resolvedSubmitLabel,
               onClick: onSubmit,
               variant: 'primary',
               disabled: !value.trim() || isPending,

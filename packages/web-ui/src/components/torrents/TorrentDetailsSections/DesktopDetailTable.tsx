@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn, Icon } from '@taurent/shared';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export type DesktopDetailTableSortDirection = 'asc' | 'desc';
 
@@ -48,6 +49,7 @@ export function DesktopDetailTable<T>({
   onTableContextMenu,
   getRowClassName,
 }: DesktopDetailTableProps<T>) {
+  const { t } = useTaurentTranslation('torrents');
   const [columnWidths, setColumnWidths] = React.useState<Record<string, number>>(() => (
     columns.reduce<Record<string, number>>((acc, column) => {
       acc[column.id] = column.width;
@@ -174,7 +176,9 @@ export function DesktopDetailTable<T>({
 
                   <button
                     type="button"
-                    aria-label={`Resize ${typeof column.label === 'string' ? column.label : 'column'}`}
+                    aria-label={t('details.panel.resizeColumn', {
+                      column: typeof column.label === 'string' ? column.label : t('details.panel.column'),
+                    })}
                     onClick={(event) => {
                       event.stopPropagation();
                     }}

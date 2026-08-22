@@ -12,15 +12,17 @@ import { AlertCircle, ICON_SIZES } from '@taurent/shared';
 import { createLogger } from '@taurent/shared/utils/logger';
 
 import { useQBClient } from '../connection';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 const logger = createLogger({ component: 'MobileConnectionBanner' });
 
 export function MobileConnectionBanner() {
+  const { t } = useTaurentTranslation('auth');
   const navigate = useNavigate();
   const { disconnect } = useQBClient();
   const { state, serverIdentity } = useConnectionHealth({
     useQBClient,
-    fallbackIdentity: 'Current server',
+    fallbackIdentity: t('server.current'),
   });
 
   const [isDisconnecting, setIsDisconnecting] = useState(false);
@@ -39,7 +41,7 @@ export function MobileConnectionBanner() {
     navigate('/servers');
   }, [disconnect, navigate]);
 
-  const identity = serverIdentity ?? 'Current server';
+  const identity = serverIdentity ?? t('server.current');
 
   if (state === 'connected_unavailable') {
     return (
@@ -67,22 +69,20 @@ export function MobileConnectionBanner() {
                 id="mobile-server-unavailable-title"
                 className="text-sm font-medium text-text-primary"
               >
-                Current server unavailable
+                {t('server.unavailable')}
               </h2>
               <p
                 id="mobile-server-unavailable-message"
                 className="mt-1 text-xs text-text-secondary"
               >
-                <span className="font-medium text-text-primary">{identity}</span>{' '}
-                is no longer responding. Taurent will keep retrying automatically,
-                but the data on this screen may be out of date.
+                {t('server.unavailableMessage', { name: identity })}
               </p>
             </div>
           </div>
           <DialogActions
             actions={[
               {
-                label: 'Switch Server',
+                label: t('server.switch'),
                 onClick: () => {
                   void handleSwitchServer();
                 },

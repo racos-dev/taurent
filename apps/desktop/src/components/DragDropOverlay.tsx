@@ -1,5 +1,6 @@
 import { Upload } from '@taurent/shared';
 import { cn } from '@taurent/shared';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 interface DragDropOverlayProps {
   isVisible: boolean;
@@ -7,6 +8,7 @@ interface DragDropOverlayProps {
 }
 
 export function DragDropOverlay({ isVisible, onClose }: DragDropOverlayProps) {
+  const { t } = useTaurentTranslation('desktop');
   if (!isVisible) return null;
 
   return (
@@ -30,10 +32,10 @@ export function DragDropOverlay({ isVisible, onClose }: DragDropOverlayProps) {
           <Upload className="w-5 h-5 text-primary" />
         </div>
         <h3 className="text-sm font-semibold text-text-primary mb-1">
-          Drop .torrent files here
+          {t('dragDrop.title')}
         </h3>
         <p className="text-xs text-text-secondary">
-          Drag and drop torrent files to add them
+          {t('dragDrop.description')}
         </p>
       </div>
     </div>

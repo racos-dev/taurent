@@ -1,6 +1,5 @@
 import React, { useCallback, useState, type FormEvent } from 'react';
 import { cn, Icon, normalizeServerUrl } from '@taurent/shared';
-import { formatUserMessageForContext } from '@taurent/shared/utils/error';
 import type { CredentialStatus } from '@taurent/shared/types/server';
 import { useAddServerScreenController } from '@taurent/web-core/screens';
 import { AddServerForm } from '../../server-setup/AddServerForm';
@@ -10,6 +9,8 @@ import { ToggleSwitch } from '../../primitives/ToggleSwitch';
 import { CredentialHealthIndicator } from '../../CredentialHealthIndicator';
 import { SettingsCard } from '../SettingsCard';
 import { StatusPanel } from '../../shared/StatusPanel';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
+import { useLocalizedErrorFormatter } from '@taurent/shared/i18n';
 
 const API_V2_SUFFIX = '/api/v2';
 
@@ -100,12 +101,16 @@ const InlineAddServerForm = React.memo<InlineAddServerFormProps>(({
   onCancel,
   bridgeServers,
 }) => {
+  const { t } = useTaurentTranslation('auth');
+  const formatError = useLocalizedErrorFormatter();
   const addController = useAddServerScreenController({
     addServer: async (name, url, username, password) => {
       const server = await onAddServer(name, url, username, password);
       return { id: server.id };
     },
     bridgeServers,
+    formatError: (error) => formatError(error, 'add-server'),
+    requiredFieldsMessage: t('form.requiredFields'),
     onSuccess: async () => {
       onCancel();
     },
@@ -159,6 +164,9 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
   onEditApiKeyChange,
   onEditUseApiKeyChange,
 }) => {
+  const { t } = useTaurentTranslation('auth');
+  const { t: commonT } = useTaurentTranslation('common');
+  const formatPanelError = useLocalizedErrorFormatter();
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingServerId, setEditingServerId] = useState<string | null>(null);
   const [switchError, setSwitchError] = useState<string | null>(null);
@@ -192,11 +200,11 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
 
       if (!editingServerId) return;
       if (!editName.trim() || !editUrl.trim()) {
-        setEditError('Please fill in all required fields');
+        setEditError(t('form.requiredFields'));
         return;
       }
       if (!editUseApiKey && !editUsername.trim()) {
-        setEditError('Please fill in all required fields');
+        setEditError(t('form.requiredFields'));
         return;
       }
 
@@ -226,7 +234,7 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
         onEditApiKeyChange('');
         onEditUseApiKeyChange(false);
       } catch (err) {
-        setEditError(formatUserMessageForContext(err, 'settings-save'));
+        setEditError(formatPanelError(err, 'settings-save'));
       }
     },
     [
@@ -241,6 +249,8 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
       onEditPasswordChange,
       onEditApiKeyChange,
       onEditUseApiKeyChange,
+      t,
+      formatPanelError,
     ]
   );
 
@@ -261,31 +271,31 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
       try {
         await onSwitchServer(serverId);
       } catch (err) {
-        setSwitchError(formatUserMessageForContext(err, 'server-switch'));
+        setSwitchError(formatPanelError(err, 'server-switch'));
       }
     },
-    [onSwitchServer]
+    [formatPanelError, onSwitchServer]
   );
 
   return (
     <div className="max-w-4xl space-y-3">
       <SettingsCard
-        title="Saved Server List"
-        description="Add, switch, edit, or delete saved server profiles. Credentials are saved locally on this device."
+        title={t('server.savedListTitle')}
+        description={t('server.savedListDescription')}
       >
         <div className="flex flex-col gap-4 mt-2">
           {!showAddForm && (
             <div>
               <Button onClick={() => setShowAddForm(true)} size="sm" variant="secondary">
                 <Icon name="plus" iconSize="md" className="mr-2" />
-                Add New Server
+                {t('server.addNew')}
               </Button>
             </div>
           )}
 
           {showAddForm && (
             <div className="rounded-sm border border-border bg-surface p-4">
-              <h4 className="text-sm font-semibold text-text-primary mb-4">Add New Server</h4>
+              <h4 className="text-sm font-semibold text-text-primary mb-4">{t('server.addNew')}</h4>
               <InlineAddServerForm
                 onAddServer={onAddServer}
                 onCancel={() => setShowAddForm(false)}
@@ -296,13 +306,13 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
 
           {isLoading ? (
             <StatusPanel
-              title="Loading saved servers"
-              description="Reading saved server profiles."
+              title={t('server.loadingSaved')}
+              description={t('server.readingSaved')}
             />
           ) : error ? (
-            <StatusPanel title="Unable to read saved servers" description={error} tone="error" />
+            <StatusPanel title={t('server.unableToRead')} description={error} tone="error" />
           ) : servers.length === 0 && !showAddForm ? (
-            <StatusPanel title="No saved server profiles" description="Add a server to get started." />
+            <StatusPanel title={t('server.noneSaved')} description={t('server.addToStart')} />
           ) : (
             <>
               {switchError && (
@@ -312,7 +322,7 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
                   <button
                     onClick={() => setSwitchError(null)}
                     className="ml-auto shrink-0 rounded-md p-1 hover:bg-error/20 transition-colors"
-                    aria-label="Dismiss error"
+                    aria-label={t('actions.dismissError')}
                   >
                     <Icon name="x" iconSize="xs" />
                   </button>
@@ -342,7 +352,7 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
                       {editingServerId === server.id ? (
                         <form onSubmit={handleSaveEdit} className="space-y-4">
                           <h4 className="text-sm font-semibold text-text-primary flex items-center gap-2">
-                            <Icon name="settings" iconSize="md" /> Edit Server
+                            <Icon name="settings" iconSize="md" /> {t('server.edit')}
                           </h4>
 
                           {editError && (
@@ -354,7 +364,7 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
                           <div className="grid gap-4 md:grid-cols-2">
                             <div className="space-y-1">
                               <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                                Server Name <span className="text-error">*</span>
+                                {t('server.name')} <span className="text-error">*</span>
                               </label>
                               <Input
                                 type="text"
@@ -365,7 +375,7 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
 
                             <div className="space-y-1">
                               <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                                Server URL <span className="text-error">*</span>
+                                {t('server.url')} <span className="text-error">*</span>
                               </label>
                               <Input
                                 type="text"
@@ -377,7 +387,7 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
                             {!editUseApiKey && (
                               <div className="space-y-1">
                                 <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                                  Username <span className="text-error">*</span>
+                                  {t('server.username')} <span className="text-error">*</span>
                                 </label>
                                 <Input
                                   type="text"
@@ -389,22 +399,22 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
 
                             <div className="space-y-1">
                               <label className="block text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                                {editUseApiKey ? 'API Key' : 'Password'}
+                                {editUseApiKey ? t('form.apiKey') : t('form.password')}
                               </label>
                               <Input
                                 type={editUseApiKey ? 'text' : 'password'}
                                 value={editUseApiKey ? editApiKey : editPassword}
                                 onChange={editUseApiKey ? onEditApiKeyChange : onEditPasswordChange}
-                                placeholder={editUseApiKey ? 'Enter API key' : 'Enter password to update'}
+                                placeholder={editUseApiKey ? t('form.enterApiKey') : t('form.enterPasswordUpdate')}
                               />
                             </div>
                           </div>
 
                           <label className="flex items-center justify-between gap-3 rounded-sm border border-border bg-background p-3 cursor-pointer select-none transition-colors hover:border-border-focus">
                             <div className="flex flex-col gap-1">
-                              <span className="text-sm font-medium text-text-primary">Use API Key</span>
+                              <span className="text-sm font-medium text-text-primary">{t('form.useApiKey')}</span>
                               <span className="text-xs text-text-secondary">
-                                Authenticate with a qBittorrent API key instead of a username and password
+                                {t('form.useApiKeyDescription')}
                               </span>
                             </div>
                             <ToggleSwitch checked={editUseApiKey} onChange={onEditUseApiKeyChange} />
@@ -416,10 +426,10 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
                               variant="outline"
                               onClick={() => setEditingServerId(null)}
                             >
-                              Cancel
+                              {commonT('actions.cancel')}
                             </Button>
                             <Button type="submit">
-                              Save Changes
+                              {t('form.saveChanges')}
                             </Button>
                           </div>
                         </form>
@@ -442,7 +452,7 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
                                   </span>
                                   {isCurrent && (
                                     <span className="text-xs uppercase tracking-wider font-bold text-primary bg-primary/10 px-2 py-1 rounded-sm">
-                                      Active
+                                      {t('server.active')}
                                     </span>
                                   )}
                                 </div>
@@ -472,7 +482,7 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
                                   onClick={() => handleSwitchServer(server.id)}
                                   className="mr-2"
                                 >
-                                  Connect
+                                  {t('form.connect')}
                                 </Button>
                               )}
 
@@ -480,14 +490,14 @@ export const ServerOverviewSettingsPanel = React.memo<ServerOverviewSettingsPane
                                 <button
                                   onClick={() => handleEditServer(server.id)}
                                   className="flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-surface-interactive hover:text-text-primary transition-colors"
-                                  title="Edit server"
+                                  title={t('server.editAction')}
                                 >
                                   <Icon name="settings" iconSize="md" />
                                 </button>
                                 <button
                                   onClick={() => handleDeleteServer(server.id)}
                                   className="flex h-8 w-8 items-center justify-center rounded-md text-text-muted hover:bg-error-20 hover:text-error transition-colors"
-                                  title="Delete server"
+                                  title={t('server.deleteAction')}
                                 >
                                   <Icon name="trash" iconSize="md" />
                                 </button>

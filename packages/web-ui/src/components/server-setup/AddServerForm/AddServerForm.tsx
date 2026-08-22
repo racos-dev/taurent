@@ -5,6 +5,7 @@ import { Button } from '../../primitives/Button';
 import { Checkbox } from '../../primitives/Checkbox';
 import { ToggleSwitch } from '../../primitives/ToggleSwitch';
 import { Spinner } from '../../shared/Spinner';
+import type { AddServerValidationError } from '@taurent/web-core/screens';
 
 export interface AddServerFormProps {
   name: string;
@@ -24,9 +25,9 @@ export interface AddServerFormProps {
   onSubmit: () => void;
   onCancel: () => void;
   validationErrors?: {
-    name?: string | null;
-    url?: string | null;
-    username?: string | null;
+    name?: AddServerValidationError | null;
+    url?: AddServerValidationError | null;
+    username?: AddServerValidationError | null;
   };
   urlSuggestion?: string | null;
   error?: string | null;
@@ -79,6 +80,8 @@ export const AddServerForm = React.memo<AddServerFormProps>(
     const credentialPlaceholder = useApiKey
       ? 'qbt_...'
       : t('form.passwordPlaceholder');
+    const validationMessage = (code?: AddServerValidationError | null) =>
+      code ? t(`form.validation.${code}`) : undefined;
 
     return (
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -94,16 +97,19 @@ export const AddServerForm = React.memo<AddServerFormProps>(
           onChange={onNameChange}
           placeholder={t('form.serverNamePlaceholder')}
           disabled={isSubmitting}
-          error={validationErrors?.name ?? undefined}
+          error={validationMessage(validationErrors?.name)}
         />
 
         <Input
           label={t('form.serverUrlRequired')}
           value={url}
           onChange={onUrlChange}
-          placeholder="https://server:8080"
+          placeholder={
+            // i18n-audit-ignore: protocol URL example is intentionally verbatim
+            'https://server:8080'
+          }
           disabled={isSubmitting}
-          error={validationErrors?.url ?? undefined}
+          error={validationMessage(validationErrors?.url)}
           helperText={t('form.serverUrlHelper')}
         />
 
@@ -126,9 +132,12 @@ export const AddServerForm = React.memo<AddServerFormProps>(
             label={t('form.usernameRequired')}
             value={username}
             onChange={onUsernameChange}
-            placeholder="admin"
+            placeholder={
+              // i18n-audit-ignore: example username is intentionally verbatim
+              'admin'
+            }
             disabled={isSubmitting}
-            error={validationErrors?.username ?? undefined}
+            error={validationMessage(validationErrors?.username)}
           />
         )}
 

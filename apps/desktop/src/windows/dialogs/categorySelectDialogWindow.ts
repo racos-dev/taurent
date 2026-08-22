@@ -2,7 +2,7 @@ import { openDialogHostWindow } from './dialogHostWindow';
 
 export const CATEGORY_SELECT_DIALOG_WINDOW_CONFIG = {
   route: '/category-select-dialog-window',
-  title: 'Select Category',
+  titleKey: 'windows.category',
   width: 300,
   height: 400,
   minWidth: 300,

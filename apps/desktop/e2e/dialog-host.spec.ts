@@ -24,7 +24,7 @@ test.describe('desktop dialog host flows', () => {
     });
 
     await expect(page.getByText('Delete “videos”?')).toBeVisible();
-    await expect(page.getByText('Torrents in "videos" will become uncategorized.')).toBeVisible();
+    await expect(page.getByText('Torrents in “videos” will become uncategorized.')).toBeVisible();
     await expect.poll(() => readMockWindowLabel(page)).toBe('dialog-host');
 
     await page.getByRole('button', { name: 'Cancel', exact: true }).click();
@@ -47,7 +47,7 @@ test.describe('desktop dialog host flows', () => {
     });
 
     await expect(page.getByText('Delete “tag-a”?')).toBeVisible();
-    await expect(page.getByText('"tag-a" will be removed from all torrents.')).toBeVisible();
+    await expect(page.getByText('“tag-a” will be removed from all torrents.')).toBeVisible();
 
     await submitPrimary(page, 'Delete');
 

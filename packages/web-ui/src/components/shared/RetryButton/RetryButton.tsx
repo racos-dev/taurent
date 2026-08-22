@@ -1,13 +1,15 @@
 import React from 'react';
 import { Button } from '../../primitives/Button';
 import type { RetryButtonProps } from './types';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export const RetryButton = React.memo<RetryButtonProps>(({
   onClick,
-  label = 'Retry',
+  label,
   className = '',
   disabled = false,
 }) => {
+  const { t } = useTaurentTranslation('common');
   return (
     <Button
       variant="outline"
@@ -16,7 +18,7 @@ export const RetryButton = React.memo<RetryButtonProps>(({
       disabled={disabled}
       className={className}
     >
-      {label}
+      {label ?? t('actions.retry')}
     </Button>
   );
 });

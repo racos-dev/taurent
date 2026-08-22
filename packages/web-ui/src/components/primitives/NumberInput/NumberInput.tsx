@@ -1,6 +1,7 @@
 import React, { useRef, useImperativeHandle, useState } from 'react';
 import { cn, ChevronUp, ChevronDown, ICON_SIZES } from '@taurent/shared';
 import type { ByteUnit, NumberInputProps } from './types';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 const BYTE_UNITS: Array<{ value: ByteUnit; label: string; factor: number }> = [
   { value: 'b', label: 'B', factor: 1 },
@@ -50,6 +51,7 @@ export const NumberInput = React.memo(
       },
       ref,
     ) => {
+      const { t } = useTaurentTranslation('common');
       const internalRef = useRef<HTMLInputElement>(null);
       const [selectedUnit, setSelectedUnit] = useState<ByteUnit>(unitDefault);
       useImperativeHandle(ref, () => internalRef.current as HTMLInputElement, []);
@@ -177,7 +179,7 @@ export const NumberInput = React.memo(
           <div className="flex w-full min-w-0 items-center gap-2">
             {input}
             <select
-              aria-label="Unit"
+              aria-label={t('accessibility.unit')}
               disabled={disabled}
               value={selectedUnit}
               onChange={(event) => setSelectedUnit(event.target.value as ByteUnit)}

@@ -4,6 +4,7 @@ import { Dialog } from '../Dialog';
 import { DialogActions } from '../DialogActions';
 import { MutationErrorBanner } from '../../shared/MutationErrorBanner/MutationErrorBanner';
 import type { TagSelectionDialogProps } from './types';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export const TagSelectionDialog = React.memo<TagSelectionDialogProps>(({
   availableTags,
@@ -14,6 +15,8 @@ export const TagSelectionDialog = React.memo<TagSelectionDialogProps>(({
   assignedTags,
   error = null,
 }) => {
+  const { t } = useTaurentTranslation('dialogs');
+  const { t: tCommon } = useTaurentTranslation('common');
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
 
   const toggleTag = (tag: string) => {
@@ -58,21 +61,21 @@ export const TagSelectionDialog = React.memo<TagSelectionDialogProps>(({
     <Dialog
       isOpen={true}
       onClose={onCancel}
-      title="Manage Tags"
-      description={`Select tags to add or remove from the selected torrent${availableTags.length === 1 ? '' : 's'}.`}
+      title={t('tagSelection.title')}
+      description={t('tagSelection.description', { count: availableTags.length })}
       maxWidth="sm"
       footer={
         <>
           <DialogActions
             actions={[
               {
-                label: 'Add',
+                label: t('tagSelection.add'),
                 onClick: handleAdd,
                 variant: 'primary',
                 disabled: !canAdd,
               },
               {
-                label: 'Remove',
+                label: t('tagSelection.remove'),
                 onClick: handleRemove,
                 variant: 'outline',
                 disabled: !canRemove,
@@ -83,7 +86,7 @@ export const TagSelectionDialog = React.memo<TagSelectionDialogProps>(({
           />
           <div className="border-t border-border pt-2">
             <DialogActions
-              actions={[{ label: 'Cancel', onClick: onCancel, disabled: isPending }]}
+              actions={[{ label: tCommon('actions.cancel'), onClick: onCancel, disabled: isPending }]}
               actionClassName="w-full"
             />
           </div>
@@ -93,7 +96,7 @@ export const TagSelectionDialog = React.memo<TagSelectionDialogProps>(({
       <MutationErrorBanner error={error} />
       <div className="max-h-48 overflow-y-auto py-2">
         {availableTags.length === 0 ? (
-          <p className="p-3 text-center text-sm text-text-secondary">No tags available</p>
+          <p className="p-3 text-center text-sm text-text-secondary">{t('tagSelection.noTags')}</p>
         ) : (
           availableTags.map((tag) => {
             const isAssigned = assignedSet.has(tag);
@@ -112,7 +115,7 @@ export const TagSelectionDialog = React.memo<TagSelectionDialogProps>(({
                   #{tag}
                 </span>
                 {isAssigned && (
-                  <span className="ml-auto text-xs text-text-muted">assigned</span>
+                  <span className="ml-auto text-xs text-text-muted">{t('tagSelection.assigned')}</span>
                 )}
               </button>
             );

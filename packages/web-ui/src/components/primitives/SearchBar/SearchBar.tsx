@@ -1,6 +1,7 @@
 import React from 'react';
 import { Icon } from '@taurent/shared';
 import { Input } from '../Input';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export interface SearchBarProps {
   value: string;
@@ -13,8 +14,9 @@ const SearchBarComponent: React.FC<SearchBarProps> = React.memo<SearchBarProps>(
   value,
   onChange,
   onClear,
-  placeholder = 'Search',
+  placeholder,
 }) => {
+  const { t } = useTaurentTranslation('common');
   const handleChange = React.useCallback((newValue: string) => {
     onChange(newValue);
     if (newValue === '') {
@@ -27,7 +29,7 @@ const SearchBarComponent: React.FC<SearchBarProps> = React.memo<SearchBarProps>(
       <Input
         value={value}
         onChange={handleChange}
-        placeholder={placeholder}
+        placeholder={placeholder ?? t('labels.search')}
         icon={<Icon name="search" className="h-4 w-4" />}
         clearable
         autoFocus

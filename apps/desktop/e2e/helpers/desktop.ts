@@ -55,10 +55,14 @@ declare global {
       clearEmittedEvents(): void;
       emitEvent(eventName: string, payload?: unknown): Promise<void>;
     };
+    __TAURENT_TAURI_TRANSPORT__?: {
+      emitLanguageChanged(event: { preference: 'system' | 'en' | 'ro'; resolved_locale: 'en' | 'ro' }): void;
+    };
     __TAURENT_TAURI_WINDOW__?: {
       requestClose(): Promise<boolean>;
       isVisible(): Promise<boolean>;
       label(): string;
+      title(): string;
     };
     __TAURENT_TAURI_WEBVIEWS__?: {
       getWindows(): MockWebviewRecord[];
@@ -74,7 +78,7 @@ export async function gotoDesktop(
     scenario?: Scenario;
     appScenario?: AppScenario;
     searchParams?: Record<string, string>;
-    language?: 'en' | 'ro';
+    language?: 'system' | 'en' | 'ro';
   } = {},
 ) {
   const {
@@ -150,7 +154,9 @@ export async function waitForHomeReady(page: Page) {
   );
   await page.waitForFunction(() => {
     const text = document.body.textContent ?? '';
-    return text.includes('No torrents') || text.includes('Torrent 1');
+    return text.includes('No torrents')
+      || text.includes('Nu s-au găsit torrente')
+      || text.includes('Torrent 1');
   }, { timeout: 15_000 });
 }
 
@@ -202,6 +208,10 @@ export async function readMockWindowLabel(page: Page): Promise<string | null> {
   return page.evaluate(() => window.__TAURENT_TAURI_WINDOW__?.label() ?? null);
 }
 
+export async function readMockWindowTitle(page: Page): Promise<string | null> {
+  return page.evaluate(() => window.__TAURENT_TAURI_WINDOW__?.title() ?? null);
+}
+
 export async function requestMockWindowClose(page: Page): Promise<boolean> {
   return page.evaluate(() => window.__TAURENT_TAURI_WINDOW__?.requestClose() ?? false);
 }
@@ -211,6 +221,13 @@ export async function emitMockTauriEvent(page: Page, eventName: string, payload:
     ({ nextEventName, nextPayload }) => window.__TAURENT_TAURI_EVENTS__?.emitEvent(nextEventName, nextPayload),
     { nextEventName: eventName, nextPayload: payload },
   );
+}
+
+export async function emitMockLanguageChanged(
+  page: Page,
+  payload: { preference: 'system' | 'en' | 'ro'; resolved_locale: 'en' | 'ro' },
+) {
+  await page.evaluate((event) => window.__TAURENT_TAURI_TRANSPORT__?.emitLanguageChanged(event), payload);
 }
 
 export async function readMockWebviews(page: Page): Promise<MockWebviewRecord[]> {

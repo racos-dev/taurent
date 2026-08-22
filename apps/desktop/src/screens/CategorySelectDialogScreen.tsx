@@ -4,15 +4,18 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 import { emit } from '@tauri-apps/api/event';
 import { BridgeAdapter } from '@taurent/bridge/adapters/desktop'
 import { DialogActions } from '@taurent/web-ui';
-import { extractHttpReason, formatUserMessageForContext } from '@taurent/shared/utils/error';
+import { extractHttpReason } from '@taurent/shared/utils/error';
 import { useQBClient } from '../connection/QBClientProvider';
 import { useCategories } from '../hooks/platform/useCategories';
 import { useLiveTorrentByHash } from '../hooks/torrents/useLiveTorrentByHash';
 import { dismissDialogWindow } from '../windows/dialogs/dialogHostWindow';
-import { useTaurentTranslation } from '@taurent/shared/i18n';
+import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 
 export function CategorySelectDialogScreen() {
   const { t } = useTaurentTranslation('desktop');
+  const { t: tDialogs } = useTaurentTranslation('dialogs');
+  const { t: tCommon } = useTaurentTranslation('common');
+  const formatError = useLocalizedErrorFormatter();
   const [searchParams] = useSearchParams();
   const { serverId, sessionGeneration } = useQBClient();
 
@@ -26,7 +29,7 @@ export function CategorySelectDialogScreen() {
 
   const categoryNames = categories ? Object.keys(categories) : [];
 
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<unknown | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -46,7 +49,7 @@ export function CategorySelectDialogScreen() {
       await dismissDialogWindow();
     } catch (err) {
       console.error('Failed to set category:', extractHttpReason(err));
-      setError(formatUserMessageForContext(err, 'torrent-action'));
+      setError(err);
     } finally {
       setIsSubmitting(false);
     }
@@ -65,7 +68,7 @@ export function CategorySelectDialogScreen() {
       await dismissDialogWindow();
     } catch (err) {
       console.error('Failed to reset category:', extractHttpReason(err));
-      setError(formatUserMessageForContext(err, 'torrent-action'));
+      setError(err);
     } finally {
       setIsSubmitting(false);
     }
@@ -82,13 +85,13 @@ export function CategorySelectDialogScreen() {
     <div className="flex flex-col h-full">
       <div className="border-b border-border px-3 py-2">
         <p className="text-xs font-medium text-text-secondary">
-          {hashes.length === 1 ? 'Select category for 1 torrent' : `Select category for ${hashes.length} torrents`}
+          {tDialogs('desktop.selectCategory', { count: hashes.length })}
         </p>
       </div>
 
-      {error && (
+      {error !== null && (
         <div className="px-3 py-2 bg-error-20 border-b border-error text-xs text-error">
-          {error}
+          {formatError(error, 'torrent-action')}
         </div>
       )}
 
@@ -100,7 +103,7 @@ export function CategorySelectDialogScreen() {
           className="w-full px-3 py-2 text-left text-xs text-text-primary hover:bg-surface-interactive transition-colors disabled:text-text-disabled"
         >
           <span className={currentCategory === '' ? 'font-semibold text-primary' : ''}>
-            (None) — Reset category
+            {tDialogs('desktop.resetCategory')}
           </span>
         </button>
 
@@ -113,20 +116,20 @@ export function CategorySelectDialogScreen() {
             className="w-full px-3 py-2 text-left text-xs text-text-primary hover:bg-surface-interactive transition-colors disabled:text-text-disabled"
           >
             <span className={currentCategory === name ? 'font-semibold text-primary' : ''}>
-              {name || '(Unnamed category)'}
+              {name || tDialogs('desktop.unnamedCategory')}
             </span>
           </button>
         ))}
 
         {categoryNames.length === 0 && (
           <div className="px-3 py-4 text-xs text-text-muted text-center">
-            No categories defined
+            {tDialogs('desktop.noCategories')}
           </div>
         )}
       </div>
 
       <DialogActions
-        actions={[{ label: 'Cancel', onClick: handleCancel }]}
+        actions={[{ label: tCommon('actions.cancel'), onClick: handleCancel }]}
         className="border-t border-border px-3 py-2"
         actionClassName="w-full"
       />

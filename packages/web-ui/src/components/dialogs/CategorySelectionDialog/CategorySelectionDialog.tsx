@@ -3,6 +3,7 @@ import { Dialog } from '../Dialog';
 import { DialogActions } from '../DialogActions';
 import { MutationErrorBanner } from '../../shared/MutationErrorBanner/MutationErrorBanner';
 import type { CategorySelectionDialogProps } from './types';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export const CategorySelectionDialog = React.memo<CategorySelectionDialogProps>(({
   categories,
@@ -11,16 +12,18 @@ export const CategorySelectionDialog = React.memo<CategorySelectionDialogProps>(
   onSelect,
   error = null,
 }) => {
+  const { t } = useTaurentTranslation('dialogs');
+  const { t: tCommon } = useTaurentTranslation('common');
   return (
     <Dialog
       isOpen={true}
       onClose={onCancel}
-      title="Set Category"
-      description={`Select a category for the selected torrent${categories.length === 1 ? '' : 's'}.`}
+      title={t('categorySelection.title')}
+      description={t('categorySelection.description', { count: categories.length })}
       maxWidth="sm"
       footer={
         <DialogActions
-          actions={[{ label: 'Cancel', onClick: onCancel, disabled: isPending }]}
+          actions={[{ label: tCommon('actions.cancel'), onClick: onCancel, disabled: isPending }]}
           actionClassName="w-full"
         />
       }
@@ -33,7 +36,7 @@ export const CategorySelectionDialog = React.memo<CategorySelectionDialogProps>(
           disabled={isPending}
           className="mb-1 w-full rounded-sm border border-border px-2 py-1 text-left text-xs font-medium text-text-primary transition-colors hover:bg-surface-interactive disabled:cursor-not-allowed disabled:text-text-disabled"
         >
-          No Category
+          {t('categorySelection.noCategory')}
         </button>
         {categories.map((category) => (
           <button

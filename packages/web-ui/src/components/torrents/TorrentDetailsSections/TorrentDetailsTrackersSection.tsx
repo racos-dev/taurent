@@ -2,7 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import type { TorrentDetailsTrackersSectionProps } from './types';
 import type { Tracker } from '@taurent/shared/types/qbittorrent';
 import { StatusBadge, type StatusType } from '@taurent/shared';
-import { formatCount, formatLabeledCount } from '@taurent/shared/utils/formatters';
+import { useLocalization, useLocalizedFormatters, useTaurentTranslation } from '@taurent/shared/i18n';
 import {
   DesktopDetailTable,
   type DesktopDetailTableColumn,
@@ -11,14 +11,18 @@ import {
 import { StateCard } from '../../shared/StateCard';
 import { RetryButton } from '../../shared/RetryButton';
 
-function getTrackerStatus(status: number): { type: StatusType; label: string } {
+type TrackerStatusLabelKey =
+  | 'details.trackers.disabled' | 'details.trackers.notContacted' | 'details.trackers.working'
+  | 'details.trackers.updating' | 'details.trackers.notWorking' | 'details.trackers.unknown';
+
+function getTrackerStatus(status: number): { type: StatusType; labelKey: TrackerStatusLabelKey } {
   switch (status) {
-    case 0: return { type: 'tracker-disabled', label: 'Disabled' };
-    case 1: return { type: 'inactive', label: 'Not contacted' }; // pending feels too urgent/warning, inactive fits better
-    case 2: return { type: 'tracker-working', label: 'Working' };
-    case 3: return { type: 'tracker-updating', label: 'Updating' };
-    case 4: return { type: 'tracker-error', label: 'Not working' };
-    default: return { type: 'inactive', label: 'Unknown' };
+    case 0: return { type: 'tracker-disabled', labelKey: 'details.trackers.disabled' };
+    case 1: return { type: 'inactive', labelKey: 'details.trackers.notContacted' };
+    case 2: return { type: 'tracker-working', labelKey: 'details.trackers.working' };
+    case 3: return { type: 'tracker-updating', labelKey: 'details.trackers.updating' };
+    case 4: return { type: 'tracker-error', labelKey: 'details.trackers.notWorking' };
+    default: return { type: 'inactive', labelKey: 'details.trackers.unknown' };
   }
 }
 
@@ -30,12 +34,12 @@ function getHostname(url: string): string {
   }
 }
 
-function compareValues(a: number | string, b: number | string, direction: DesktopDetailTableSortDirection): number {
+function compareValues(a: number | string, b: number | string, direction: DesktopDetailTableSortDirection, locale: string): number {
   if (typeof a === 'number' && typeof b === 'number') {
     return direction === 'asc' ? a - b : b - a;
   }
 
-  const result = String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
+  const result = String(a).localeCompare(String(b), locale, { numeric: true, sensitivity: 'base' });
   return direction === 'asc' ? result : -result;
 }
 
@@ -46,6 +50,9 @@ function DesktopTrackers({ trackers, onAddTrackers, onEditTracker, onRemoveTrack
   onRemoveTracker?: (tracker: Tracker) => void;
   onCopyTrackerUrl?: (tracker: Tracker) => void;
 }) {
+  const { locale } = useLocalization();
+  const { t } = useTaurentTranslation('torrents');
+  const format = useLocalizedFormatters();
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; tracker: Tracker | null } | null>(null);
   const [activeTrackerKey, setActiveTrackerKey] = useState<string | null>(null);
   const [sortColumnId, setSortColumnId] = useState<string>('tier');
@@ -95,7 +102,7 @@ function DesktopTrackers({ trackers, onAddTrackers, onEditTracker, onRemoveTrack
         case 'url':
           return tracker.url;
         case 'status':
-          return getTrackerStatus(tracker.status).label;
+          return t(getTrackerStatus(tracker.status).labelKey);
         case 'peers':
           return tracker.num_peers;
         case 'seeds':
@@ -111,22 +118,22 @@ function DesktopTrackers({ trackers, onAddTrackers, onEditTracker, onRemoveTrack
       }
     };
 
-    return [...trackers].sort((left, right) => compareValues(sortValue(left), sortValue(right), sortDirection));
-  }, [sortColumnId, sortDirection, trackers]);
+    return [...trackers].sort((left, right) => compareValues(sortValue(left), sortValue(right), sortDirection, locale));
+  }, [locale, sortColumnId, sortDirection, t, trackers]);
 
   const columns = useMemo<DesktopDetailTableColumn<Tracker>[]>(() => [
     {
       id: 'tier',
-      label: 'Tier',
+      label: t('details.trackers.tier'),
       width: 68,
       minWidth: 56,
       align: 'center',
       sortable: true,
-      renderCell: (tracker) => <span className="text-text-secondary">{formatCount(tracker.tier)}</span>,
+      renderCell: (tracker) => <span className="text-text-secondary">{format.formatCount(tracker.tier)}</span>,
     },
     {
       id: 'url',
-      label: 'URL',
+      label: t('details.trackers.url'),
       width: 328,
       minWidth: 220,
       sortable: true,
@@ -139,61 +146,61 @@ function DesktopTrackers({ trackers, onAddTrackers, onEditTracker, onRemoveTrack
     },
     {
       id: 'status',
-      label: 'Status',
+      label: t('details.trackers.status'),
       width: 116,
       minWidth: 104,
       align: 'center',
       sortable: true,
       renderCell: (tracker) => {
-        const { type, label } = getTrackerStatus(tracker.status);
-        return <StatusBadge status={type} label={label} size="small" />;
+        const { type, labelKey } = getTrackerStatus(tracker.status);
+        return <StatusBadge status={type} label={t(labelKey)} size="small" />;
       },
     },
     {
       id: 'peers',
-      label: 'Peers',
+      label: t('fields.peers'),
       width: 74,
       minWidth: 64,
       align: 'right',
       sortable: true,
-      renderCell: (tracker) => <span className="text-text-secondary">{formatCount(tracker.num_peers)}</span>,
+      renderCell: (tracker) => <span className="text-text-secondary">{format.formatCount(tracker.num_peers)}</span>,
     },
     {
       id: 'seeds',
-      label: 'Seeds',
+      label: t('fields.seeds'),
       width: 74,
       minWidth: 64,
       align: 'right',
       sortable: true,
-      renderCell: (tracker) => <span className="text-text-secondary">{formatCount(tracker.num_seeds)}</span>,
+      renderCell: (tracker) => <span className="text-text-secondary">{format.formatCount(tracker.num_seeds)}</span>,
     },
     {
       id: 'leeches',
-      label: 'Leeches',
+      label: t('details.trackers.leeches'),
       width: 80,
       minWidth: 68,
       align: 'right',
       sortable: true,
-      renderCell: (tracker) => <span className="text-text-secondary">{formatCount(tracker.num_leeches)}</span>,
+      renderCell: (tracker) => <span className="text-text-secondary">{format.formatCount(tracker.num_leeches)}</span>,
     },
     {
       id: 'downloaded',
-      label: 'Downloaded',
+      label: t('fields.downloaded'),
       width: 96,
       minWidth: 84,
       align: 'right',
       sortable: true,
-      renderCell: (tracker) => <span className="text-text-secondary">{formatCount(tracker.num_downloaded)}</span>,
+      renderCell: (tracker) => <span className="text-text-secondary">{format.formatCount(tracker.num_downloaded)}</span>,
     },
     {
       id: 'message',
-      label: 'Message',
+      label: t('details.trackers.message'),
       width: 220,
       minWidth: 144,
       sortable: true,
       renderCell: (tracker) => <span className="block truncate text-text-secondary" title={tracker.msg || ''}>{tracker.msg || '—'}</span>,
     },
-  ], []);
+  ], [format, t]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -236,6 +243,7 @@ function TrackerContextMenuOverlay({ x, y, tracker, onClose, onAddTrackers, onEd
   onRemoveTracker?: (tracker: Tracker) => void;
   onCopyTrackerUrl?: (tracker: Tracker) => void;
 }) {
+  const { t } = useTaurentTranslation('torrents');
   const menuRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -281,7 +289,7 @@ function TrackerContextMenuOverlay({ x, y, tracker, onClose, onAddTrackers, onEd
           onClick={() => { onAddTrackers(); onClose(); }}
           className="flex w-full items-center px-2 py-1 text-left text-xs text-text-primary hover:bg-surface-interactive select-none"
         >
-          Add trackers...
+          {t('details.trackers.add')}
         </button>
       ) : null}
       {tracker && onEditTracker ? (
@@ -291,7 +299,7 @@ function TrackerContextMenuOverlay({ x, y, tracker, onClose, onAddTrackers, onEd
           onClick={() => { onEditTracker(tracker); onClose(); }}
           className="flex w-full items-center px-2 py-1 text-left text-xs text-text-primary hover:bg-surface-interactive select-none"
         >
-          Edit tracker URL...
+          {t('details.trackers.edit')}
         </button>
       ) : null}
       {tracker && onRemoveTracker ? (
@@ -301,7 +309,7 @@ function TrackerContextMenuOverlay({ x, y, tracker, onClose, onAddTrackers, onEd
           onClick={() => { onRemoveTracker(tracker); onClose(); }}
           className="flex w-full items-center px-2 py-1 text-left text-xs text-error hover:bg-error-20 select-none"
         >
-          Remove tracker
+          {t('details.trackers.remove')}
         </button>
       ) : null}
       {tracker && onCopyTrackerUrl ? (
@@ -311,7 +319,7 @@ function TrackerContextMenuOverlay({ x, y, tracker, onClose, onAddTrackers, onEd
           onClick={() => { onCopyTrackerUrl(tracker); onClose(); }}
           className="flex w-full items-center px-2 py-1 text-left text-xs text-text-primary hover:bg-surface-interactive select-none"
         >
-          Copy tracker URL
+          {t('details.trackers.copy')}
         </button>
       ) : null}
     </div>
@@ -319,6 +327,8 @@ function TrackerContextMenuOverlay({ x, y, tracker, onClose, onAddTrackers, onEd
 }
 
 function MobileTrackerCard({ tracker }: { tracker: Tracker }) {
+  const { t } = useTaurentTranslation('torrents');
+  const format = useLocalizedFormatters();
   const status = getTrackerStatus(tracker.status);
   
   return (
@@ -328,14 +338,14 @@ function MobileTrackerCard({ tracker }: { tracker: Tracker }) {
           <div className="text-sm font-semibold text-text-primary">{getHostname(tracker.url)}</div>
           <div className="mt-1 break-all text-xs text-text-secondary">{tracker.url}</div>
         </div>
-        <StatusBadge status={status.type} label={status.label} size="small" />
+        <StatusBadge status={status.type} label={t(status.labelKey)} size="small" />
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        <SummaryChip>{formatLabeledCount('Seeds', tracker.num_seeds)}</SummaryChip>
-        <SummaryChip>{formatLabeledCount('Peers', tracker.num_peers)}</SummaryChip>
-        <SummaryChip>{formatLabeledCount('Downloads', tracker.num_downloaded)}</SummaryChip>
-        <SummaryChip>{formatLabeledCount('Tier', tracker.tier)}</SummaryChip>
+        <SummaryChip>{t('details.trackers.labeledCount', { label: t('fields.seeds'), count: format.formatCount(tracker.num_seeds) })}</SummaryChip>
+        <SummaryChip>{t('details.trackers.labeledCount', { label: t('fields.peers'), count: format.formatCount(tracker.num_peers) })}</SummaryChip>
+        <SummaryChip>{t('details.trackers.labeledCount', { label: t('details.trackers.downloads'), count: format.formatCount(tracker.num_downloaded) })}</SummaryChip>
+        <SummaryChip>{t('details.trackers.labeledCount', { label: t('details.trackers.tier'), count: format.formatCount(tracker.tier) })}</SummaryChip>
       </div>
 
       {tracker.msg ? (
@@ -357,6 +367,7 @@ function SummaryChip({ children }: { children: React.ReactNode }) {
 
 export const TorrentDetailsTrackersSection = React.memo<TorrentDetailsTrackersSectionProps>(
   ({ variant = 'desktop', trackers, isLoading, error, onRetry, onAddTrackers, onEditTracker, onRemoveTracker, onCopyTrackerUrl }) => {
+    const { t } = useTaurentTranslation('torrents');
     if (isLoading && !trackers) {
       if (variant === 'mobile') {
         return (
@@ -379,7 +390,7 @@ export const TorrentDetailsTrackersSection = React.memo<TorrentDetailsTrackersSe
     if (error) {
       return (
         <StateCard
-          title="Could not load trackers"
+          title={t('details.trackers.loadError')}
           action={onRetry ? <RetryButton onClick={onRetry as () => void} /> : undefined}
         />
       );
@@ -392,8 +403,8 @@ export const TorrentDetailsTrackersSection = React.memo<TorrentDetailsTrackersSe
     if (!trackers || trackers.length === 0) {
       return (
         <StateCard
-          title="No trackers reported"
-          message="Tracker information will appear here when available."
+          title={t('details.trackers.empty')}
+          message={t('details.trackers.emptyMessage')}
         />
       );
     }

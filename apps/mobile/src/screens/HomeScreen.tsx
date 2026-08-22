@@ -13,18 +13,18 @@ import {
 } from '@taurent/web-ui';
 import { isTorrentFilterType } from '@taurent/shared';
 import type { SortField } from '@taurent/shared';
-import { formatUserMessageForContext } from '@taurent/shared/utils/error';
 import { toast } from '@taurent/web-ui/components/shared/Toast/toast';
 import { Icon } from '../ui/Icon';
 import { RetryButton, StateCard, Button } from '@taurent/web-ui';
 import { HomeScreenBody, SpeedLimitsModal } from '@taurent/web-ui';
 import type { SortOption } from '@taurent/web-core/screens';
 import { mobileCenteredStateClassName } from '../ui/mobileScreenLayout';
-import { useTaurentTranslation } from '@taurent/shared/i18n';
+import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 
 export function HomeScreen() {
   const { t: torrentT } = useTaurentTranslation('torrents');
   const { t: authT } = useTaurentTranslation('auth');
+  const formatError = useLocalizedErrorFormatter();
   const sortOptions = useMemo<SortOption[]>(() => [
     { value: 'added_on', label: torrentT('fields.dateAdded'), defaultOrder: 'desc' },
     { value: 'name', label: torrentT('fields.name'), defaultOrder: 'asc' },
@@ -87,7 +87,8 @@ export function HomeScreen() {
     torrentActions,
     homeController.selectedHashList,
     homeController.isBatchActionPending,
-    homeController.openDeleteDialog
+    homeController.openDeleteDialog,
+    torrentT,
   );
 
   const secondaryBatchActions = buildSecondaryBatchActions(
@@ -97,7 +98,8 @@ export function HomeScreen() {
     () => homeController.openSpeedLimitModal('download'),
     () => homeController.openSpeedLimitModal('upload'),
     homeController.openCategoryDialog,
-    homeController.openTagsDialog
+    homeController.openTagsDialog,
+    torrentT,
   );
 
   // ── Alt speed limits toggle ────────────────────────────────────────────────────
@@ -109,13 +111,15 @@ export function HomeScreen() {
     const willBeEnabled = !useAltSpeeds;
     toggleSpeedLimitsMode()
       .then(() => {
-        const message = willBeEnabled ? 'Alternative speed limits enabled' : 'Alternative speed limits disabled';
-        toast.success(message, { description: 'Long press to edit limits' });
+        const message = torrentT(willBeEnabled
+          ? 'workspace.alternativeLimitsEnabled'
+          : 'workspace.alternativeLimitsDisabled');
+        toast.success(message, { description: torrentT('workspace.longPressToEditLimits') });
       })
       .catch((err) => {
-        toast.error(formatUserMessageForContext(err, 'speed-limits'));
+        toast.error(formatError(err, 'speed-limits'));
       });
-  }, [toggleSpeedLimitsMode, useAltSpeeds]);
+  }, [formatError, toggleSpeedLimitsMode, torrentT, useAltSpeeds]);
 
   // ── Categories / tags from sync state ─────────────────────────────────────────
   const categories = useMaindataSelector((s) => s.categories ?? null);
@@ -221,13 +225,13 @@ export function HomeScreen() {
       [prefKey2]: ulBytes,
     })
       .then(() => {
-        toast.success('Speed limits updated');
+        toast.success(torrentT('workspace.speedLimitsUpdated'));
         setShowSpeedLimitsModal(false);
       })
       .catch((err) => {
-        toast.error(formatUserMessageForContext(err, 'speed-limits'));
+        toast.error(formatError(err, 'speed-limits'));
       });
-  }, [setPreferencesMutation, useAltSpeeds]);
+  }, [formatError, setPreferencesMutation, torrentT, useAltSpeeds]);
 
   // ── Error / loading early returns ───────────────────────────────────────────
   if (!isHydrated) {
@@ -259,7 +263,7 @@ export function HomeScreen() {
       <div className={mobileCenteredStateClassName({ height: 'full' })}>
         <StateCard
           title={authT('connectionProblem')}
-          message={formatUserMessageForContext(error, 'connection')}
+          message={formatError(error, 'connection')}
           action={
             <>
               <RetryButton onClick={retry} />

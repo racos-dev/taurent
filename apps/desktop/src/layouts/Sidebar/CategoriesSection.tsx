@@ -9,8 +9,7 @@ import { openEditCategoryDialogWindow } from '../../windows/dialogs/editCategory
 import { openCreateDialogWindow } from '../../windows/dialogs/createDialogWindow';
 import { openConfirmDialogWindow } from '../../windows/dialogs/confirmDialogWindow';
 import type { useSidebarActions } from './useSidebarActions';
-
-const UNCATEGORIZED_LABEL = 'Uncategorized';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 interface CategoriesSectionProps {
   items: SidebarCategoryItem[];
@@ -34,6 +33,7 @@ export function CategoriesSection({
   totalFilteredCount,
   capabilities,
 }: CategoriesSectionProps) {
+  const { t } = useTaurentTranslation('torrents');
   const capStatus = getCapabilityStatus(capabilities, 'supportsCategoriesManage');
 
   const [contextMenu, setContextMenu] = useState<{
@@ -59,22 +59,22 @@ export function CategoriesSection({
   return (
     <>
       <SidebarSection
-        title="Categories"
+        title={t('sidebar.categories')}
         expanded={expanded}
         onToggle={onToggle}
       >
         <SidebarFilterItem
           icon={<Folder />}
-          label="All Categories"
+          label={t('sidebar.allCategories')}
           count={totalCount}
           active={activeCategory === null}
           onClick={() => onCategoryClick(null)}
           ariaPressed={activeCategory === null}
-          title="All Categories"
+          title={t('sidebar.allCategories')}
         />
         {items.length > 0 ? (
           items.map(({ categoryName, count }) => {
-            const label = categoryName || UNCATEGORIZED_LABEL;
+            const label = categoryName || t('sidebar.uncategorized');
             return (
               <SidebarFilterItem
                 key={categoryName === '' ? '__uncategorized__' : categoryName}
@@ -93,7 +93,7 @@ export function CategoriesSection({
             );
           })
         ) : (
-          <div className="px-3 py-2 text-sm text-text-muted">No categories</div>
+          <div className="px-3 py-2 text-sm text-text-muted">{t('sidebar.noCategories')}</div>
         )}
         <CapabilityButton
           enabled={capStatus.enabled}
@@ -107,7 +107,7 @@ export function CategoriesSection({
           className="h-auto w-full justify-start rounded-none px-2 py-1 font-normal text-text-secondary"
         >
           <Plus className="h-3 w-3 shrink-0" />
-          <span className="min-w-0 truncate text-left text-xs">Add Category</span>
+          <span className="min-w-0 truncate text-left text-xs">{t('sidebar.addCategory')}</span>
         </CapabilityButton>
       </SidebarSection>
 

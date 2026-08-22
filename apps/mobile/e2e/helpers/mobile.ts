@@ -37,7 +37,7 @@ export async function gotoMobile(
     scenario?: string;
     appScenario?: AppScenario;
     searchParams?: Record<string, string>;
-    language?: 'en' | 'ro';
+    language?: 'system' | 'en' | 'ro';
   } = {},
 ) {
   const {

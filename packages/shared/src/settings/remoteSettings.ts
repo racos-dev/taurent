@@ -25,14 +25,12 @@ export type PreferenceValidator<K extends PreferenceKey> = (
 
 export interface RemoteSettingMetadata<K extends PreferenceKey = PreferenceKey> {
   key: K;
-  displayLabel: string;
-  helpText: string;
   valueType: 'boolean' | 'number' | 'string' | 'record';
   validation: PreferenceValidator<K>;
   desktopSection: DesktopSection;
   min?: number;
   max?: number;
-  options?: readonly { value: number; label: string }[];
+  options?: readonly { value: number }[];
   remoteOnly: boolean;
 }
 
@@ -41,8 +39,6 @@ export const REMOTE_SETTINGS_METADATA: {
 } = {
   locale: {
     key: 'locale',
-    displayLabel: 'Language',
-    helpText: 'Application interface language',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'general',
@@ -50,8 +46,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   create_subfolder_enabled: {
     key: 'create_subfolder_enabled',
-    displayLabel: 'Create Subfolder',
-    helpText: 'Create a subfolder for multi-file torrents',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'downloads',
@@ -59,8 +53,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   start_paused_enabled: {
     key: 'start_paused_enabled',
-    displayLabel: 'Start Paused',
-    helpText: 'Add torrents in paused state',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'downloads',
@@ -68,8 +60,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   auto_delete_mode: {
     key: 'auto_delete_mode',
-    displayLabel: 'Auto Delete',
-    helpText: 'Automatically delete torrents',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'downloads',
@@ -79,8 +69,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   preallocate_all: {
     key: 'preallocate_all',
-    displayLabel: 'Preallocate Space',
-    helpText: 'Preallocate disk space for files',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'downloads',
@@ -88,8 +76,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   incomplete_files_ext: {
     key: 'incomplete_files_ext',
-    displayLabel: 'Incomplete Files Extension',
-    helpText: 'Add .!ut extension to incomplete files',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'downloads',
@@ -97,8 +83,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   auto_tmm_enabled: {
     key: 'auto_tmm_enabled',
-    displayLabel: 'Auto Torrent Management',
-    helpText: 'Automatically manage torrent save paths',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'downloads',
@@ -106,8 +90,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   torrent_changed_tmm_enabled: {
     key: 'torrent_changed_tmm_enabled',
-    displayLabel: 'Torrent Changed TMM',
-    helpText: 'Move torrents when category changes',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'downloads',
@@ -115,8 +97,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   save_path_changed_tmm_enabled: {
     key: 'save_path_changed_tmm_enabled',
-    displayLabel: 'Save Path Changed TMM',
-    helpText: 'Move torrents when default save path changes',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'downloads',
@@ -124,8 +104,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   category_changed_tmm_enabled: {
     key: 'category_changed_tmm_enabled',
-    displayLabel: 'Category Changed TMM',
-    helpText: 'Move torrents when category save path changes',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'downloads',
@@ -133,8 +111,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   save_path: {
     key: 'save_path',
-    displayLabel: 'Default Save Path',
-    helpText: 'Default folder for downloaded files',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'downloads',
@@ -142,8 +118,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   temp_path_enabled: {
     key: 'temp_path_enabled',
-    displayLabel: 'Temp Path Enabled',
-    helpText: 'Use a temporary folder for incomplete files',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'downloads',
@@ -151,8 +125,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   temp_path: {
     key: 'temp_path',
-    displayLabel: 'Temp Path',
-    helpText: 'Temporary folder for incomplete files',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'downloads',
@@ -160,8 +132,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   scan_dirs: {
     key: 'scan_dirs',
-    displayLabel: 'Scan Dirs',
-    helpText: 'Watch folders for new torrents',
     valueType: 'record',
     validation: (v): v is Record<string, number> => typeof v === 'object' && v !== null,
     desktopSection: 'downloads',
@@ -169,8 +139,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   export_dir: {
     key: 'export_dir',
-    displayLabel: 'Export Dir',
-    helpText: 'Folder for exported torrents',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'downloads',
@@ -178,8 +146,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   export_dir_fin: {
     key: 'export_dir_fin',
-    displayLabel: 'Export Dir Finished',
-    helpText: 'Folder for completed torrents',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'downloads',
@@ -187,8 +153,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   mail_notification_enabled: {
     key: 'mail_notification_enabled',
-    displayLabel: 'Email Notifications',
-    helpText: 'Send email on torrent completion',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'general',
@@ -196,8 +160,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   mail_notification_sender: {
     key: 'mail_notification_sender',
-    displayLabel: 'Email Sender',
-    helpText: 'Sender email address',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'general',
@@ -205,8 +167,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   mail_notification_email: {
     key: 'mail_notification_email',
-    displayLabel: 'Notification Email',
-    helpText: 'Email address for notifications',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'general',
@@ -214,8 +174,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   mail_notification_smtp: {
     key: 'mail_notification_smtp',
-    displayLabel: 'SMTP Server',
-    helpText: 'SMTP server for email',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'general',
@@ -223,8 +181,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   mail_notification_ssl_enabled: {
     key: 'mail_notification_ssl_enabled',
-    displayLabel: 'Email SSL',
-    helpText: 'Use SSL for email',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'general',
@@ -232,8 +188,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   mail_notification_auth_enabled: {
     key: 'mail_notification_auth_enabled',
-    displayLabel: 'Email Auth',
-    helpText: 'Use authentication for email',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'general',
@@ -241,8 +195,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   mail_notification_username: {
     key: 'mail_notification_username',
-    displayLabel: 'Email Username',
-    helpText: 'Username for email auth',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'general',
@@ -250,8 +202,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   mail_notification_password: {
     key: 'mail_notification_password',
-    displayLabel: 'Email Password',
-    helpText: 'Password for email auth',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'general',
@@ -259,8 +209,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   autorun_enabled: {
     key: 'autorun_enabled',
-    displayLabel: 'Autorun Enabled',
-    helpText: 'Run a command on torrent completion',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'general',
@@ -268,8 +216,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   autorun_program: {
     key: 'autorun_program',
-    displayLabel: 'Autorun Program',
-    helpText: 'Command to run on completion',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'general',
@@ -277,8 +223,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   queueing_enabled: {
     key: 'queueing_enabled',
-    displayLabel: 'Queueing Enabled',
-    helpText: 'Enable torrent queueing',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'transfers',
@@ -286,8 +230,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   max_active_downloads: {
     key: 'max_active_downloads',
-    displayLabel: 'Max Active Downloads',
-    helpText: 'Maximum number of active downloads',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'transfers',
@@ -296,8 +238,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   max_active_torrents: {
     key: 'max_active_torrents',
-    displayLabel: 'Max Active Torrents',
-    helpText: 'Maximum number of active torrents',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'transfers',
@@ -306,8 +246,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   max_active_uploads: {
     key: 'max_active_uploads',
-    displayLabel: 'Max Active Uploads',
-    helpText: 'Maximum number of active uploads',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'transfers',
@@ -316,8 +254,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   dont_count_slow_torrents: {
     key: 'dont_count_slow_torrents',
-    displayLabel: 'Dont Count Slow Torrents',
-    helpText: 'Dont count slow torrents in max active limits',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'transfers',
@@ -325,8 +261,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   slow_torrent_dl_rate_threshold: {
     key: 'slow_torrent_dl_rate_threshold',
-    displayLabel: 'Slow Torrent Download Rate Threshold',
-    helpText: 'Download rate threshold for slow torrent detection',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'transfers',
@@ -335,8 +269,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   slow_torrent_ul_rate_threshold: {
     key: 'slow_torrent_ul_rate_threshold',
-    displayLabel: 'Slow Torrent Upload Rate Threshold',
-    helpText: 'Upload rate threshold for slow torrent detection',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'transfers',
@@ -345,8 +277,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   slow_torrent_inactive_timer: {
     key: 'slow_torrent_inactive_timer',
-    displayLabel: 'Slow Torrent Inactive Timer',
-    helpText: 'Time before a torrent is considered slow (seconds)',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'transfers',
@@ -355,8 +285,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   max_ratio_enabled: {
     key: 'max_ratio_enabled',
-    displayLabel: 'Max Ratio Enabled',
-    helpText: 'Stop seeding at maximum ratio',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'seeding',
@@ -364,8 +292,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   max_ratio: {
     key: 'max_ratio',
-    displayLabel: 'Max Ratio',
-    helpText: 'Maximum share ratio for seeding',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'seeding',
@@ -374,8 +300,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   max_ratio_act: {
     key: 'max_ratio_act',
-    displayLabel: 'Max Ratio Action',
-    helpText: 'Action on max ratio: 0=pause, 1=stop, 2=remove',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'seeding',
@@ -385,8 +309,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   listen_port: {
     key: 'listen_port',
-    displayLabel: 'Listening Port',
-    helpText: 'Port for incoming connections (1-65535)',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'network',
@@ -396,8 +318,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   upnp: {
     key: 'upnp',
-    displayLabel: 'UPnP',
-    helpText: 'Use UPnP to forward port',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'network',
@@ -405,8 +325,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   random_port: {
     key: 'random_port',
-    displayLabel: 'Random Port',
-    helpText: 'Use random port on startup',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'network',
@@ -414,8 +332,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   dl_limit: {
     key: 'dl_limit',
-    displayLabel: 'Download Limit',
-    helpText: 'Global download speed limit (0=unlimited)',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'transfers',
@@ -424,8 +340,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   up_limit: {
     key: 'up_limit',
-    displayLabel: 'Upload Limit',
-    helpText: 'Global upload speed limit (0=unlimited)',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'transfers',
@@ -434,8 +348,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   alt_dl_limit: {
     key: 'alt_dl_limit',
-    displayLabel: 'Alternative Download Limit',
-    helpText: 'Alternative download speed limit',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'transfers',
@@ -444,8 +356,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   alt_up_limit: {
     key: 'alt_up_limit',
-    displayLabel: 'Alternative Upload Limit',
-    helpText: 'Alternative upload speed limit',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'transfers',
@@ -454,8 +364,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   max_connec: {
     key: 'max_connec',
-    displayLabel: 'Max Connections',
-    helpText: 'Maximum number of connections',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -464,8 +372,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   max_connec_per_torrent: {
     key: 'max_connec_per_torrent',
-    displayLabel: 'Max Connections Per Torrent',
-    helpText: 'Maximum connections per torrent',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -474,8 +380,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   max_uploads: {
     key: 'max_uploads',
-    displayLabel: 'Max Upload Slots',
-    helpText: 'Maximum upload slots',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -484,8 +388,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   max_uploads_per_torrent: {
     key: 'max_uploads_per_torrent',
-    displayLabel: 'Max Uploads Per Torrent',
-    helpText: 'Maximum upload slots per torrent',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -494,8 +396,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   enable_piece_extent_affinity: {
     key: 'enable_piece_extent_affinity',
-    displayLabel: 'Piece Extent Affinity',
-    helpText: 'Prefer piece order for sequential downloads',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'advanced',
@@ -503,8 +403,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   bittorrent_protocol: {
     key: 'bittorrent_protocol',
-    displayLabel: 'BitTorrent Protocol',
-    helpText: '0=Both, 1=TCP, 2=uTP',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -514,8 +412,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   limit_utp_rate: {
     key: 'limit_utp_rate',
-    displayLabel: 'Limit uTP Rate',
-    helpText: 'Include uTP in transfer limits',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'advanced',
@@ -523,8 +419,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   limit_tcp_overhead: {
     key: 'limit_tcp_overhead',
-    displayLabel: 'TCP Overhead',
-    helpText: 'Count TCP protocol overhead in limits',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'advanced',
@@ -532,8 +426,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   limit_lan_peers: {
     key: 'limit_lan_peers',
-    displayLabel: 'LAN Peers',
-    helpText: 'Apply speed limits to LAN peers',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'advanced',
@@ -541,8 +433,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   scheduler_enabled: {
     key: 'scheduler_enabled',
-    displayLabel: 'Scheduler',
-    helpText: 'Enable scheduled speed limits',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'transfers',
@@ -550,8 +440,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   use_alt_speed_limits: {
     key: 'use_alt_speed_limits',
-    displayLabel: 'Alternative Speed Limits',
-    helpText: 'Use the configured alternative download and upload speed limits',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'transfers',
@@ -559,8 +447,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   schedule_from_hour: {
     key: 'schedule_from_hour',
-    displayLabel: 'Schedule From Hour',
-    helpText: 'Start hour for scheduled limits',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'transfers',
@@ -570,8 +456,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   schedule_from_min: {
     key: 'schedule_from_min',
-    displayLabel: 'Schedule From Minute',
-    helpText: 'Start minute for scheduled limits',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'transfers',
@@ -581,8 +465,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   schedule_to_hour: {
     key: 'schedule_to_hour',
-    displayLabel: 'Schedule To Hour',
-    helpText: 'End hour for scheduled limits',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'transfers',
@@ -592,8 +474,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   schedule_to_min: {
     key: 'schedule_to_min',
-    displayLabel: 'Schedule To Minute',
-    helpText: 'End minute for scheduled limits',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'transfers',
@@ -603,8 +483,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   scheduler_days: {
     key: 'scheduler_days',
-    displayLabel: 'Scheduler Days',
-    helpText: 'Days for scheduler (1-7)',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'transfers',
@@ -614,8 +492,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   dht: {
     key: 'dht',
-    displayLabel: 'DHT',
-    helpText: 'Enable DHT (Distributed Hash Table)',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'network',
@@ -623,8 +499,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   pex: {
     key: 'pex',
-    displayLabel: 'PeX',
-    helpText: 'Enable Peer Exchange',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'network',
@@ -632,8 +506,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   lsd: {
     key: 'lsd',
-    displayLabel: 'LSD',
-    helpText: 'Enable Local Service Discovery',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'network',
@@ -641,24 +513,20 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   encryption: {
     key: 'encryption',
-    displayLabel: 'Encryption',
-    helpText: '0=Prefer, 1=Force, 2=Disable',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'network',
     min: 0,
     max: 2,
     options: [
-      { value: 0, label: 'Prefer' },
-      { value: 1, label: 'Force' },
-      { value: 2, label: 'Disable' },
+      { value: 0 },
+      { value: 1 },
+      { value: 2 },
     ] as const,
     remoteOnly: true,
   },
   anonymous_mode: {
     key: 'anonymous_mode',
-    displayLabel: 'Anonymous Mode',
-    helpText: 'Hide sensitive information from trackers',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'privacy',
@@ -666,8 +534,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   proxy_type: {
     key: 'proxy_type',
-    displayLabel: 'Proxy Type',
-    helpText: 'Proxy connection type',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'connection',
@@ -677,8 +543,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   proxy_ip: {
     key: 'proxy_ip',
-    displayLabel: 'Proxy IP',
-    helpText: 'Proxy server IP address',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'connection',
@@ -686,8 +550,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   proxy_port: {
     key: 'proxy_port',
-    displayLabel: 'Proxy Port',
-    helpText: 'Proxy server port',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'connection',
@@ -697,8 +559,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   proxy_peer_connections: {
     key: 'proxy_peer_connections',
-    displayLabel: 'Proxy Peer Connections',
-    helpText: 'Use proxy for peer connections',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'connection',
@@ -706,8 +566,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   proxy_auth_enabled: {
     key: 'proxy_auth_enabled',
-    displayLabel: 'Proxy Auth',
-    helpText: 'Use authentication for proxy',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'connection',
@@ -715,8 +573,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   proxy_username: {
     key: 'proxy_username',
-    displayLabel: 'Proxy Username',
-    helpText: 'Username for proxy authentication',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'connection',
@@ -724,8 +580,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   proxy_password: {
     key: 'proxy_password',
-    displayLabel: 'Proxy Password',
-    helpText: 'Password for proxy authentication',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'connection',
@@ -733,8 +587,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   proxy_torrents_only: {
     key: 'proxy_torrents_only',
-    displayLabel: 'Proxy Torrents Only',
-    helpText: 'Only use proxy for torrents',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'connection',
@@ -742,8 +594,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   ip_filter_enabled: {
     key: 'ip_filter_enabled',
-    displayLabel: 'IP Filter',
-    helpText: 'Enable IP filter',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'privacy',
@@ -751,8 +601,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   ip_filter_path: {
     key: 'ip_filter_path',
-    displayLabel: 'IP Filter Path',
-    helpText: 'Path to IP filter file',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'privacy',
@@ -760,8 +608,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   ip_filter_trackers: {
     key: 'ip_filter_trackers',
-    displayLabel: 'IP Filter Trackers',
-    helpText: 'Apply IP filter to trackers',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'privacy',
@@ -769,8 +615,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   web_ui_domain_list: {
     key: 'web_ui_domain_list',
-    displayLabel: 'WebUI Domain List',
-    helpText: 'Allowed domains for WebUI',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'webui',
@@ -778,8 +622,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   web_ui_address: {
     key: 'web_ui_address',
-    displayLabel: 'WebUI Address',
-    helpText: 'WebUI listening address',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'webui',
@@ -787,8 +629,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   web_ui_port: {
     key: 'web_ui_port',
-    displayLabel: 'WebUI Port',
-    helpText: 'WebUI listening port',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'webui',
@@ -798,8 +638,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   web_ui_upnp: {
     key: 'web_ui_upnp',
-    displayLabel: 'WebUI UPnP',
-    helpText: 'Use UPnP to forward WebUI port',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'webui',
@@ -807,8 +645,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   web_ui_username: {
     key: 'web_ui_username',
-    displayLabel: 'WebUI Username',
-    helpText: 'WebUI login username',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'webui',
@@ -816,8 +652,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   web_ui_password: {
     key: 'web_ui_password',
-    displayLabel: 'WebUI Password',
-    helpText: 'WebUI login password',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'webui',
@@ -825,8 +659,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   web_ui_csrf_protection_enabled: {
     key: 'web_ui_csrf_protection_enabled',
-    displayLabel: 'CSRF Protection',
-    helpText: 'Enable CSRF protection',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'webui',
@@ -834,8 +666,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   web_ui_clickjacking_protection_enabled: {
     key: 'web_ui_clickjacking_protection_enabled',
-    displayLabel: 'Clickjacking Protection',
-    helpText: 'Enable clickjacking protection',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'webui',
@@ -843,8 +673,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   web_ui_secure_cookie_enabled: {
     key: 'web_ui_secure_cookie_enabled',
-    displayLabel: 'Secure Cookie',
-    helpText: 'Use secure flag for cookies',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'webui',
@@ -852,8 +680,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   web_ui_max_auth_fail_count: {
     key: 'web_ui_max_auth_fail_count',
-    displayLabel: 'Max Auth Failures',
-    helpText: 'Maximum authentication failures before ban',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'webui',
@@ -862,8 +688,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   web_ui_ban_duration: {
     key: 'web_ui_ban_duration',
-    displayLabel: 'Ban Duration',
-    helpText: 'IP ban duration in seconds',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'webui',
@@ -872,8 +696,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   web_ui_session_timeout: {
     key: 'web_ui_session_timeout',
-    displayLabel: 'Session Timeout',
-    helpText: 'Session timeout in seconds',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'webui',
@@ -882,8 +704,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   web_ui_host_header_validation_enabled: {
     key: 'web_ui_host_header_validation_enabled',
-    displayLabel: 'Host Header Validation',
-    helpText: 'Validate host header',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'webui',
@@ -891,8 +711,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   bypass_local_auth: {
     key: 'bypass_local_auth',
-    displayLabel: 'Local Auth Bypass',
-    helpText: 'Skip authentication for localhost',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'webui',
@@ -900,8 +718,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   bypass_auth_subnet_whitelist_enabled: {
     key: 'bypass_auth_subnet_whitelist_enabled',
-    displayLabel: 'Subnet Whitelist',
-    helpText: 'Enable subnet whitelist for auth bypass',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'webui',
@@ -909,8 +725,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   bypass_auth_subnet_whitelist: {
     key: 'bypass_auth_subnet_whitelist',
-    displayLabel: 'Subnet Whitelist',
-    helpText: 'Comma-separated list of allowed subnets',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'webui',
@@ -918,8 +732,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   alternative_webui_enabled: {
     key: 'alternative_webui_enabled',
-    displayLabel: 'Alternative WebUI',
-    helpText: 'Enable alternative WebUI folder',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'webui',
@@ -927,8 +739,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   alternative_webui_path: {
     key: 'alternative_webui_path',
-    displayLabel: 'Alternative WebUI Path',
-    helpText: 'Path to alternative WebUI files',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'webui',
@@ -936,8 +746,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   use_https: {
     key: 'use_https',
-    displayLabel: 'HTTPS',
-    helpText: 'Enable HTTPS for WebUI',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'webui',
@@ -945,8 +753,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   ssl_key: {
     key: 'ssl_key',
-    displayLabel: 'SSL Key',
-    helpText: 'SSL private key',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'webui',
@@ -954,8 +760,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   ssl_cert: {
     key: 'ssl_cert',
-    displayLabel: 'SSL Certificate',
-    helpText: 'SSL certificate',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'webui',
@@ -963,8 +767,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   web_ui_https_key: {
     key: 'web_ui_https_key',
-    displayLabel: 'WebUI HTTPS Key',
-    helpText: 'WebUI HTTPS private key',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'webui',
@@ -972,8 +774,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   web_ui_https_cert: {
     key: 'web_ui_https_cert',
-    displayLabel: 'WebUI HTTPS Cert',
-    helpText: 'WebUI HTTPS certificate',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'webui',
@@ -981,8 +781,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   dyndns_enabled: {
     key: 'dyndns_enabled',
-    displayLabel: 'DynDNS',
-    helpText: 'Enable Dynamic DNS',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'general',
@@ -990,8 +788,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   dyndns_service: {
     key: 'dyndns_service',
-    displayLabel: 'DynDNS Service',
-    helpText: 'Dynamic DNS service provider',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'general',
@@ -1001,8 +797,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   dyndns_username: {
     key: 'dyndns_username',
-    displayLabel: 'DynDNS Username',
-    helpText: 'DynDNS account username',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'general',
@@ -1010,8 +804,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   dyndns_password: {
     key: 'dyndns_password',
-    displayLabel: 'DynDNS Password',
-    helpText: 'DynDNS account password',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'general',
@@ -1019,8 +811,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   dyndns_domain: {
     key: 'dyndns_domain',
-    displayLabel: 'DynDNS Domain',
-    helpText: 'DynDNS domain name',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'general',
@@ -1028,8 +818,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   rss_refresh_interval: {
     key: 'rss_refresh_interval',
-    displayLabel: 'RSS Refresh Interval',
-    helpText: 'RSS feed refresh interval in minutes',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'general',
@@ -1038,8 +826,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   rss_max_articles_per_feed: {
     key: 'rss_max_articles_per_feed',
-    displayLabel: 'RSS Max Articles',
-    helpText: 'Maximum articles per RSS feed',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'general',
@@ -1048,8 +834,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   rss_processing_enabled: {
     key: 'rss_processing_enabled',
-    displayLabel: 'RSS Processing',
-    helpText: 'Enable RSS article processing',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'general',
@@ -1057,8 +841,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   rss_auto_downloading_enabled: {
     key: 'rss_auto_downloading_enabled',
-    displayLabel: 'RSS Auto Downloading',
-    helpText: 'Enable automatic RSS downloads',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'general',
@@ -1066,8 +848,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   rss_download_repack_proper_episodes: {
     key: 'rss_download_repack_proper_episodes',
-    displayLabel: 'RSS Repack Episodes',
-    helpText: 'Download repack episodes',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'general',
@@ -1075,8 +855,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   rss_smart_episode_filters: {
     key: 'rss_smart_episode_filters',
-    displayLabel: 'RSS Smart Filters',
-    helpText: 'Smart episode filter strings',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'general',
@@ -1084,8 +862,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   add_trackers_enabled: {
     key: 'add_trackers_enabled',
-    displayLabel: 'Add Trackers',
-    helpText: 'Auto-add trackers to new torrents',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'general',
@@ -1093,8 +869,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   add_trackers: {
     key: 'add_trackers',
-    displayLabel: 'Tracker List',
-    helpText: 'Trackers to auto-add',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'general',
@@ -1102,8 +876,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   web_ui_use_custom_http_headers_enabled: {
     key: 'web_ui_use_custom_http_headers_enabled',
-    displayLabel: 'Custom HTTP Headers',
-    helpText: 'Use custom HTTP headers in WebUI',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'general',
@@ -1111,8 +883,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   web_ui_custom_http_headers: {
     key: 'web_ui_custom_http_headers',
-    displayLabel: 'Custom HTTP Headers',
-    helpText: 'Custom HTTP headers',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'general',
@@ -1120,8 +890,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   max_seeding_time_enabled: {
     key: 'max_seeding_time_enabled',
-    displayLabel: 'Max Seeding Time',
-    helpText: 'Limit maximum seeding time',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'seeding',
@@ -1129,8 +897,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   max_seeding_time: {
     key: 'max_seeding_time',
-    displayLabel: 'Max Seeding Time',
-    helpText: 'Maximum seeding time in minutes',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'seeding',
@@ -1139,8 +905,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   announce_to_all_tiers: {
     key: 'announce_to_all_tiers',
-    displayLabel: 'Announce All Tiers',
-    helpText: 'Announce to all tracker tiers',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'advanced',
@@ -1148,8 +912,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   announce_to_all_trackers: {
     key: 'announce_to_all_trackers',
-    displayLabel: 'Announce All Trackers',
-    helpText: 'Announce to all trackers in tier',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'advanced',
@@ -1157,8 +919,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   async_io_threads: {
     key: 'async_io_threads',
-    displayLabel: 'Async IO Threads',
-    helpText: 'Number of async IO threads',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1168,8 +928,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   hashing_threads: {
     key: 'hashing_threads',
-    displayLabel: 'Hashing Threads',
-    helpText: 'Number of hashing threads',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1179,8 +937,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   file_pool_size: {
     key: 'file_pool_size',
-    displayLabel: 'File Pool Size',
-    helpText: 'File pool size',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1189,8 +945,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   checking_memory_use: {
     key: 'checking_memory_use',
-    displayLabel: 'Checking Memory',
-    helpText: 'Memory to use for checking (MB)',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1199,8 +953,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   disk_cache: {
     key: 'disk_cache',
-    displayLabel: 'Disk Cache',
-    helpText: 'Disk cache size in MB',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1209,8 +961,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   disk_cache_ttl: {
     key: 'disk_cache_ttl',
-    displayLabel: 'Disk Cache TTL',
-    helpText: 'Disk cache TTL in seconds',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1219,8 +969,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   enable_upload_suggestions: {
     key: 'enable_upload_suggestions',
-    displayLabel: 'Upload Suggestions',
-    helpText: 'Suggest upload pieces to peers',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'advanced',
@@ -1228,8 +976,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   upload_suggestions_interval: {
     key: 'upload_suggestions_interval',
-    displayLabel: 'Upload Suggestions Interval',
-    helpText: 'Interval for upload suggestions (ms)',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1238,8 +984,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   send_buffer_watermark: {
     key: 'send_buffer_watermark',
-    displayLabel: 'Send Buffer Watermark',
-    helpText: 'Send buffer watermark',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1248,8 +992,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   send_buffer_low_watermark: {
     key: 'send_buffer_low_watermark',
-    displayLabel: 'Send Buffer Low Watermark',
-    helpText: 'Send buffer low watermark',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1258,8 +1000,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   send_buffer_watermark_factor: {
     key: 'send_buffer_watermark_factor',
-    displayLabel: 'Send Buffer Watermark Factor',
-    helpText: 'Send buffer watermark factor',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1268,8 +1008,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   connection_speed: {
     key: 'connection_speed',
-    displayLabel: 'Connection Speed',
-    helpText: 'Outgoing connections per second',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1278,8 +1016,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   socket_backlog_size: {
     key: 'socket_backlog_size',
-    displayLabel: 'Socket Backlog Size',
-    helpText: 'Socket backlog size',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1288,8 +1024,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   outgoing_ports_min: {
     key: 'outgoing_ports_min',
-    displayLabel: 'Outgoing Port Min',
-    helpText: 'Minimum outgoing port (0=any)',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'network',
@@ -1299,8 +1033,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   outgoing_ports_max: {
     key: 'outgoing_ports_max',
-    displayLabel: 'Outgoing Port Max',
-    helpText: 'Maximum outgoing port (0=any)',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'network',
@@ -1310,8 +1042,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   upnp_lease_duration: {
     key: 'upnp_lease_duration',
-    displayLabel: 'UPnP Lease Duration',
-    helpText: 'UPnP lease duration in seconds',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'network',
@@ -1320,8 +1050,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   peer_tos: {
     key: 'peer_tos',
-    displayLabel: 'Peer TOS',
-    helpText: 'Peer Type of Service',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1331,8 +1059,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   utp_tcp_mixed_mode: {
     key: 'utp_tcp_mixed_mode',
-    displayLabel: 'uTP TCP Mixed Mode',
-    helpText: '0=Disabled, 1=Prefer, 2=Force',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1342,8 +1068,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   idn_support_enabled: {
     key: 'idn_support_enabled',
-    displayLabel: 'IDN Support',
-    helpText: 'Support internationalized domain names',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'advanced',
@@ -1351,8 +1075,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   enable_multi_connections_from_same_ip: {
     key: 'enable_multi_connections_from_same_ip',
-    displayLabel: 'Multi Connections Same IP',
-    helpText: 'Allow multiple connections from same IP',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'advanced',
@@ -1360,8 +1082,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   validate_https_tracker_certificate: {
     key: 'validate_https_tracker_certificate',
-    displayLabel: 'Validate Tracker Cert',
-    helpText: 'Validate HTTPS tracker certificates',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'advanced',
@@ -1369,8 +1089,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   ssrf_mitigation: {
     key: 'ssrf_mitigation',
-    displayLabel: 'SSRF Mitigation',
-    helpText: 'Enable SSRF mitigation',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'advanced',
@@ -1378,8 +1096,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   block_peers_on_privileged_ports: {
     key: 'block_peers_on_privileged_ports',
-    displayLabel: 'Block Privileged Ports',
-    helpText: 'Block peers on privileged ports',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'advanced',
@@ -1387,8 +1103,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   enable_embedded_tracker: {
     key: 'enable_embedded_tracker',
-    displayLabel: 'Embedded Tracker',
-    helpText: 'Enable embedded tracker',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'advanced',
@@ -1396,8 +1110,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   embedded_tracker_port: {
     key: 'embedded_tracker_port',
-    displayLabel: 'Embedded Tracker Port',
-    helpText: 'Embedded tracker listening port',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1407,8 +1119,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   mark_of_the_web: {
     key: 'mark_of_the_web',
-    displayLabel: 'Mark of the Web',
-    helpText: 'Add MOTW to downloaded files',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'downloads',
@@ -1416,8 +1126,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   upload_slots_behavior: {
     key: 'upload_slots_behavior',
-    displayLabel: 'Upload Slots Behavior',
-    helpText: 'Upload slots behavior',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1427,8 +1135,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   upload_choking_algorithm: {
     key: 'upload_choking_algorithm',
-    displayLabel: 'Upload Choking Algorithm',
-    helpText: 'Upload choking algorithm',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1438,8 +1144,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   announce_ip: {
     key: 'announce_ip',
-    displayLabel: 'Announce IP',
-    helpText: 'IP to announce to trackers',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'advanced',
@@ -1447,8 +1151,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   max_concurrent_http_announces: {
     key: 'max_concurrent_http_announces',
-    displayLabel: 'Max Concurrent HTTP Announces',
-    helpText: 'Maximum concurrent HTTP announces',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1457,8 +1159,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   stop_tracker_timeout: {
     key: 'stop_tracker_timeout',
-    displayLabel: 'Stop Tracker Timeout',
-    helpText: 'Stop tracker timeout in seconds',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1467,8 +1167,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   peer_turnover: {
     key: 'peer_turnover',
-    displayLabel: 'Peer Turnover',
-    helpText: 'Peer turnover percentage',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1478,8 +1176,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   peer_turnover_cutoff: {
     key: 'peer_turnover_cutoff',
-    displayLabel: 'Peer Turnover Cutoff',
-    helpText: 'Peer turnover cutoff percentage',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1489,8 +1185,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   peer_turnover_interval: {
     key: 'peer_turnover_interval',
-    displayLabel: 'Peer Turnover Interval',
-    helpText: 'Peer turnover interval in seconds',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1499,8 +1193,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   request_queue_size: {
     key: 'request_queue_size',
-    displayLabel: 'Request Queue Size',
-    helpText: 'Request queue size',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1509,8 +1201,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   dht_bootstrap_nodes: {
     key: 'dht_bootstrap_nodes',
-    displayLabel: 'DHT Bootstrap Nodes',
-    helpText: 'Comma-separated list of DHT bootstrap nodes',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'network',
@@ -1518,8 +1208,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   i2p_enabled: {
     key: 'i2p_enabled',
-    displayLabel: 'I2P',
-    helpText: 'Enable I2P network',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'network',
@@ -1527,8 +1215,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   i2p_address: {
     key: 'i2p_address',
-    displayLabel: 'I2P Address',
-    helpText: 'I2P SAM bridge address',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'network',
@@ -1536,8 +1222,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   i2p_port: {
     key: 'i2p_port',
-    displayLabel: 'I2P Port',
-    helpText: 'I2P SAM bridge port',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'network',
@@ -1547,8 +1231,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   i2p_mixed_mode: {
     key: 'i2p_mixed_mode',
-    displayLabel: 'I2P Mixed Mode',
-    helpText: 'I2P mixed mode',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'network',
@@ -1556,8 +1238,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   i2p_inbound_quantity: {
     key: 'i2p_inbound_quantity',
-    displayLabel: 'I2P Inbound Quantity',
-    helpText: 'I2P inbound quantity',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'network',
@@ -1566,8 +1246,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   i2p_outbound_quantity: {
     key: 'i2p_outbound_quantity',
-    displayLabel: 'I2P Outbound Quantity',
-    helpText: 'I2P outbound quantity',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'network',
@@ -1576,8 +1254,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   i2p_inbound_length: {
     key: 'i2p_inbound_length',
-    displayLabel: 'I2P Inbound Length',
-    helpText: 'I2P inbound length',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'network',
@@ -1586,8 +1262,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   i2p_outbound_length: {
     key: 'i2p_outbound_length',
-    displayLabel: 'I2P Outbound Length',
-    helpText: 'I2P outbound length',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'network',
@@ -1597,8 +1271,6 @@ export const REMOTE_SETTINGS_METADATA: {
   // ─── New fields ──────────────────────────────────────────
   torrent_content_layout: {
     key: 'torrent_content_layout',
-    displayLabel: 'Torrent Content Layout',
-    helpText: 'Content layout when adding torrents',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'downloads',
@@ -1606,8 +1278,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   add_to_top_of_queue: {
     key: 'add_to_top_of_queue',
-    displayLabel: 'Add to Top of Queue',
-    helpText: 'Add new torrents to the top of the queue',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'downloads',
@@ -1615,8 +1285,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   torrent_stop_condition: {
     key: 'torrent_stop_condition',
-    displayLabel: 'Torrent Stop Condition',
-    helpText: 'Condition to stop a torrent after metadata received',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'downloads',
@@ -1624,8 +1292,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   merge_trackers: {
     key: 'merge_trackers',
-    displayLabel: 'Merge Trackers',
-    helpText: 'Merge trackers from duplicate torrents',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'downloads',
@@ -1633,8 +1299,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   excluded_file_names_enabled: {
     key: 'excluded_file_names_enabled',
-    displayLabel: 'Excluded File Names Enabled',
-    helpText: 'Enable excluding files by name pattern',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'downloads',
@@ -1642,8 +1306,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   excluded_file_names: {
     key: 'excluded_file_names',
-    displayLabel: 'Excluded File Names',
-    helpText: 'File name patterns to exclude',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'downloads',
@@ -1651,8 +1313,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   autorun_on_torrent_added_enabled: {
     key: 'autorun_on_torrent_added_enabled',
-    displayLabel: 'Auto-Run on Torrent Added',
-    helpText: 'Run a program when a torrent is added',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'downloads',
@@ -1660,8 +1320,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   autorun_on_torrent_added_program: {
     key: 'autorun_on_torrent_added_program',
-    displayLabel: 'Auto-Run Program (Added)',
-    helpText: 'Program to run when a torrent is added',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'downloads',
@@ -1669,8 +1327,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   recheck_completed_torrents: {
     key: 'recheck_completed_torrents',
-    displayLabel: 'Recheck Completed Torrents',
-    helpText: 'Recheck torrents on completion',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'bittorrent',
@@ -1678,8 +1334,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   resolve_peer_countries: {
     key: 'resolve_peer_countries',
-    displayLabel: 'Resolve Peer Countries',
-    helpText: 'Resolve peer IP addresses to countries',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'advanced',
@@ -1687,8 +1341,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   reannounce_when_address_changed: {
     key: 'reannounce_when_address_changed',
-    displayLabel: 'Reannounce When Address Changed',
-    helpText: 'Reannounce to all trackers when IP changes',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'advanced',
@@ -1696,8 +1348,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   max_active_checking_torrents: {
     key: 'max_active_checking_torrents',
-    displayLabel: 'Max Active Checking Torrents',
-    helpText: 'Maximum number of simultaneous checking torrents',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'bittorrent',
@@ -1706,8 +1356,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   max_inactive_seeding_time_enabled: {
     key: 'max_inactive_seeding_time_enabled',
-    displayLabel: 'Max Inactive Seeding Time Enabled',
-    helpText: 'Enable limit on inactive seeding time',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'bittorrent',
@@ -1715,8 +1363,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   max_inactive_seeding_time: {
     key: 'max_inactive_seeding_time',
-    displayLabel: 'Max Inactive Seeding Time',
-    helpText: 'Maximum inactive seeding time in minutes',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'bittorrent',
@@ -1725,8 +1371,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   resume_data_storage_type: {
     key: 'resume_data_storage_type',
-    displayLabel: 'Resume Data Storage Type',
-    helpText: 'Type of storage for resume data',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'advanced',
@@ -1734,8 +1378,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   torrent_file_size_limit: {
     key: 'torrent_file_size_limit',
-    displayLabel: 'Torrent File Size Limit',
-    helpText: 'Maximum torrent file size',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1744,8 +1386,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   save_resume_data_interval: {
     key: 'save_resume_data_interval',
-    displayLabel: 'Save Resume Data Interval',
-    helpText: 'Interval in minutes for saving resume data',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1754,8 +1394,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   save_statistics_interval: {
     key: 'save_statistics_interval',
-    displayLabel: 'Save Statistics Interval',
-    helpText: 'Interval in minutes for saving statistics',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1764,8 +1402,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   confirm_torrent_recheck: {
     key: 'confirm_torrent_recheck',
-    displayLabel: 'Confirm Torrent Recheck',
-    helpText: 'Confirm before rechecking torrents',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'advanced',
@@ -1773,8 +1409,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   refresh_interval: {
     key: 'refresh_interval',
-    displayLabel: 'Refresh Interval',
-    helpText: 'Refresh interval for the transfer list (ms)',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1783,8 +1417,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   customize_application_instance_name: {
     key: 'customize_application_instance_name',
-    displayLabel: 'Application Instance Name',
-    helpText: 'Custom application instance name',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'advanced',
@@ -1792,8 +1424,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   python_executable_path: {
     key: 'python_executable_path',
-    displayLabel: 'Python Executable Path',
-    helpText: 'Path to the Python executable for search plugins',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'advanced',
@@ -1801,8 +1431,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   torrent_content_removing_mode: {
     key: 'torrent_content_removing_mode',
-    displayLabel: 'Torrent Content Removing Mode',
-    helpText: 'How to remove torrent content files',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'advanced',
@@ -1810,8 +1438,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   memory_working_set_limit: {
     key: 'memory_working_set_limit',
-    displayLabel: 'Memory Working Set Limit',
-    helpText: 'Physical memory (RAM) usage limit in MiB',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1820,8 +1446,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   current_network_interface: {
     key: 'current_network_interface',
-    displayLabel: 'Network Interface',
-    helpText: 'Network interface to use',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'advanced',
@@ -1829,8 +1453,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   current_ip_address: {
     key: 'current_ip_address',
-    displayLabel: 'IP Address',
-    helpText: 'Optional IP address to bind to',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'advanced',
@@ -1838,8 +1460,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   disk_queue_size: {
     key: 'disk_queue_size',
-    displayLabel: 'Disk Queue Size',
-    helpText: 'Disk queue size in bytes',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1848,8 +1468,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   disk_io_type: {
     key: 'disk_io_type',
-    displayLabel: 'Disk IO Type',
-    helpText: 'Disk IO type',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1857,8 +1475,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   disk_io_read_mode: {
     key: 'disk_io_read_mode',
-    displayLabel: 'Disk IO Read Mode',
-    helpText: 'Disk IO read mode',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1866,8 +1482,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   disk_io_write_mode: {
     key: 'disk_io_write_mode',
-    displayLabel: 'Disk IO Write Mode',
-    helpText: 'Disk IO write mode',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1875,8 +1489,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   bdecode_depth_limit: {
     key: 'bdecode_depth_limit',
-    displayLabel: 'Bdecode Depth Limit',
-    helpText: 'Bdecode depth limit',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1885,8 +1497,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   bdecode_token_limit: {
     key: 'bdecode_token_limit',
-    displayLabel: 'Bdecode Token Limit',
-    helpText: 'Bdecode token limit',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1895,8 +1505,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   socket_send_buffer_size: {
     key: 'socket_send_buffer_size',
-    displayLabel: 'Socket Send Buffer Size',
-    helpText: 'Socket send buffer size in bytes',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1905,8 +1513,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   socket_receive_buffer_size: {
     key: 'socket_receive_buffer_size',
-    displayLabel: 'Socket Receive Buffer Size',
-    helpText: 'Socket receive buffer size in bytes',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1915,8 +1521,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   announce_to_all_trackers_in_tier: {
     key: 'announce_to_all_trackers_in_tier',
-    displayLabel: 'Announce to All Trackers in Tier',
-    helpText: 'Announce to all trackers in a tier',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'bittorrent',
@@ -1924,8 +1528,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   announce_port: {
     key: 'announce_port',
-    displayLabel: 'Announce Port',
-    helpText: 'Port to announce to trackers',
     valueType: 'number',
     validation: (v): v is number => typeof v === 'number',
     desktopSection: 'advanced',
@@ -1935,8 +1537,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   add_trackers_url: {
     key: 'add_trackers_url',
-    displayLabel: 'Additional Trackers URL',
-    helpText: 'URLs for additional trackers to add to new torrents',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'bittorrent',
@@ -1944,8 +1544,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   web_ui_reverse_proxy_enabled: {
     key: 'web_ui_reverse_proxy_enabled',
-    displayLabel: 'Reverse Proxy Enabled',
-    helpText: 'Enable reverse proxy support for WebUI',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'webui',
@@ -1953,8 +1551,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   web_ui_reverse_proxies_list: {
     key: 'web_ui_reverse_proxies_list',
-    displayLabel: 'Reverse Proxies List',
-    helpText: 'Trusted reverse proxy addresses',
     valueType: 'string',
     validation: (v): v is string => typeof v === 'string',
     desktopSection: 'webui',
@@ -1962,8 +1558,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   ignore_ssl_errors: {
     key: 'ignore_ssl_errors',
-    displayLabel: 'Ignore SSL Errors',
-    helpText: 'Ignore SSL errors for tracker connections',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'advanced',
@@ -1971,8 +1565,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   enable_port_forwarding_for_embedded_tracker: {
     key: 'enable_port_forwarding_for_embedded_tracker',
-    displayLabel: 'Port Forwarding for Embedded Tracker',
-    helpText: 'Enable port forwarding for the embedded tracker',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'advanced',
@@ -1980,8 +1572,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   use_subcategories: {
     key: 'use_subcategories',
-    displayLabel: 'Use Subcategories',
-    helpText: 'Enable subcategory support',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'downloads',
@@ -1989,8 +1579,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   use_category_paths_in_manual_mode: {
     key: 'use_category_paths_in_manual_mode',
-    displayLabel: 'Category Paths in Manual Mode',
-    helpText: 'Use category paths in manual mode',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'downloads',
@@ -1998,8 +1586,6 @@ export const REMOTE_SETTINGS_METADATA: {
   },
   delete_torrent_files_afterwards: {
     key: 'delete_torrent_files_afterwards',
-    displayLabel: 'Delete .torrent Files Afterwards',
-    helpText: 'Delete .torrent files after adding',
     valueType: 'boolean',
     validation: (v): v is boolean => typeof v === 'boolean',
     desktopSection: 'downloads',

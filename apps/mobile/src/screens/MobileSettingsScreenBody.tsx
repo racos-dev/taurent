@@ -4,6 +4,7 @@ import type { Preferences } from '@taurent/shared';
 import {
   type RemoteSettingsField,
   type RemoteSettingsSectionKey,
+  type RemoteSettingsTranslationKey,
   REMOTE_SETTINGS_SECTIONS,
   toUiNumberValue,
   toWireNumberValue,
@@ -27,6 +28,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { appBuildMetadata } from '../buildMetadata';
 import { Icon } from '../ui/Icon';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export type MobileRemoteSnapshots = Partial<Record<RemoteSettingsSectionKey, Record<string, unknown>>>;
 
@@ -45,9 +47,9 @@ type MobileRemoteSectionKey = Extract<MobileSettingsSectionKey, RemoteSettingsSe
 interface NumberEditorState {
   section: RemoteSettingsSectionKey;
   key: string;
-  title: string;
+  titleKey: RemoteSettingsTranslationKey;
   currentValue: number;
-  unit?: string;
+  unitKey?: RemoteSettingsTranslationKey;
   unitMode?: 'bytes' | 'bytes-per-second';
   unitDefault?: 'b' | 'kb' | 'mb' | 'gb';
   fromDisplay?: (value: number) => number;
@@ -106,16 +108,15 @@ interface MobileSettingsScreenBodyProps {
 
 const REMOTE_SECTIONS: Array<{
   key: MobileRemoteSectionKey;
-  label: string;
   icon: Parameters<typeof Icon>[0]['name'];
   summaryKey: string;
 }> = [
-  { key: 'downloads', label: 'Downloads', icon: 'download', summaryKey: 'downloads' },
-  { key: 'connection', label: 'Connection', icon: 'link', summaryKey: 'connection' },
-  { key: 'speed', label: 'Speed', icon: 'arrow-up-down', summaryKey: 'speed' },
-  { key: 'bittorrent', label: 'BitTorrent', icon: 'list', summaryKey: 'bittorrent' },
-  { key: 'webui', label: 'WebUI', icon: 'globe', summaryKey: 'webui' },
-  { key: 'advanced', label: 'Advanced', icon: 'settings', summaryKey: 'advanced' },
+  { key: 'downloads', icon: 'download', summaryKey: 'downloads' },
+  { key: 'connection', icon: 'link', summaryKey: 'connection' },
+  { key: 'speed', icon: 'arrow-up-down', summaryKey: 'speed' },
+  { key: 'bittorrent', icon: 'list', summaryKey: 'bittorrent' },
+  { key: 'webui', icon: 'globe', summaryKey: 'webui' },
+  { key: 'advanced', icon: 'settings', summaryKey: 'advanced' },
 ];
 
 export function MobileSettingsScreenBody({
@@ -148,11 +149,13 @@ export function MobileSettingsScreenBody({
   confirmDialog,
   onCloseConfirmDialog,
 }: MobileSettingsScreenBodyProps) {
+  const { t } = useTaurentTranslation('settings');
+  const { t: tCommon } = useTaurentTranslation('common');
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<MobileSettingsSectionKey | null>(null);
   const [numberEditor, setNumberEditor] = useState<NumberEditorState | null>(null);
 
-  const activeTitle = activeSection ? getSectionTitle(activeSection) : 'Settings';
+  const activeTitle = activeSection ? t(activeSection) : t('title');
 
   const closeSection = () => {
     setActiveSection(null);
@@ -214,7 +217,7 @@ export function MobileSettingsScreenBody({
       {isRemoteDirty ? (
         <MobileSaveBar
           isSaving={isSavingRemote}
-          error={remoteSaveError}
+          error={remoteSaveError ? t('remoteStatus.saveFailed') : null}
           onDiscard={onDiscardRemote}
           onSave={onSaveRemote}
         />
@@ -222,11 +225,13 @@ export function MobileSettingsScreenBody({
 
       {numberEditor ? (
         <NumberInputModal
-          title={numberEditor.title}
+          title={t(numberEditor.titleKey)}
           currentValue={numberEditor.currentValue}
-          unit={numberEditor.unit}
+          unit={numberEditor.unitKey ? t(numberEditor.unitKey) : undefined}
           unitMode={numberEditor.unitMode}
           unitDefault={numberEditor.unitDefault}
+          submitLabel={tCommon('actions.set')}
+          cancelLabel={tCommon('actions.cancel')}
           onSubmit={(value) => {
             const finalValue = !numberEditor.unitMode && numberEditor.fromDisplay
               ? numberEditor.fromDisplay(value)
@@ -273,6 +278,7 @@ function SettingsOverview({
   onOpenServerSwitcher: () => void;
   onOpenStatistics: () => void;
 }) {
+  const { t } = useTaurentTranslation('settings');
   return (
     <div className="space-y-5">
       <ServerSummary
@@ -282,17 +288,17 @@ function SettingsOverview({
         onOpenStatistics={onOpenStatistics}
       />
 
-      <SettingsList label="App">
+      <SettingsList label={t('appBehavior')}>
         <SettingsListButton
           icon="brush"
-          title="Appearance"
+          title={t('appearance')}
           summary={themeSummary}
           onClick={() => onOpenSection('appearance')}
         />
         <SettingsListButton
           icon="settings"
-          title="About"
-          summary="Version and app information"
+          title={t('about')}
+          summary={t('screen.aboutSummary')}
           onClick={() => onOpenSection('about')}
         />
       </SettingsList>
@@ -302,8 +308,8 @@ function SettingsOverview({
           <SettingsListButton
             key={section.key}
             icon={section.icon}
-            title={section.label}
-            summary={isConnected ? sectionSummaries[section.summaryKey] : 'Connect to edit'}
+            title={t(section.key)}
+            summary={isConnected ? sectionSummaries[section.summaryKey] : t('screen.connectToEdit')}
             dirty={(dirtyKeys[section.key]?.length ?? 0) > 0}
             disabled={!isConnected}
             onClick={() => onOpenSection(section.key)}
@@ -325,9 +331,11 @@ function ServerSummary({
   onOpenServerSwitcher: () => void;
   onOpenStatistics: () => void;
 }) {
+  const { t } = useTaurentTranslation('settings');
+  const { t: tCommon } = useTaurentTranslation('common');
   return (
     <section>
-      <h2 className="px-1 pb-2 text-xs font-semibold uppercase tracking-wide text-text-muted">Server</h2>
+      <h2 className="px-1 pb-2 text-xs font-semibold uppercase tracking-wide text-text-muted">{t('screen.server')}</h2>
       <div className="divide-y divide-border border-y border-border bg-surface">
         <div className="flex min-h-16 items-center gap-3 px-4 py-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-sm bg-primary/10 text-primary">
@@ -336,7 +344,7 @@ function ServerSummary({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <span className="truncate text-base font-medium text-text-primary">
-                {connection.isConnected ? connection.serverName || 'Current server' : 'No active connection'}
+                {connection.isConnected ? connection.serverName || t('screen.currentServer') : t('screen.noActiveConnection')}
               </span>
               <span
                 className={cn(
@@ -344,11 +352,11 @@ function ServerSummary({
                   connection.isConnected ? 'bg-success/10 text-success' : 'bg-surface-interactive text-text-secondary',
                 )}
               >
-                {connection.isConnected ? 'Connected' : 'Disconnected'}
+                {tCommon(connection.isConnected ? 'status.connected' : 'status.disconnected')}
               </span>
             </div>
             <p className="mt-1 truncate text-sm text-text-secondary">
-              {connection.isConnected ? connection.serverUrl : `${servers.length} saved ${servers.length === 1 ? 'server' : 'servers'}`}
+              {connection.isConnected ? connection.serverUrl : t('screen.savedServers', { count: servers.length })}
             </p>
           </div>
         </div>
@@ -358,7 +366,7 @@ function ServerSummary({
           onClick={onOpenServerSwitcher}
           className="flex min-h-12 w-full items-center justify-between px-4 py-3 text-left transition-colors enabled:active:bg-surface-interactive disabled:text-text-disabled disabled:cursor-not-allowed"
         >
-          <span className="text-sm font-medium text-text-primary disabled:text-text-disabled">Manage Servers</span>
+          <span className="text-sm font-medium text-text-primary disabled:text-text-disabled">{t('screen.manageServers')}</span>
           <Icon name="chevron-down" iconSize="md" className="shrink-0 -rotate-90 text-text-muted disabled:text-text-disabled" />
         </button>
 
@@ -368,7 +376,7 @@ function ServerSummary({
             onClick={onOpenStatistics}
             className="flex min-h-12 w-full items-center justify-between px-4 py-3 text-left transition-colors enabled:active:bg-surface-interactive disabled:text-text-disabled disabled:cursor-not-allowed"
           >
-            <span className="text-sm font-medium text-text-primary disabled:text-text-disabled">View Statistics</span>
+            <span className="text-sm font-medium text-text-primary disabled:text-text-disabled">{t('screen.viewStatistics')}</span>
             <Icon name="chevron-down" iconSize="md" className="shrink-0 -rotate-90 text-text-muted disabled:text-text-disabled" />
           </button>
         ) : null}
@@ -449,6 +457,7 @@ function SectionEditor(props: {
   onOpenStatistics: () => void;
 }) {
   const { section } = props;
+  const { t } = useTaurentTranslation('settings');
 
   if (section === 'appearance') {
     return (
@@ -470,22 +479,22 @@ function SectionEditor(props: {
   if (!props.connection.isConnected) {
     return (
       <StateCard
-        title="Not connected"
-        message="Connect to a server before editing qBittorrent settings."
-        action={<Button onClick={props.onOpenServerSwitcher}>Open Servers</Button>}
+        title={t('screen.notConnected')}
+        message={t('screen.connectBeforeEditing')}
+        action={<Button onClick={props.onOpenServerSwitcher}>{t('screen.openServers')}</Button>}
       />
     );
   }
 
   if (props.isLoading) {
-    return <StateCard title="Loading preferences" message="Pulling settings from qBittorrent." />;
+    return <StateCard title={t('screen.loadingPreferences')} message={t('screen.pullingPreferences')} />;
   }
 
   if (props.error || !props.preferences || !props.effectivePreferences) {
     return (
       <StateCard
-        title="Could not load preferences"
-        message={props.error ?? 'The server settings payload is unavailable.'}
+        title={t('screen.couldNotLoadPreferences')}
+        message={props.error ? t('remoteStatus.couldNotFetch') : t('screen.unavailablePayload')}
         action={<RetryButton onClick={props.onRetry} />}
       />
     );
@@ -525,6 +534,7 @@ function AppearanceEditor({
   onManualVariantChange: (variant: ThemeVariant) => void;
   onAccentChange: (accent: AccentPreference) => void;
 }) {
+  const { t } = useTaurentTranslation('settings');
   const themeOptions = useMemo(() => getThemeOptions(), []);
   const activePalette = themeConfig.mode === 'system' ? themeConfig.systemPalette : themeConfig.manualPalette;
   const isManualMode = themeConfig.mode === 'manual';
@@ -543,24 +553,24 @@ function AppearanceEditor({
 
   return (
     <div className="space-y-5">
-      <SettingsList label="Language">
+      <SettingsList label={t('language')}>
         <div className="p-3">
           <LanguageSettingsPanel />
         </div>
       </SettingsList>
 
-      <SettingsList label="Mode">
+      <SettingsList label={t('themeSettings.mode')}>
         <SegmentedRow
           options={[
-            { value: 'system', label: 'System' },
-            { value: 'manual', label: 'Manual' },
+            { value: 'system', label: t('themeSettings.system') },
+            { value: 'manual', label: t('themeSettings.manual') },
           ]}
           value={themeConfig.mode}
           onChange={(value) => onThemeModeChange(value as 'system' | 'manual')}
         />
       </SettingsList>
 
-      <SettingsList label="Palette">
+      <SettingsList label={t('themeSettings.palette')}>
         {themeOptions.map((option) => {
           const selected = option.palette === activePalette;
           const supportsVariant = isManualMode && !option.darkOnly;
@@ -584,8 +594,8 @@ function AppearanceEditor({
                   <span className="h-3 w-3 rounded-full bg-current" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-base font-medium text-text-primary">{option.label}</span>
-                  <span className="mt-1 block text-sm text-text-secondary">{option.description}</span>
+                  <span className="block truncate text-base font-medium text-text-primary">{t(option.labelKey)}</span>
+                  <span className="mt-1 block text-sm text-text-secondary">{t(option.descriptionKey)}</span>
                 </span>
               </button>
               {supportsVariant ? (
@@ -599,7 +609,7 @@ function AppearanceEditor({
                 />
               ) : option.darkOnly ? (
                 <span className="shrink-0 rounded-sm bg-surface-interactive px-2 py-1 text-xs font-medium text-text-secondary">
-                  Dark only
+                  {t('themeSettings.darkOnly')}
                 </span>
               ) : null}
             </div>
@@ -608,16 +618,19 @@ function AppearanceEditor({
       </SettingsList>
 
       {activePalette === 'midnight' ? (
-        <SettingsList label="Accent">
+        <SettingsList label={t('themeSettings.accent')}>
           <div className="space-y-2 px-4 py-3">
             <Input
-              label="Midnight accent"
+              label={t('themeSettings.midnightAccent')}
               value={themeConfig.accent ?? ''}
-              placeholder="#3b82f6"
+              placeholder={
+                // i18n-audit-ignore: hexadecimal color example is intentionally verbatim
+                '#3b82f6'
+              }
               onChange={(value) => onAccentChange(value.trim() ? (value as AccentPreference) : null)}
             />
             <Button variant="outline" size="sm" onClick={() => onAccentChange(null)}>
-              Reset Accent
+              {t('themeSettings.resetAccentButton')}
             </Button>
           </div>
         </SettingsList>
@@ -635,15 +648,16 @@ function PaletteVariantToggle({
   value: ThemeVariant;
   onChange: (value: ThemeVariant) => void;
 }) {
+  const { t } = useTaurentTranslation('settings');
   const options: Array<{ value: ThemeVariant; label: string }> = [
-    { value: 'light', label: 'Light' },
-    { value: 'dark', label: 'Dark' },
+    { value: 'light', label: t('themeSettings.light') },
+    { value: 'dark', label: t('themeSettings.dark') },
   ];
 
   return (
     <div
       role="group"
-      aria-label="Theme variant"
+      aria-label={t('themeSettings.variant')}
       className="grid shrink-0 grid-cols-2 rounded-sm border border-border bg-background p-1"
     >
       {options.map((option) => {
@@ -715,6 +729,7 @@ function RemoteSectionEditor({
   onOpenNumberEditor: (state: NumberEditorState) => void;
   onRevert?: (key: string) => void;
 }) {
+  const { t } = useTaurentTranslation('settings');
   const sectionDef = REMOTE_SETTINGS_SECTIONS[section];
   const groups = sectionDef.groups;
   const desktopFields = sectionDef.desktopFields;
@@ -743,7 +758,7 @@ function RemoteSectionEditor({
   return (
     <div className="space-y-5">
       {ungroupedFields.length > 0 && (
-        <SettingsList label={sectionDef.title}>
+        <SettingsList label={t(`remoteSettings.sections.${section}.title`)}>
           {ungroupedFields.map((field) => (
             <RemoteFieldRow
               key={field.key}
@@ -762,7 +777,10 @@ function RemoteSectionEditor({
         const groupFields = groupedFields.get(group.key) ?? [];
         if (groupFields.length === 0) return null;
         return (
-          <SettingsList key={group.key} label={group.title}>
+          <SettingsList
+            key={group.key}
+            label={t(`remoteSettings.sections.${section}.groups.${group.key}.title`)}
+          >
             {groupFields.map((field) => (
               <RemoteFieldRow
                 key={field.key}
@@ -782,18 +800,6 @@ function RemoteSectionEditor({
   );
 }
 
-function getFieldTitle(field: RemoteSettingsField): string {
-  if (field.label) {
-    return field.label;
-  }
-
-  if (field.kind === 'number' || field.kind === 'unlimitedNumber') {
-    return field.mobileEditor?.title ?? field.key;
-  }
-
-  return field.key;
-}
-
 function RemoteFieldRow({
   section,
   field,
@@ -811,13 +817,16 @@ function RemoteFieldRow({
   onOpenNumberEditor: (state: NumberEditorState) => void;
   onRevert?: (key: string) => void;
 }) {
-  const title = getFieldTitle(field);
+  const { t } = useTaurentTranslation('settings');
+  const title = t(field.labelKey);
+  const description = field.descriptionKey ? t(field.descriptionKey) : undefined;
+  const revertLabel = t('remoteSettings.common.revert');
 
   if (field.kind === 'boolean') {
     return (
       <SettingControlRow
         title={title}
-        description={field.description}
+        description={description}
         dirty={isDirty}
         control={
           <div className="flex items-center gap-2">
@@ -827,7 +836,7 @@ function RemoteFieldRow({
                 onClick={() => onRevert(field.key)}
                 className="text-xs font-medium text-text-muted enabled:hover:text-text-primary disabled:text-text-disabled disabled:cursor-not-allowed"
               >
-                Revert
+                {revertLabel}
               </button>
             ) : null}
             <ToggleSwitch
@@ -859,9 +868,9 @@ function RemoteFieldRow({
           onClick={() => onOpenNumberEditor({
             section,
             key: field.key,
-            title: editor.title,
+            titleKey: editor.titleKey,
             currentValue,
-            unit: editor.unit,
+            unitKey: editor.unitKey,
             unitMode: editor.unitMode,
             unitDefault: editor.unitDefault,
             fromDisplay: editor.fromDisplay,
@@ -869,7 +878,7 @@ function RemoteFieldRow({
           })}
           className="flex flex-1 items-center gap-3 text-left transition-colors enabled:active:bg-surface-interactive disabled:text-text-disabled disabled:cursor-not-allowed"
         >
-          <SettingText title={title} description={field.description} dirty={isDirty} />
+          <SettingText title={title} description={description} dirty={isDirty} />
           <span className="max-w-[40%] shrink-0 truncate text-sm font-medium text-text-secondary">
             {displayValue}
           </span>
@@ -880,7 +889,7 @@ function RemoteFieldRow({
             onClick={() => onRevert(field.key)}
             className="shrink-0 text-xs font-medium text-text-muted enabled:hover:text-text-primary disabled:text-text-disabled disabled:cursor-not-allowed"
           >
-            Revert
+            {revertLabel}
           </button>
         ) : null}
         <Icon name="chevron-down" iconSize="md" className="shrink-0 -rotate-90 text-text-muted" />
@@ -896,8 +905,12 @@ function RemoteFieldRow({
     const isEnabled = rawValue !== field.disabledValue;
     const currentValue = isEnabled ? rawValue : field.defaultEnabledValue;
     const displayValue = isEnabled
-      ? (editor.display ? editor.display(rawValue) : field.enabledLabel ? `${currentValue} ${field.enabledLabel}` : String(currentValue))
-      : field.disabledLabel;
+      ? (editor.display
+          ? editor.display(rawValue)
+          : field.enabledLabelKey
+            ? `${currentValue} ${t(field.enabledLabelKey)}`
+            : String(currentValue))
+      : t(field.disabledLabelKey);
 
     return (
       <div className="flex min-h-16 items-center gap-3 px-4 py-3">
@@ -913,13 +926,13 @@ function RemoteFieldRow({
           onClick={() => onOpenNumberEditor({
             section,
             key: field.key,
-            title: editor.title,
+            titleKey: editor.titleKey,
             currentValue: editor.unitMode
               ? currentValue
               : editor.toDisplay
                 ? editor.toDisplay(currentValue)
                 : currentValue,
-            unit: editor.unit,
+            unitKey: editor.unitKey,
             unitMode: editor.unitMode,
             unitDefault: editor.unitDefault,
             fromDisplay: editor.fromDisplay,
@@ -927,7 +940,7 @@ function RemoteFieldRow({
           })}
           className="flex min-w-0 flex-1 items-center gap-3 text-left disabled:text-text-disabled disabled:cursor-not-allowed"
         >
-          <SettingText title={title} description={field.description} dirty={isDirty} />
+          <SettingText title={title} description={description} dirty={isDirty} />
           <span className="max-w-[40%] shrink-0 truncate text-sm font-medium text-text-secondary">
             {displayValue}
           </span>
@@ -938,7 +951,7 @@ function RemoteFieldRow({
             onClick={() => onRevert(field.key)}
             className="shrink-0 text-xs font-medium text-text-muted enabled:hover:text-text-primary disabled:text-text-disabled disabled:cursor-not-allowed"
           >
-            Revert
+            {revertLabel}
           </button>
         ) : null}
         <Icon name="chevron-down" iconSize="md" className="shrink-0 -rotate-90 text-text-muted" />
@@ -950,20 +963,23 @@ function RemoteFieldRow({
     return (
       <div className="space-y-2 px-4 py-3">
         <div className="flex items-start justify-between gap-2">
-          <SettingText title={title} description={field.description} dirty={isDirty} />
+          <SettingText title={title} description={description} dirty={isDirty} />
           {isDirty && onRevert ? (
             <button
               type="button"
               onClick={() => onRevert(field.key)}
               className="shrink-0 pt-1 text-xs font-medium text-text-muted enabled:hover:text-text-primary disabled:text-text-disabled disabled:cursor-not-allowed"
             >
-              Revert
+              {revertLabel}
             </button>
           ) : null}
         </div>
         <Select
           value={value as string | number | undefined}
-          options={field.selectOptions}
+          options={field.selectOptions.map((option) => ({
+            value: option.value,
+            label: t(option.labelKey),
+          }))}
           onChange={(nextValue) => onFieldChange(field.key, nextValue)}
           className="w-full"
         />
@@ -975,14 +991,14 @@ function RemoteFieldRow({
     return (
       <div className="space-y-2 px-4 py-3">
         <div className="flex items-start justify-between gap-2">
-          <SettingText title={title} description={field.description} dirty={isDirty} />
+          <SettingText title={title} description={description} dirty={isDirty} />
           {isDirty && onRevert ? (
             <button
               type="button"
               onClick={() => onRevert(field.key)}
               className="shrink-0 pt-1 text-xs font-medium text-text-muted enabled:hover:text-text-primary disabled:text-text-disabled disabled:cursor-not-allowed"
             >
-              Revert
+              {revertLabel}
             </button>
           ) : null}
         </div>
@@ -999,14 +1015,14 @@ function RemoteFieldRow({
     return (
       <div className="space-y-2 px-4 py-3">
         <div className="flex items-start justify-between gap-2">
-          <SettingText title={title} description={field.description} dirty={isDirty} />
+          <SettingText title={title} description={description} dirty={isDirty} />
           {isDirty && onRevert ? (
             <button
               type="button"
               onClick={() => onRevert(field.key)}
               className="shrink-0 pt-1 text-xs font-medium text-text-muted enabled:hover:text-text-primary disabled:text-text-disabled disabled:cursor-not-allowed"
             >
-              Revert
+              {revertLabel}
             </button>
           ) : null}
         </div>
@@ -1059,15 +1075,16 @@ function SettingText({ title, description, dirty }: { title: string; description
 }
 
 function AboutEditor() {
+  const { t } = useTaurentTranslation('settings');
   return (
-    <SettingsList label="About">
+    <SettingsList label={t('about')}>
       <div className="px-4 py-4">
         <p className="text-base font-medium text-text-primary">Taurent</p>
-        <p className="mt-1 text-sm text-text-secondary">Version {appBuildMetadata.version}</p>
+        <p className="mt-1 text-sm text-text-secondary">{t('screen.version', { version: appBuildMetadata.version })}</p>
         {appBuildMetadata.diagnostics.length > 0 ? (
           <p className="mt-1 text-sm text-text-muted">{appBuildMetadata.diagnostics.join(' · ')}</p>
         ) : null}
-        <p className="mt-1 text-sm text-text-secondary">A mobile-first Tauri client for qBittorrent.</p>
+        <p className="mt-1 text-sm text-text-secondary">{t('screen.mobileDescription')}</p>
       </div>
     </SettingsList>
   );
@@ -1084,6 +1101,8 @@ function MobileSaveBar({
   onDiscard: () => void;
   onSave: () => void;
 }) {
+  const { t } = useTaurentTranslation('settings');
+  const { t: tCommon } = useTaurentTranslation('common');
   return (
     <div
       className="fixed inset-x-0 z-40 border-t border-border bg-surface-elevated px-2 py-3 shadow-sm"
@@ -1092,24 +1111,18 @@ function MobileSaveBar({
       <div className="mx-auto w-full max-w-lg">
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-primary" />
-          <span className="text-sm font-medium text-text-primary">Unsaved qBittorrent changes</span>
+          <span className="text-sm font-medium text-text-primary">{t('screen.unsavedRemoteChanges')}</span>
         </div>
         {error ? <p className="mt-2 text-sm text-error">{error}</p> : null}
         <div className="mt-3 grid grid-cols-2 gap-2">
           <Button variant="secondary" size="md" disabled={isSaving} onClick={onDiscard}>
-            Discard
+            {tCommon('actions.discard')}
           </Button>
           <Button variant="primary" size="md" loading={isSaving} onClick={onSave}>
-            Save All
+            {t('screen.saveAll')}
           </Button>
         </div>
       </div>
     </div>
   );
-}
-
-function getSectionTitle(section: MobileSettingsSectionKey) {
-  if (section === 'webui') return 'WebUI';
-  if (section === 'bittorrent') return 'BitTorrent';
-  return section.charAt(0).toUpperCase() + section.slice(1);
 }

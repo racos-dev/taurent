@@ -121,7 +121,7 @@ vi.mock('@/stores', () => {
   };
   const COLUMNS = columnOrder.map((id) => ({
     id,
-    label: id,
+    labelKey: `columns.${id}`,
     field: 'name' as keyof import('@taurent/shared/types/qbittorrent').Torrent,
     formatter: () => null as unknown,
     defaultVisibility: true,

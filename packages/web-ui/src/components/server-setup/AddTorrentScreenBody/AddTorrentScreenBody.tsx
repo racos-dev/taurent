@@ -8,6 +8,7 @@ import { Input } from '../../primitives/Input';
 import { Select } from '../../primitives/Select';
 import { ToggleSwitch } from '../../primitives/ToggleSwitch';
 import type { AddTorrentScreenBodyProps } from './types';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
   (
@@ -63,6 +64,8 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
       onCancel,
     },
   ) => {
+    const { t } = useTaurentTranslation('torrents');
+    const { t: tCommon } = useTaurentTranslation('common');
     const isMobile = variant === 'mobile';
     const [showTagsDropdown, setShowTagsDropdown] = useState(false);
     // Read the active control density so the shared button/icon size maps
@@ -98,7 +101,7 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
                 }`}
               >
                 <Magnet />
-                Magnet Link
+                {t('addForm.magnetLink')}
               </button>
               <button
                 onClick={() => onModeChange('file')}
@@ -109,7 +112,7 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
                 }`}
               >
                 <File />
-                Torrent File
+                {t('addForm.torrentFile')}
               </button>
             </div>
           </section>
@@ -120,7 +123,7 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
               <div className="flex h-6 w-6 items-center justify-center rounded-sm text-primary">
                 {mode === 'file' ? <File /> : <Magnet />}
               </div>
-              <h2 className="text-xs font-medium">Torrent Source</h2>
+              <h2 className="text-xs font-medium">{t('addForm.source')}</h2>
             </div>
 
             {mode === 'magnet' ? (
@@ -128,7 +131,10 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
                 <textarea
                   value={magnetUri}
                   onChange={(e) => onMagnetUriChange(e.target.value)}
-                  placeholder="magnet:?xt=urn:btih:..."
+                  placeholder={
+                    // i18n-audit-ignore: magnet URI syntax example is intentionally verbatim
+                    'magnet:?xt=urn:btih:...'
+                  }
                   className="w-full rounded-sm border border-border bg-surface-interactive px-2 py-2 text-xs text-text-primary placeholder:text-text-muted resize-none outline-none focus-visible:border-primary focus-visible:outline-none transition-colors"
                   rows={4}
                 />
@@ -143,9 +149,9 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
                     <div className="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-sm bg-primary/10 text-primary">
                       <Upload className="h-6 w-6" />
                     </div>
-                    <div className="text-xs font-medium text-text-primary">Select Torrent Files</div>
+                    <div className="text-xs font-medium text-text-primary">{t('addForm.selectFiles')}</div>
                     <div className="mt-1 text-xs text-text-secondary">
-                      Tap to browse your device
+                      {t('addForm.browseDevice')}
                     </div>
                   </button>
                 ) : (
@@ -174,7 +180,7 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
                       className={`flex w-full items-center justify-center gap-2 rounded-sm border border-dashed border-border px-3 font-medium text-primary transition-colors hover:border-primary/50 hover:bg-surface-interactive ${smButtonClasses}`}
                     >
                       <Upload />
-                      Add More Files
+                      {t('addForm.addMoreFiles')}
                     </button>
                   </div>
                 )}
@@ -188,40 +194,45 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
               <div className="flex h-6 w-6 items-center justify-center rounded-sm text-primary">
                 <Folder />
               </div>
-              <h2 className="text-xs font-medium">Destination</h2>
+              <h2 className="text-xs font-medium">{t('addForm.destination')}</h2>
             </div>
 
             <div className="space-y-3">
               <div>
-                <label className="mb-1 block text-xs font-medium text-text-secondary">Save Path</label>
+                <label className="mb-1 block text-xs font-medium text-text-secondary">{t('addForm.savePath')}</label>
                 <Input
                   type="text"
                   value={savePath}
                   onChange={onSavePathChange}
-                  placeholder="/downloads"
+                  placeholder={
+                    // i18n-audit-ignore: filesystem path example is intentionally verbatim
+                    '/downloads'
+                  }
                 />
               </div>
 
               <Select
                 dataTestid="category-select"
-                label="Category"
+                label={t('addForm.category')}
                 value={category}
                 onChange={(value) => onCategoryChange(value as string)}
                 options={[
-                  { value: '', label: 'None' },
+                  { value: '', label: tCommon('values.none') },
                   ...categories.map(c => ({ value: c, label: c })),
                 ]}
               />
               {tags.length > 0 && (
                 <div className="relative">
-                  <label className="mb-1 block text-xs font-medium text-text-secondary">Tags</label>
+                  <label className="mb-1 block text-xs font-medium text-text-secondary">{t('addForm.tags')}</label>
                   <button
                     type="button"
                     onClick={() => setShowTagsDropdown((current) => !current)}
                     className={`flex w-full items-center justify-between rounded-sm border border-border bg-surface-interactive px-3 text-text-primary transition-colors hover:border-primary/50 ${smButtonClasses}`}
                   >
                     <span>
-                      {selectedTags.length > 0 ? `${selectedTags.length} selected` : 'None'}
+                      {selectedTags.length > 0
+                        ? t('addForm.tagsSelected', { count: selectedTags.length })
+                        : tCommon('values.none')}
                     </span>
                     <ChevronDown className="h-4 w-4 text-text-muted" />
                   </button>
@@ -279,27 +290,27 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
               <div className="flex h-6 w-6 items-center justify-center rounded-sm text-primary">
                 <Settings />
               </div>
-              <h2 className="text-xs font-medium">Advanced Options</h2>
+              <h2 className="text-xs font-medium">{t('addForm.advancedOptions')}</h2>
             </div>
 
             <div className="space-y-2">
               <ToggleRow
-                label="Sequential Download"
+                label={t('addForm.sequentialDownload')}
                 checked={sequentialDownload}
                 onChange={onSequentialDownloadChange}
               />
               <ToggleRow
-                label="Skip Hash Checking"
+                label={t('addForm.skipHashChecking')}
                 checked={skipChecking}
                 onChange={onSkipCheckingChange}
               />
               <ToggleRow
-                label="Start Paused"
+                label={t('addForm.startPaused')}
                 checked={paused}
                 onChange={onPausedChange}
               />
               <ToggleRow
-                label="Create Root Folder"
+                label={t('addForm.createRootFolder')}
                 checked={rootFolder}
                 onChange={onRootFolderChange}
               />
@@ -310,10 +321,10 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
           <DialogActions
             actions={[
               ...(onCancel
-                ? [{ label: 'Cancel', onClick: onCancel, disabled: isSubmitting }]
+                ? [{ label: tCommon('actions.cancel'), onClick: onCancel, disabled: isSubmitting }]
                 : []),
               {
-                label: isSubmitting ? 'Adding...' : 'Add Torrent',
+                label: isSubmitting ? t('addForm.adding') : t('add'),
                 onClick: onSubmit,
                 variant: 'primary',
                 disabled: isSubmitting,
@@ -330,7 +341,7 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
       <div className="flex flex-col h-full">
         {/* Header */}
         <div className="shrink-0 border-b border-border px-4 py-4">
-          <h1 className="text-sm font-semibold text-text-primary">Add Torrent</h1>
+          <h1 className="text-sm font-semibold text-text-primary">{t('add')}</h1>
         </div>
 
         {/* Scrollable body */}
@@ -347,14 +358,14 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
             <section>
               <div className="mb-3 flex items-center gap-2">
                 <Magnet size={ICON_SIZES.md} className="text-text-secondary" />
-                <span className="text-sm font-semibold text-text-secondary">Torrent Source</span>
+                <span className="text-sm font-semibold text-text-secondary">{t('addForm.source')}</span>
               </div>
 
               <div className="space-y-4 rounded-sm border border-border bg-surface p-2">
                 {/* Magnet link — always visible */}
                 <div>
                   <label className="mb-1 block text-xs font-medium text-text-secondary">
-                    Magnet Link
+                    {t('addForm.magnetLink')}
                   </label>
                   <textarea
                     value={magnetUri}
@@ -365,7 +376,10 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
                     onFocus={() => {
                       if (_onLastUsedSourceChange) _onLastUsedSourceChange('magnet');
                     }}
-                    placeholder="magnet:?xt=urn:btih:..."
+                    placeholder={
+                      // i18n-audit-ignore: magnet URI syntax example is intentionally verbatim
+                      'magnet:?xt=urn:btih:...'
+                    }
                     rows={1}
                     className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus-visible:border-primary focus-visible:outline-none disabled:text-text-disabled"
                    />
@@ -374,7 +388,7 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
                 {/* Divider */}
                 <div className="flex items-center gap-2">
                   <div className="flex-1 border-t border-border" />
-                  <span className="text-xs text-text-muted">or</span>
+                  <span className="text-xs text-text-muted">{t('addForm.or')}</span>
                   <div className="flex-1 border-t border-border" />
                 </div>
 
@@ -389,10 +403,10 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
                 >
                   <Upload size={ICON_SIZES.md} />
                   {fileItems.length === 0 ? (
-                    <span className="text-sm font-medium">Click to browse for .torrent files</span>
+                    <span className="text-sm font-medium">{t('addForm.browseTorrentFiles')}</span>
                   ) : (
                     <span className="text-sm font-medium text-text-primary">
-                      {fileItems.length} file{fileItems.length !== 1 ? 's' : ''} selected — click to add more
+                      {t('addForm.filesSelected', { count: fileItems.length })}
                     </span>
                   )}
                 </button>
@@ -427,21 +441,21 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
             <section>
               <div className="mb-3 flex items-center gap-2">
                 <Folder size={ICON_SIZES.md} className="text-text-secondary" />
-                <span className="text-sm font-semibold text-text-secondary">Options</span>
+                <span className="text-sm font-semibold text-text-secondary">{t('addForm.options')}</span>
               </div>
 
               <div className="rounded-sm border border-border bg-surface p-2 space-y-4">
                 {/* Torrent Management Mode */}
                 <div>
                   <label className="mb-1 block text-xs font-medium text-text-secondary">
-                    Torrent Management Mode
+                    {t('addForm.managementMode')}
                   </label>
                   <Select
                     value={autoTMM ? 'auto' : 'manual'}
                     onChange={(value) => onAutoTMMChange(value === 'auto')}
                     options={[
-                      { value: 'auto', label: 'Automatic' },
-                      { value: 'manual', label: 'Manual' },
+                      { value: 'auto', label: t('addForm.automatic') },
+                      { value: 'manual', label: t('addForm.manual') },
                     ]}
                   />
                 </div>
@@ -451,40 +465,40 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
                   {/* Save Path */}
                   <div className="col-span-2">
                     <label className="mb-1 block text-xs font-medium text-text-secondary">
-                      Save files to location
+                      {t('addForm.saveLocation')}
                     </label>
                     <Input
                       type="text"
                       value={savePath}
                       onChange={onSavePathChange}
-                      placeholder="Default download path"
+                      placeholder={t('addForm.defaultDownloadPath')}
                     />
                   </div>
 
                   {/* Rename */}
                   <div className="col-span-2">
                     <label className="mb-1 block text-xs font-medium text-text-secondary">
-                      Rename torrent
+                      {t('addForm.rename')}
                     </label>
                     <Input
                       type="text"
                       value={rename}
                       onChange={onRenameChange}
-                      placeholder="Optional"
+                      placeholder={t('addForm.optional')}
                     />
                   </div>
 
                   {/* Category */}
                   <div>
                     <label className="mb-1 block text-xs font-medium text-text-secondary">
-                      Category
+                      {t('addForm.category')}
                     </label>
                     <Select
                       dataTestid="category-select"
                       value={category}
                       onChange={(value) => onCategoryChange(value as string)}
                       options={[
-                        { value: '', label: 'None' },
+                        { value: '', label: tCommon('values.none') },
                         ...categories.map(c => ({ value: c, label: c })),
                       ]}
                     />
@@ -493,15 +507,15 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
                   {/* Stop Condition */}
                   <div>
                     <label className="mb-1 block text-xs font-medium text-text-secondary">
-                      Stop Condition
+                      {t('addForm.stopCondition')}
                     </label>
                     <Select
                       value={stopCondition}
                       onChange={(value) => onStopConditionChange(value as 'none' | 'metadata' | 'files')}
                       options={[
-                        { value: 'none', label: 'None' },
-                        ...(supportsMetadataApi ? [{ value: 'metadata', label: 'Metadata received' }] : []),
-                        { value: 'files', label: 'All files downloaded' },
+                        { value: 'none', label: tCommon('values.none') },
+                        ...(supportsMetadataApi ? [{ value: 'metadata', label: t('addForm.metadataReceived') }] : []),
+                        { value: 'files', label: t('addForm.allFilesDownloaded') },
                       ]}
                     />
                   </div>
@@ -509,15 +523,15 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
                   {/* Content Layout */}
                   <div>
                     <label className="mb-1 block text-xs font-medium text-text-secondary">
-                      Content Layout
+                      {t('addForm.contentLayout')}
                     </label>
                     <Select
                       value={contentLayout}
                       onChange={(value) => onContentLayoutChange(value as 'Original' | 'Subfolder' | 'NoSubfolder')}
                       options={[
-                        { value: 'Original', label: 'Original' },
-                        { value: 'Subfolder', label: 'Subfolder' },
-                        { value: 'NoSubfolder', label: 'No Subfolder' },
+                        { value: 'Original', label: t('addForm.original') },
+                        { value: 'Subfolder', label: t('addForm.subfolder') },
+                        { value: 'NoSubfolder', label: t('addForm.noSubfolder') },
                       ]}
                     />
                   </div>
@@ -525,7 +539,7 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
                   {/* Tags */}
                   <div className="col-span-2">
                     <label className="mb-1 block text-xs font-medium text-text-secondary">
-                      Tags
+                      {t('addForm.tags')}
                     </label>
                     <div className="rounded-sm border border-border bg-background px-2 py-1 flex flex-wrap items-center gap-1">
                       {selectedTags.map((tag) => (
@@ -541,7 +555,7 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
                       ))}
                       <input
                         type="text"
-                        placeholder={selectedTags.length === 0 ? 'tag1, tag2, ...' : ''}
+                        placeholder={selectedTags.length === 0 ? t('addForm.tagsPlaceholder') : ''}
                         className="flex-1 min-w-[120px] bg-transparent outline-none text-sm text-text-primary placeholder:text-text-muted"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' || e.key === ',') {
@@ -565,46 +579,46 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
                       checked={!paused}
                       onChange={(checked) => onPausedChange(!checked)}
                     />
-                    <span className="text-sm text-text-primary">Start torrent</span>
+                    <span className="text-sm text-text-primary">{t('addForm.startTorrent')}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <Checkbox
                       checked={addToTop}
                       onChange={onAddToTopChange}
                     />
-                    <span className="text-sm text-text-primary">Add to top of queue</span>
+                    <span className="text-sm text-text-primary">{t('addForm.addToTop')}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <Checkbox
                       checked={skipChecking}
                       onChange={onSkipCheckingChange}
                     />
-                    <span className="text-sm text-text-primary">Skip hash check</span>
+                    <span className="text-sm text-text-primary">{t('addForm.skipHashCheck')}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <Checkbox
                       checked={sequentialDownload}
                       onChange={onSequentialDownloadChange}
                     />
-                    <span className="text-sm text-text-primary">Download in sequential order</span>
+                    <span className="text-sm text-text-primary">{t('addForm.sequentialOrder')}</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <Checkbox
                       checked={firstLastPiecePrio}
                       onChange={onFirstLastPiecePrioChange}
                     />
-                    <span className="text-sm text-text-primary">Download first and last pieces first</span>
+                    <span className="text-sm text-text-primary">{t('addForm.firstLastPieces')}</span>
                   </label>
                 </div>
 
                 {/* Rate Limits */}
                 <div className="pt-4 border-t border-border">
-                  <span className="mb-3 block text-xs font-medium text-text-secondary">Rate Limits</span>
+                  <span className="mb-3 block text-xs font-medium text-text-secondary">{t('addForm.rateLimits')}</span>
                   <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                     {/* DL Limit */}
                     <div>
                       <label className="mb-1 block text-xs font-medium text-text-secondary">
-                        Limit download rate
+                        {t('addForm.limitDownloadRate')}
                       </label>
                       <div className="flex items-center gap-2">
                         <Checkbox
@@ -620,7 +634,7 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
                               onDlLimitChange(value);
                             }}
                             disabled={dlLimit === null}
-                            placeholder="0 = unlimited"
+                            placeholder={t('addForm.zeroUnlimited')}
                             className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus-visible:border-primary focus-visible:outline-none disabled:text-text-disabled"
                           />
                         </div>
@@ -630,7 +644,7 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
                     {/* UL Limit */}
                     <div>
                       <label className="mb-1 block text-xs font-medium text-text-secondary">
-                        Limit upload rate
+                        {t('addForm.limitUploadRate')}
                       </label>
                       <div className="flex items-center gap-2">
                         <Checkbox
@@ -646,7 +660,7 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
                               onUpLimitChange(value);
                             }}
                             disabled={upLimit === null}
-                            placeholder="0 = unlimited"
+                            placeholder={t('addForm.zeroUnlimited')}
                             className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus-visible:border-primary focus-visible:outline-none disabled:text-text-disabled"
                           />
                         </div>
@@ -663,10 +677,10 @@ export const AddTorrentScreenBody = React.memo<AddTorrentScreenBodyProps>(
         <DialogActions
           actions={[
             ...(onCancel
-              ? [{ label: 'Cancel', onClick: onCancel, disabled: isSubmitting }]
+              ? [{ label: tCommon('actions.cancel'), onClick: onCancel, disabled: isSubmitting }]
               : []),
             {
-              label: isSubmitting ? 'Adding...' : 'Add Torrent',
+              label: isSubmitting ? t('addForm.adding') : t('add'),
               onClick: onSubmit,
               variant: 'primary',
               disabled: isSubmitting,

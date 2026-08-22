@@ -11,6 +11,7 @@ import { Input } from '../../components/primitives/Input';
 import { Button } from '../../components/primitives/Button';
 import { RetryButton } from '../../components/shared/RetryButton';
 import { ToggleSwitch } from '../../components/primitives/ToggleSwitch';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -102,8 +103,10 @@ interface RSSItemRowProps {
   isRemoving: boolean;
 }
 
-const RSSItemRow = React.memo<RSSItemRowProps>(({ item, onEditFeedUrl, onRemoveItem, isEditing, isRemoving }) => (
-  <div className="flex items-start gap-3 rounded-md border border-border bg-surface px-4 py-3">
+const RSSItemRow = React.memo<RSSItemRowProps>(({ item, onEditFeedUrl, onRemoveItem, isEditing, isRemoving }) => {
+  const { t } = useTaurentTranslation('rss');
+
+  return <div className="flex items-start gap-3 rounded-md border border-border bg-surface px-4 py-3">
       <div className="mt-1">
         <Icon name={item.isFolder ? 'folder' : 'rss'} className="h-4 w-4 text-text-secondary" />
       </div>
@@ -112,7 +115,7 @@ const RSSItemRow = React.memo<RSSItemRowProps>(({ item, onEditFeedUrl, onRemoveI
           <span title={item.name} className="text-sm font-medium text-text-primary truncate">{item.name}</span>
           {item.isFolder && (
             <span className="shrink-0 rounded-sm bg-surface-interactive px-2 py-1 text-xs text-text-muted">
-              Folder
+              {t('folder')}
             </span>
           )}
       </div>
@@ -132,7 +135,7 @@ const RSSItemRow = React.memo<RSSItemRowProps>(({ item, onEditFeedUrl, onRemoveI
           onClick={() => onEditFeedUrl(item)}
           disabled={isEditing || isRemoving}
           className="p-2 hover:bg-surface-interactive rounded-sm transition-colors disabled:text-text-disabled"
-          aria-label="Edit feed URL"
+          aria-label={t('editFeedUrl')}
         >
           <Edit2 className="h-4 w-4 text-text-muted" />
         </button>
@@ -140,14 +143,14 @@ const RSSItemRow = React.memo<RSSItemRowProps>(({ item, onEditFeedUrl, onRemoveI
           onClick={() => onRemoveItem(item)}
           disabled={isEditing || isRemoving}
           className="p-2 hover:bg-error/10 rounded-sm transition-colors disabled:text-text-disabled"
-          aria-label="Remove feed"
+          aria-label={t('removeFeed')}
         >
           <Trash2 className="h-4 w-4 text-error" />
         </button>
       </div>
     )}
-  </div>
-));
+  </div>;
+});
 
 RSSItemRow.displayName = 'RSSItemRow';
 
@@ -159,8 +162,10 @@ interface RSSRuleRowProps {
   isRemoving: boolean;
 }
 
-const RSSRuleRow = React.memo<RSSRuleRowProps>(({ rule, onEdit, onRemove, isSetting, isRemoving }) => (
-  <div className="rounded-md border border-border bg-surface px-4 py-3">
+const RSSRuleRow = React.memo<RSSRuleRowProps>(({ rule, onEdit, onRemove, isSetting, isRemoving }) => {
+  const { t } = useTaurentTranslation('rss');
+
+  return <div className="rounded-md border border-border bg-surface px-4 py-3">
     <div className="flex items-start justify-between gap-3">
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
@@ -173,31 +178,31 @@ const RSSRuleRow = React.memo<RSSRuleRowProps>(({ rule, onEdit, onRemove, isSett
                 : 'bg-surface-interactive text-text-muted'
             )}
           >
-            {rule.enabled ? 'Enabled' : 'Disabled'}
+            {rule.enabled ? t('enabled') : t('disabled')}
           </span>
         </div>
 
         <div className="mt-2 space-y-1">
           {rule.mustContain && (
-            <InfoRow label="Contains" value={rule.mustContain} />
+            <InfoRow label={t('contains')} value={rule.mustContain} />
           )}
           {rule.mustNotContain && (
-            <InfoRow label="Excludes" value={rule.mustNotContain} />
+            <InfoRow label={t('excludes')} value={rule.mustNotContain} />
           )}
           {rule.episodeFilter && (
-            <InfoRow label="Episode" value={rule.episodeFilter} />
+            <InfoRow label={t('episode')} value={rule.episodeFilter} />
           )}
           {rule.affectedFeeds.length > 0 && (
-            <InfoRow label="Feeds" value={rule.affectedFeeds.join(', ')} />
+            <InfoRow label={t('feeds')} value={rule.affectedFeeds.join(', ')} />
           )}
           {rule.assignedCategory && (
-            <InfoRow label="Category" value={rule.assignedCategory} />
+            <InfoRow label={t('category')} value={rule.assignedCategory} />
           )}
           {rule.savePath && (
-            <InfoRow label="Save path" value={rule.savePath} />
+            <InfoRow label={t('savePath')} value={rule.savePath} />
           )}
           {rule.lastMatch && (
-            <InfoRow label="Last match" value={rule.lastMatch} />
+            <InfoRow label={t('lastMatch')} value={rule.lastMatch} />
           )}
         </div>
       </div>
@@ -206,7 +211,7 @@ const RSSRuleRow = React.memo<RSSRuleRowProps>(({ rule, onEdit, onRemove, isSett
           onClick={() => onEdit(rule)}
           disabled={isSetting || isRemoving}
           className="p-2 hover:bg-surface-interactive rounded-sm transition-colors disabled:text-text-disabled"
-          aria-label="Edit rule"
+          aria-label={t('editRule')}
         >
           <Edit2 className="h-4 w-4 text-text-muted" />
         </button>
@@ -214,14 +219,14 @@ const RSSRuleRow = React.memo<RSSRuleRowProps>(({ rule, onEdit, onRemove, isSett
           onClick={() => onRemove(rule)}
           disabled={isSetting || isRemoving}
           className="p-2 hover:bg-error/10 rounded-sm transition-colors disabled:text-text-disabled"
-          aria-label="Remove rule"
+          aria-label={t('removeRule')}
         >
           <Trash2 className="h-4 w-4 text-error" />
         </button>
       </div>
     </div>
-  </div>
-));
+  </div>;
+});
 
 RSSRuleRow.displayName = 'RSSRuleRow';
 
@@ -245,6 +250,7 @@ interface FeedDialogProps {
 }
 
 const FeedDialog = React.memo<FeedDialogProps>(({ isOpen, state, isSubmitting, onClose, onSubmit }) => {
+  const { t } = useTaurentTranslation('rss');
   const [path, setPath] = useState(state.path);
   const [url, setUrl] = useState(state.url);
 
@@ -267,19 +273,19 @@ const FeedDialog = React.memo<FeedDialogProps>(({ isOpen, state, isSubmitting, o
     <Dialog
       isOpen={isOpen}
       onClose={onClose}
-      title={state.mode === 'add' ? 'Add RSS Feed' : 'Edit Feed URL'}
-      description={state.mode === 'add' ? 'Enter the URL of the RSS feed to add.' : `Editing feed: ${state.item?.name}`}
+      title={state.mode === 'add' ? t('addFeed') : t('editFeed')}
+      description={state.mode === 'add' ? t('addFeedDescription') : t('editFeedDescription', { name: state.item?.name })}
       maxWidth="sm"
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={isSubmitting}>
-            Cancel
+            {t('common:actions.cancel')}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={isSubmitting || !url.trim()}
           >
-            {isSubmitting ? 'Saving...' : state.mode === 'add' ? 'Add Feed' : 'Save'}
+            {isSubmitting ? t('saving') : state.mode === 'add' ? t('addFeed') : t('save')}
           </Button>
         </>
       }
@@ -288,27 +294,27 @@ const FeedDialog = React.memo<FeedDialogProps>(({ isOpen, state, isSubmitting, o
         {state.mode === 'add' && (
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-2">
-              Folder path (optional)
+              {t('folderPath')}
             </label>
             <Input
               value={path}
               onChange={setPath}
-              placeholder="Leave empty for root"
+              placeholder={t('folderPathPlaceholder')}
               className="w-full"
             />
             <p className="mt-1 text-xs text-text-muted">
-              Use &quot;Folder\Subfolder&quot; to add feeds inside folders. Slashes are normalized to backslashes.
+              {t('folderPathHint')}
             </p>
           </div>
         )}
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-2">
-            Feed URL <span className="text-error">*</span>
+            {t('feedUrl')} <span className="text-error">*</span>
           </label>
           <Input
             value={url}
             onChange={setUrl}
-            placeholder="https://example.com/feed.xml"
+            placeholder={t('feedUrlExample')}
             className="w-full"
             autoFocus
           />
@@ -343,6 +349,7 @@ const RuleEditor = React.memo<RuleEditorProps>(({
   onRename,
   isRenaming,
 }) => {
+  const { t } = useTaurentTranslation('rss');
   const [ruleName, setRuleName] = useState(initialRule?.name ?? '');
   const [newRuleName, setNewRuleName] = useState(initialRule?.name ?? '');
   const [enabled, setEnabled] = useState(initialRule?.enabled ?? true);
@@ -423,18 +430,18 @@ const RuleEditor = React.memo<RuleEditorProps>(({
     <Dialog
       isOpen={isOpen}
       onClose={onClose}
-      title={isCreate ? 'Create RSS Rule' : `Edit Rule: ${initialRule?.name}`}
+      title={isCreate ? t('createRule') : t('editRuleTitle', { name: initialRule?.name })}
       maxWidth="lg"
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={isSubmitting || isRenaming}>
-            Cancel
+            {t('common:actions.cancel')}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={isSubmitting || isRenaming || !ruleName.trim()}
           >
-            {isSubmitting ? 'Saving...' : isCreate ? 'Create Rule' : 'Save Rule'}
+            {isSubmitting ? t('saving') : isCreate ? t('createRule') : t('saveRule')}
           </Button>
         </>
       }
@@ -443,13 +450,13 @@ const RuleEditor = React.memo<RuleEditorProps>(({
         {/* Rule name — editable only in create mode */}
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-2">
-            Rule name <span className="text-error">*</span>
+            {t('ruleName')} <span className="text-error">*</span>
           </label>
           {isCreate ? (
             <Input
               value={ruleName}
               onChange={setRuleName}
-              placeholder="e.g. MyAnimeRule"
+              placeholder={t('ruleNameExample')}
               className="w-full"
               autoFocus
             />
@@ -458,7 +465,7 @@ const RuleEditor = React.memo<RuleEditorProps>(({
               <span className="flex-1 rounded-md border border-border bg-surface-interactive px-3 py-2 text-sm text-text-primary">
                 {initialRule?.name}
               </span>
-              <span className="text-xs text-text-muted">Read-only</span>
+              <span className="text-xs text-text-muted">{t('readOnly')}</span>
             </div>
           )}
         </div>
@@ -468,12 +475,12 @@ const RuleEditor = React.memo<RuleEditorProps>(({
           <div className="flex gap-2 items-end">
             <div className="flex-1">
               <label className="block text-sm font-medium text-text-secondary mb-2">
-                New name (optional)
+                {t('newName')}
               </label>
               <Input
                 value={newRuleName}
                 onChange={setNewRuleName}
-                placeholder="Leave empty to keep current name"
+                placeholder={t('newNamePlaceholder')}
                 className="w-full"
               />
             </div>
@@ -482,7 +489,7 @@ const RuleEditor = React.memo<RuleEditorProps>(({
               onClick={handleRename}
               disabled={isRenaming || !newRuleName.trim() || newRuleName === initialRule?.name}
             >
-              Rename
+              {t('rename')}
             </Button>
           </div>
         )}
@@ -493,18 +500,18 @@ const RuleEditor = React.memo<RuleEditorProps>(({
             checked={enabled}
             onChange={setEnabled}
           />
-          <span className="text-sm text-text-primary">Rule enabled</span>
+          <span className="text-sm text-text-primary">{t('ruleEnabled')}</span>
         </div>
 
         {/* Must contain */}
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-2">
-            Must contain
+            {t('mustContain')}
           </label>
           <Input
             value={mustContain}
             onChange={setMustContain}
-            placeholder="e.g. 720p or S01"
+            placeholder={t('mustContainExample')}
             className="w-full"
           />
         </div>
@@ -512,12 +519,12 @@ const RuleEditor = React.memo<RuleEditorProps>(({
         {/* Must not contain */}
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-2">
-            Must not contain
+            {t('mustNotContain')}
           </label>
           <Input
             value={mustNotContain}
             onChange={setMustNotContain}
-            placeholder="e.g. cams or pre"
+            placeholder={t('mustNotContainExample')}
             className="w-full"
           />
         </div>
@@ -528,18 +535,18 @@ const RuleEditor = React.memo<RuleEditorProps>(({
             checked={useRegex}
             onChange={setUseRegex}
           />
-          <span className="text-sm text-text-primary">Use regular expressions</span>
+          <span className="text-sm text-text-primary">{t('useRegex')}</span>
         </div>
 
         {/* Episode filter */}
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-2">
-            Episode filter
+            {t('episodeFilter')}
           </label>
           <Input
             value={episodeFilter}
             onChange={setEpisodeFilter}
-            placeholder="e.g. 1x01-; (smart filter)"
+            placeholder={t('episodeFilterExample')}
             className="w-full"
           />
         </div>
@@ -550,18 +557,18 @@ const RuleEditor = React.memo<RuleEditorProps>(({
             checked={smartFilter}
             onChange={setSmartFilter}
           />
-          <span className="text-sm text-text-primary">Smart episode filter</span>
+          <span className="text-sm text-text-primary">{t('smartEpisodeFilter')}</span>
         </div>
 
         {/* Affected feeds */}
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-2">
-            Affected feeds <span className="text-text-muted">(one per line, empty = all)</span>
+            {t('affectedFeeds')} <span className="text-text-muted">{t('affectedFeedsHint')}</span>
           </label>
           <textarea
             value={affectedFeeds}
             onChange={(e) => setAffectedFeeds(e.target.value)}
-            placeholder="https://example.com/feed.xml"
+            placeholder={t('feedUrlExample')}
             rows={3}
             className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus-visible:ring-1 focus-visible:ring-border-focus focus-visible:outline-none resize-none"
           />
@@ -570,12 +577,12 @@ const RuleEditor = React.memo<RuleEditorProps>(({
         {/* Assigned category */}
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-2">
-            Assigned category
+            {t('assignedCategory')}
           </label>
           <Input
             value={assignedCategory}
             onChange={setAssignedCategory}
-            placeholder="e.g. Anime"
+            placeholder={t('categoryExample')}
             className="w-full"
           />
         </div>
@@ -583,12 +590,12 @@ const RuleEditor = React.memo<RuleEditorProps>(({
         {/* Save path */}
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-2">
-            Save path
+            {t('savePath')}
           </label>
           <Input
             value={savePath}
             onChange={setSavePath}
-            placeholder="/path/to/downloads"
+            placeholder={t('savePathExample')}
             className="w-full"
           />
         </div>
@@ -599,13 +606,13 @@ const RuleEditor = React.memo<RuleEditorProps>(({
             checked={addPaused}
             onChange={setAddPaused}
           />
-          <span className="text-sm text-text-primary">Add matched downloads paused</span>
+          <span className="text-sm text-text-primary">{t('addPaused')}</span>
         </div>
 
         {/* Ignore days */}
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-2">
-            Minimum interval between episodes (days)
+            {t('minimumEpisodeInterval')}
           </label>
           <Input
             value={ignoreDays > 0 ? String(ignoreDays) : ''}
@@ -648,6 +655,7 @@ export const RSSScreenBody = React.memo<RSSScreenProps>(({
   isRenamingRule,
   isRemovingRule,
 }) => {
+  const { t } = useTaurentTranslation('rss');
   const [activeTab, setActiveTab] = useState<'feeds' | 'rules'>('feeds');
 
   // Feed dialog state
@@ -738,8 +746,8 @@ export const RSSScreenBody = React.memo<RSSScreenProps>(({
     return (
       <StateSurface
         tone="loading"
-        title="Checking RSS capability..."
-        message="Please wait while we check if your server supports RSS."
+        title={t('checking')}
+        message={t('checkingMessage')}
         icon={<Icon name="rss" className="h-6 w-6" />}
       />
     );
@@ -749,8 +757,8 @@ export const RSSScreenBody = React.memo<RSSScreenProps>(({
     return (
       <StateSurface
         tone="unsupported"
-        title="RSS not available"
-        message="Your qBittorrent server does not support RSS feeds, or they have been disabled."
+        title={t('unsupported')}
+        message={t('unsupportedMessage')}
         icon={<Icon name="rss" className="h-6 w-6" />}
       />
     );
@@ -760,8 +768,8 @@ export const RSSScreenBody = React.memo<RSSScreenProps>(({
     return (
       <StateSurface
         tone="offline"
-        title="RSS unavailable"
-        message="Connect to a server to access RSS feeds."
+        title={t('unavailable')}
+        message={t('unavailableMessage')}
         icon={<Icon name="rss" className="h-6 w-6" />}
       />
     );
@@ -769,9 +777,9 @@ export const RSSScreenBody = React.memo<RSSScreenProps>(({
 
   const isCompact = variant === 'mobile';
 
-  const TABS = [
-    { id: 'feeds' as const, label: <>Feeds ({rssItems.length})</> },
-    { id: 'rules' as const, label: <>Rules ({rssRules.length})</> },
+  const tabs = [
+    { id: 'feeds' as const, label: t('feedsTab', { count: rssItems.length }) },
+    { id: 'rules' as const, label: t('rulesTab', { count: rssRules.length }) },
   ];
 
   return (
@@ -779,7 +787,7 @@ export const RSSScreenBody = React.memo<RSSScreenProps>(({
       {/* Tab Bar */}
       <TabBar
         variant="underline"
-        tabs={TABS}
+        tabs={tabs}
         activeTab={activeTab}
         onTabChange={(id) => setActiveTab(id as 'feeds' | 'rules')}
       />
@@ -789,7 +797,7 @@ export const RSSScreenBody = React.memo<RSSScreenProps>(({
         <div className="border-b border-border bg-error/10 px-4 py-3">
           <div className="flex items-center gap-2">
             <Icon name="alert" className="h-4 w-4 text-error" />
-            <p className="text-xs text-error">{error.message}</p>
+            <p className="text-xs text-error">{t('loadFailed')}</p>
             <RetryButton onClick={onRefetch} className="ml-auto" />
           </div>
         </div>
@@ -816,16 +824,16 @@ export const RSSScreenBody = React.memo<RSSScreenProps>(({
                 )}
               >
                 <Icon name="plus" className="h-4 w-4" />
-                Add RSS Feed
+                {t('addFeed')}
               </button>
             </div>
 
             {rssItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <Icon name="rss" className="h-8 w-8 text-text-muted" />
-                <p className="mt-3 text-sm text-text-secondary">No RSS feeds configured</p>
+                <p className="mt-3 text-sm text-text-secondary">{t('noFeeds')}</p>
                 <p className="mt-1 text-xs text-text-muted">
-                  Add your first feed above
+                  {t('noFeedsHint')}
                 </p>
               </div>
             ) : (
@@ -856,16 +864,16 @@ export const RSSScreenBody = React.memo<RSSScreenProps>(({
                 )}
               >
                 <Icon name="plus" className="h-4 w-4" />
-                Create RSS Rule
+                {t('createRule')}
               </button>
             </div>
 
             {rssRules.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <Icon name="filter" className="h-8 w-8 text-text-muted" />
-                <p className="mt-3 text-sm text-text-secondary">No RSS rules configured</p>
+                <p className="mt-3 text-sm text-text-secondary">{t('noRules')}</p>
                 <p className="mt-1 text-xs text-text-muted">
-                  Create your first rule above
+                  {t('noRulesHint')}
                 </p>
               </div>
             ) : (
@@ -909,13 +917,13 @@ export const RSSScreenBody = React.memo<RSSScreenProps>(({
       {/* Delete Confirmation */}
       {deleteConfirmTarget && (
         <ConfirmDialog
-          title={`Delete ${deleteConfirmTarget.type === 'feed' ? 'Feed' : 'Rule'}`}
+          title={deleteConfirmTarget.type === 'feed' ? t('deleteFeedTitle') : t('deleteRuleTitle')}
           message={
             deleteConfirmTarget.type === 'feed'
-              ? `Are you sure you want to remove the feed "${deleteConfirmTarget.name}"? This cannot be undone.`
-              : `Are you sure you want to delete the rule "${deleteConfirmTarget.name}"? This cannot be undone.`
+              ? t('deleteFeedMessage', { name: deleteConfirmTarget.name })
+              : t('deleteRuleMessage', { name: deleteConfirmTarget.name })
           }
-          confirmLabel="Delete"
+          confirmLabel={t('common:actions.delete')}
           onConfirm={handleDeleteConfirm}
           onCancel={() => {
             setDeleteConfirmTarget(null);

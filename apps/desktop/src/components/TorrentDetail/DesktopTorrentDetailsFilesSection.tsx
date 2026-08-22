@@ -9,7 +9,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { emit } from '@tauri-apps/api/event';
 import { File, FolderOpen } from '@taurent/shared';
 import { toast } from '@taurent/web-ui/components/shared/Toast/toast';
-import { formatUserMessageForContext } from '@taurent/shared/utils/error';
+import { useLocalizedErrorFormatter, useTaurentTranslation } from '@taurent/shared/i18n';
 import { ContextMenu, TorrentDetailsFilesSection } from '@taurent/web-ui';
 import type { TorrentDetailsFilesSectionProps, FileDisplayRow } from '@taurent/web-ui/components/torrents/TorrentDetailsSections/types';
 import { BridgeAdapter } from '@taurent/bridge/adapters/desktop'
@@ -95,6 +95,8 @@ interface DesktopTorrentDetailsFilesSectionProps extends TorrentDetailsFilesSect
 export function DesktopTorrentDetailsFilesSection(
   props: DesktopTorrentDetailsFilesSectionProps
 ) {
+  const { t } = useTaurentTranslation('torrents');
+  const formatError = useLocalizedErrorFormatter();
   const { contentPath, totalFileCount, ...restProps } = props;
   const [fileContextMenu, setFileContextMenu] = useState<FileContextMenuState | null>(null);
   const [folderContextMenu, setFolderContextMenu] = useState<FolderContextMenuState | null>(null);
@@ -174,7 +176,7 @@ export function DesktopTorrentDetailsFilesSection(
             {
               kind: 'item',
               id: 'open-file',
-              label: 'Open File',
+              label: t('details.panel.openFile'),
               icon: File,
               disabled: !fileContextMenu.serverFilePath,
               onClick: async () => {
@@ -183,21 +185,21 @@ export function DesktopTorrentDetailsFilesSection(
                 try {
                   await resolveAndOpenPath(fileContextMenu.serverFilePath);
                 } catch (err) {
-                  toast.error(formatUserMessageForContext(err, 'torrent-action'), { dedupeKey: 'details-panel:open-file' });
+                  toast.error(formatError(err, 'torrent-action'), { dedupeKey: 'details-panel:open-file' });
                 }
               },
             },
             {
               kind: 'item',
               id: 'show-in-folder',
-              label: 'Show in Folder',
+              label: t('details.panel.showInFolder'),
               icon: FolderOpen,
               onClick: async () => {
                 closeFileContextMenu();
                 try {
                   await resolveAndRevealItem(fileContextMenu.serverFilePath ?? fileContextMenu.serverFolderPath);
                 } catch (err) {
-                  toast.error(formatUserMessageForContext(err, 'torrent-action'), { dedupeKey: 'details-panel:show-in-folder' });
+                  toast.error(formatError(err, 'torrent-action'), { dedupeKey: 'details-panel:show-in-folder' });
                 }
               },
             },
@@ -214,28 +216,28 @@ export function DesktopTorrentDetailsFilesSection(
             {
               kind: 'item',
               id: 'open-folder',
-              label: 'Open Folder',
+              label: t('details.panel.openFolder'),
               icon: FolderOpen,
               onClick: async () => {
                 closeFolderContextMenu();
                 try {
                   await resolveAndOpenPath(folderContextMenu.serverFolderPath);
                 } catch (err) {
-                  toast.error(formatUserMessageForContext(err, 'torrent-action'), { dedupeKey: 'details-panel:open-folder' });
+                  toast.error(formatError(err, 'torrent-action'), { dedupeKey: 'details-panel:open-folder' });
                 }
               },
             },
             {
               kind: 'item',
               id: 'show-in-folder',
-              label: 'Show in Folder',
+              label: t('details.panel.showInFolder'),
               icon: FolderOpen,
               onClick: async () => {
                 closeFolderContextMenu();
                 try {
                   await resolveAndRevealItem(folderContextMenu.serverFolderPath);
                 } catch (err) {
-                  toast.error(formatUserMessageForContext(err, 'torrent-action'), { dedupeKey: 'details-panel:show-in-folder' });
+                  toast.error(formatError(err, 'torrent-action'), { dedupeKey: 'details-panel:show-in-folder' });
                 }
               },
             },

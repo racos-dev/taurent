@@ -78,6 +78,8 @@ export function useCurrentLocale() {
   return useSyncExternalStore(subscribeLanguageState, getLanguageState, getLanguageState).locale;
 }
 
-export function useTaurentTranslation(namespace: AppNamespace = 'common') {
-  return useTranslation(namespace, { i18n: localization, useSuspense: false });
+export function useTaurentTranslation<N extends AppNamespace = 'common'>(
+  namespace: N = 'common' as N,
+) {
+  return useTranslation<N>(namespace, { i18n: localization, useSuspense: false });
 }

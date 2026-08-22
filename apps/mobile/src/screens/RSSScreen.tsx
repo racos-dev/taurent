@@ -9,16 +9,24 @@ import { useNavigate } from 'react-router-dom';
 import { RSSScreenBody, ScreenHeader } from '@taurent/web-ui';
 import { useRssScreen } from '../hooks';
 import { mobileScreenRootClassName } from '../ui/mobileScreenLayout';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 export function RSSScreen() {
   const navigate = useNavigate();
   const model = useRssScreen();
+  const { t } = useTaurentTranslation('rss');
 
   return (
     <div className={mobileScreenRootClassName({ height: 'full' })}>
       <ScreenHeader
-        title="RSS Feeds"
-        subtitle={model.isLoading ? 'Loading...' : `${model.rssItems.length} feeds, ${model.rssRules.length} rules`}
+        title={t('title')}
+        subtitle={model.isLoading
+          ? t('loading')
+          : t('summary', {
+              count: model.rssItems.length + model.rssRules.length,
+              feedCount: model.rssItems.length,
+              ruleCount: model.rssRules.length,
+            })}
         variant="mobile"
         onBack={() => navigate('/')}
       />

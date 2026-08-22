@@ -23,6 +23,7 @@ import {
   buildSyncMaindataKey,
 } from '@taurent/web-core/query';
 import { WorkspaceFrame } from '@taurent/web-ui';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 
 interface AppShellProps {
   children: ReactNode;
@@ -33,6 +34,7 @@ const MAX_SIDEBAR_WIDTH = 500;
 const ACCEPTED_TORRENT_EXTENSIONS = ['.torrent'];
 
 export function AppShell({ children }: AppShellProps) {
+  const { t } = useTaurentTranslation('desktop');
   const { isConnected, isHydrated, serverId, sessionGeneration } = useQBClient();
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -198,7 +200,7 @@ export function AppShell({ children }: AppShellProps) {
       </div>
       <button
         type="button"
-        aria-label="Resize sidebar"
+        aria-label={t('accessibility.resizeSidebar')}
         aria-orientation="vertical"
         className="w-1 shrink-0 cursor-col-resize bg-transparent transition-colors hover:bg-primary-20"
         onMouseDown={handleSidebarResizeStart}

@@ -107,19 +107,23 @@ const TORRENT_STATES_FOR_FILTER: Record<TorrentFilterType, readonly string[]> = 
 };
 
 export const TORRENT_FILTER_OPTIONS = [
-  { value: 'all' as TorrentFilterType, label: 'All' },
-  { value: 'downloading' as TorrentFilterType, label: 'Downloading' },
-  { value: 'seeding' as TorrentFilterType, label: 'Seeding' },
-  { value: 'completed' as TorrentFilterType, label: 'Completed' },
-  { value: 'stopped' as TorrentFilterType, label: 'Paused' },
-  { value: 'active' as TorrentFilterType, label: 'Active' },
-  { value: 'inactive' as TorrentFilterType, label: 'Inactive' },
-  { value: 'running' as TorrentFilterType, label: 'Running' },
-  { value: 'stalled' as TorrentFilterType, label: 'Stalled' },
-  { value: 'stalled_uploading' as TorrentFilterType, label: 'Stalled Uploading' },
-  { value: 'stalled_downloading' as TorrentFilterType, label: 'Stalled Downloading' },
-  { value: 'errored' as TorrentFilterType, label: 'Errored' },
+  { value: 'all' as TorrentFilterType, labelKey: 'filters.all' },
+  { value: 'downloading' as TorrentFilterType, labelKey: 'filters.downloading' },
+  { value: 'seeding' as TorrentFilterType, labelKey: 'filters.seeding' },
+  { value: 'completed' as TorrentFilterType, labelKey: 'filters.completed' },
+  { value: 'stopped' as TorrentFilterType, labelKey: 'filters.stopped' },
+  { value: 'active' as TorrentFilterType, labelKey: 'filters.active' },
+  { value: 'inactive' as TorrentFilterType, labelKey: 'filters.inactive' },
+  { value: 'running' as TorrentFilterType, labelKey: 'filters.running' },
+  { value: 'stalled' as TorrentFilterType, labelKey: 'filters.stalled' },
+  { value: 'stalled_uploading' as TorrentFilterType, labelKey: 'filters.stalledUploading' },
+  { value: 'stalled_downloading' as TorrentFilterType, labelKey: 'filters.stalledDownloading' },
+  { value: 'errored' as TorrentFilterType, labelKey: 'filters.errored' },
 ] as const;
+
+export function getTorrentFilterLabelKey(value: string) {
+  return TORRENT_FILTER_OPTIONS.find((option) => option.value === value)?.labelKey ?? null;
+}
 
 export const isTorrentFilterType = (value: string): value is TorrentFilterType => {
   return Object.prototype.hasOwnProperty.call(TORRENT_STATES_FOR_FILTER, value);

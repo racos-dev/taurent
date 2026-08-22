@@ -1,23 +1,6 @@
 import React from 'react';
-import {
-  formatAvailabilityMultiplier,
-  formatBytes,
-  formatCount,
-  formatCountFraction,
-  formatCountWithTotal,
-  formatDateTime,
-  formatEta,
-  formatPopularity,
-  formatProgress,
-  formatRatio,
-  formatReannounce,
-  formatSeenComplete,
-  formatSpeed,
-  formatTime,
-  formatTransferLimit,
-} from '@taurent/shared/utils/formatters';
 import { localizeTorrentDetailedState, RatioIcon, ICON_SIZES } from '@taurent/shared';
-import { useTaurentTranslation } from '@taurent/shared/i18n';
+import { useLocalizedFormatters, useTaurentTranslation } from '@taurent/shared/i18n';
 import { Clock, Download, Upload, Users, Link, HardDrive, Layers, Shield } from '@taurent/shared';
 import type { TorrentDetailsOverviewSectionProps } from './types';
 import type { Torrent, TorrentProperties } from '@taurent/shared/types/qbittorrent';
@@ -27,6 +10,8 @@ import { RetryButton } from '../../shared/RetryButton';
 // Desktop overview section — flat key-value layout matching qBittorrent's General tab
 function DesktopOverview({ torrent, properties }: { torrent: Torrent; properties: TorrentProperties | null }) {
   const { t } = useTaurentTranslation('torrents');
+  const { t: tCommon } = useTaurentTranslation('common');
+  const format = useLocalizedFormatters();
   const wasted = properties?.total_wasted ?? 0;
   const reannounce = properties?.reannounce ?? 0;
   const lastSeen = properties?.last_seen ?? 0;
@@ -39,43 +24,51 @@ function DesktopOverview({ torrent, properties }: { torrent: Torrent; properties
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1 text-xs">
       {/* Transfer column */}
       <div>
-        <h3 className="text-xs font-semibold text-text-secondary border-b border-border pb-1 mb-1">Transfer</h3>
-        <KVRow label="Time Active" value={formatTime(properties?.time_elapsed)} />
-        <KVRow label="ETA" value={formatEta(torrent.eta)} />
-        <KVRow label="Connections" value={formatCount(properties?.nb_connections)} />
-        <KVRow label="Downloaded" value={`${formatBytes(torrent.downloaded)} (${formatBytes(properties?.total_downloaded ?? torrent.downloaded)} this session)`} />
-        <KVRow label="Uploaded" value={`${formatBytes(torrent.uploaded)} (${formatBytes(properties?.total_uploaded ?? torrent.uploaded)} this session)`} />
-        <KVRow label="Seeds" value={formatCountWithTotal(properties?.seeds ?? torrent.num_seeds, properties?.seeds_total ?? torrent.num_complete, 'total')} />
-        <KVRow label="Peers" value={formatCountWithTotal(properties?.peers ?? torrent.num_leechs, properties?.peers_total ?? torrent.num_incomplete, 'total')} />
-        <KVRow label="Download Speed" value={formatSpeed(torrent.dlspeed)} />
-        <KVRow label="Upload Speed" value={formatSpeed(torrent.upspeed)} />
-        <KVRow label="Wasted" value={formatBytes(wasted)} />
-        <KVRow label="Share Ratio" value={formatRatio(torrent.ratio)} />
-        <KVRow label="Popularity" value={formatPopularity(torrent.popularity)} />
-        <KVRow label="Reannounce In" value={formatReannounce(reannounce)} />
-        <KVRow label="Last Seen Complete" value={formatSeenComplete(lastSeen)} />
-        <KVRow label="Download Limit" value={formatTransferLimit(torrent.dl_limit)} />
-        <KVRow label="Upload Limit" value={formatTransferLimit(torrent.up_limit)} />
+        <h3 className="text-xs font-semibold text-text-secondary border-b border-border pb-1 mb-1">{t('details.overview.transfer')}</h3>
+        <KVRow label={t('details.overview.timeActive')} value={format.formatDuration(properties?.time_elapsed ?? 0)} />
+        <KVRow label={t('fields.eta')} value={format.formatEta(torrent.eta)} />
+        <KVRow label={t('details.overview.connections')} value={format.formatCount(properties?.nb_connections)} />
+        <KVRow label={t('fields.downloaded')} value={t('details.overview.downloadedWithSession', {
+          total: format.formatBytes(torrent.downloaded), session: format.formatBytes(properties?.total_downloaded ?? torrent.downloaded),
+        })} />
+        <KVRow label={t('fields.uploaded')} value={t('details.overview.uploadedWithSession', {
+          total: format.formatBytes(torrent.uploaded), session: format.formatBytes(properties?.total_uploaded ?? torrent.uploaded),
+        })} />
+        <KVRow label={t('fields.seeds')} value={t('details.overview.countWithTotal', {
+          current: format.formatCount(properties?.seeds ?? torrent.num_seeds), total: format.formatCount(properties?.seeds_total ?? torrent.num_complete),
+        })} />
+        <KVRow label={t('fields.peers')} value={t('details.overview.countWithTotal', {
+          current: format.formatCount(properties?.peers ?? torrent.num_leechs), total: format.formatCount(properties?.peers_total ?? torrent.num_incomplete),
+        })} />
+        <KVRow label={t('fields.downloadSpeed')} value={format.formatSpeed(torrent.dlspeed)} />
+        <KVRow label={t('fields.uploadSpeed')} value={format.formatSpeed(torrent.upspeed)} />
+        <KVRow label={t('details.overview.wasted')} value={format.formatBytes(wasted)} />
+        <KVRow label={t('details.overview.shareRatio')} value={format.formatRatio(torrent.ratio)} />
+        <KVRow label={t('details.overview.popularity')} value={format.formatNumber(torrent.popularity ?? 0, { maximumFractionDigits: 3 })} />
+        <KVRow label={t('details.overview.reannounceIn')} value={format.formatDuration(reannounce)} />
+        <KVRow label={t('details.overview.lastSeenComplete')} value={lastSeen > 0 ? format.formatDateTime(lastSeen) : tCommon('values.never')} />
+        <KVRow label={t('details.overview.downloadLimit')} value={torrent.dl_limit > 0 ? format.formatSpeed(torrent.dl_limit) : '∞'} />
+        <KVRow label={t('details.overview.uploadLimit')} value={torrent.up_limit > 0 ? format.formatSpeed(torrent.up_limit) : '∞'} />
       </div>
       {/* Information column */}
       <div>
-        <h3 className="text-xs font-semibold text-text-secondary border-b border-border pb-1 mb-1">Information</h3>
-        <KVRow label="Total Size" value={formatBytes(totalSize)} />
-        <KVRow label="Progress" value={formatProgress(torrent.progress)} />
+        <h3 className="text-xs font-semibold text-text-secondary border-b border-border pb-1 mb-1">{t('details.overview.information')}</h3>
+        <KVRow label={t('details.overview.totalSize')} value={format.formatBytes(totalSize)} />
+        <KVRow label={t('fields.progress')} value={format.formatPercent(torrent.progress)} />
         <KVRow label={t('fields.state')} value={localizeTorrentDetailedState(torrent.state, t)} />
-        <KVRow label="Save Path" value={properties?.save_path ?? torrent.save_path ?? ''} />
-        <KVRow label="Category" value={torrent.category || 'None'} />
-        <KVRow label="Tags" value={torrent.tags || 'None'} />
-        <KVRow label="Added On" value={formatDateTime(torrent.added_on)} />
-        <KVRow label="Completed On" value={formatDateTime(torrent.completion_on)} />
-        <KVRow label="Created On" value={formatDateTime(createdOn)} />
-        <KVRow label="Created By" value={properties?.created_by || 'Unknown'} />
-        <KVRow label="Piece Size" value={properties?.piece_size ? formatBytes(properties.piece_size) : '—'} />
-        <KVRow label="Pieces" value={properties ? formatCountFraction(properties.pieces_have, properties.pieces_num) : '-'} />
-        <KVRow label="Info Hash v1" value={infohashV1 || 'N/A'} />
-        <KVRow label="Info Hash v2" value={infohashV2 || 'N/A'} />
-        <KVRow label="Comment" value={properties?.comment || 'None'} />
-        <KVRow label="Private" value={properties?.isPrivate ? 'Yes' : 'No'} />
+        <KVRow label={t('fields.savePath')} value={properties?.save_path ?? torrent.save_path ?? ''} />
+        <KVRow label={t('fields.category')} value={torrent.category || tCommon('values.none')} />
+        <KVRow label={t('fields.tags')} value={torrent.tags || tCommon('values.none')} />
+        <KVRow label={t('details.overview.addedOn')} value={format.formatDateTime(torrent.added_on)} />
+        <KVRow label={t('details.overview.completedOn')} value={format.formatDateTime(torrent.completion_on)} />
+        <KVRow label={t('details.overview.createdOn')} value={format.formatDateTime(createdOn)} />
+        <KVRow label={t('details.overview.createdBy')} value={properties?.created_by || tCommon('values.unknown')} />
+        <KVRow label={t('details.overview.pieceSize')} value={properties?.piece_size ? format.formatBytes(properties.piece_size) : '—'} />
+        <KVRow label={t('details.overview.pieces')} value={properties ? `${format.formatCount(properties.pieces_have)} / ${format.formatCount(properties.pieces_num)}` : '-'} />
+        <KVRow label={t('details.overview.infoHashV1')} value={infohashV1 || tCommon('values.notAvailable')} />
+        <KVRow label={t('details.overview.infoHashV2')} value={infohashV2 || tCommon('values.notAvailable')} />
+        <KVRow label={t('details.overview.comment')} value={properties?.comment || tCommon('values.none')} />
+        <KVRow label={t('details.overview.private')} value={format.formatBoolean(Boolean(properties?.isPrivate))} />
       </div>
     </div>
   );
@@ -91,46 +84,49 @@ function KVRow({ label, value }: { label: string; value: string }) {
   );
 }
 function MobileOverview({ torrent, properties }: { torrent: Torrent; properties: TorrentProperties | null }) {
+  const { t } = useTaurentTranslation('torrents');
+  const { t: tCommon } = useTaurentTranslation('common');
+  const format = useLocalizedFormatters();
   return (
     <div className="space-y-4">
-      <SectionCard title="Transfer" icon="download">
+      <SectionCard title={t('details.overview.transfer')} icon="download">
         <div className="grid grid-cols-2 gap-3">
-          <StatTile icon="download" label="Downloaded" value={formatBytes(properties?.total_downloaded ?? torrent.downloaded)} />
-          <StatTile icon="upload" label="Uploaded" value={formatBytes(properties?.total_uploaded ?? torrent.uploaded)} />
-          <StatTile icon="clock" label="ETA" value={formatEta(properties?.eta ?? torrent.eta)} />
-          <StatTile icon="ratio" label="Ratio" value={formatRatio(properties?.share_ratio ?? torrent.ratio)} />
-          <StatTile icon="download" label="DL speed" value={formatSpeed(properties?.dl_speed ?? torrent.dlspeed)} />
-          <StatTile icon="upload" label="UL speed" value={formatSpeed(properties?.up_speed ?? torrent.upspeed)} />
+          <StatTile icon="download" label={t('fields.downloaded')} value={format.formatBytes(properties?.total_downloaded ?? torrent.downloaded)} />
+          <StatTile icon="upload" label={t('fields.uploaded')} value={format.formatBytes(properties?.total_uploaded ?? torrent.uploaded)} />
+          <StatTile icon="clock" label={t('fields.eta')} value={format.formatEta(properties?.eta ?? torrent.eta)} />
+          <StatTile icon="ratio" label={t('fields.ratio')} value={format.formatRatio(properties?.share_ratio ?? torrent.ratio)} />
+          <StatTile icon="download" label={t('details.overview.dlSpeed')} value={format.formatSpeed(properties?.dl_speed ?? torrent.dlspeed)} />
+          <StatTile icon="upload" label={t('details.overview.ulSpeed')} value={format.formatSpeed(properties?.up_speed ?? torrent.upspeed)} />
         </div>
       </SectionCard>
 
-      <SectionCard title="Peers availability" icon="users">
+      <SectionCard title={t('details.overview.peersAvailability')} icon="users">
         <div className="grid grid-cols-2 gap-3">
-          <StatTile icon="seeds" label="Seeds" value={formatCountFraction(properties?.seeds ?? torrent.num_seeds, properties?.seeds_total ?? torrent.num_complete)} />
-          <StatTile icon="users" label="Peers" value={formatCountFraction(properties?.peers ?? torrent.num_leechs, properties?.peers_total ?? torrent.num_incomplete)} />
-          <StatTile icon="link" label="Connections" value={formatCount(properties?.nb_connections)} />
-          <StatTile icon="clock" label="Active time" value={formatTime(properties?.time_elapsed)} />
+          <StatTile icon="seeds" label={t('fields.seeds')} value={`${format.formatCount(properties?.seeds ?? torrent.num_seeds)} / ${format.formatCount(properties?.seeds_total ?? torrent.num_complete)}`} />
+          <StatTile icon="users" label={t('fields.peers')} value={`${format.formatCount(properties?.peers ?? torrent.num_leechs)} / ${format.formatCount(properties?.peers_total ?? torrent.num_incomplete)}`} />
+          <StatTile icon="link" label={t('details.overview.connections')} value={format.formatCount(properties?.nb_connections)} />
+          <StatTile icon="clock" label={t('details.overview.activeTime')} value={format.formatDuration(properties?.time_elapsed ?? 0)} />
         </div>
-        <DetailRow label="Availability" value={formatAvailabilityMultiplier(torrent.availability)} />
+        <DetailRow label={t('fields.availability')} value={`${format.formatNumber(torrent.availability, { maximumFractionDigits: 2 })}×`} />
       </SectionCard>
 
-      <SectionCard title="Storage" icon="hard-drive">
+      <SectionCard title={t('details.overview.storage')} icon="hard-drive">
         <div className="grid grid-cols-2 gap-3">
-          <StatTile icon="hard-drive" label="Size" value={formatBytes(properties?.total_size ?? torrent.total_size ?? torrent.size)} />
-          <StatTile icon="download" label="Remaining" value={formatBytes(torrent.amount_left)} />
-          <StatTile icon="layers" label="Pieces" value={formatCountFraction(properties?.pieces_have, properties?.pieces_num)} />
-          <StatTile icon="hard-drive" label="Piece size" value={properties?.piece_size ? formatBytes(properties.piece_size) : '-'} />
+          <StatTile icon="hard-drive" label={t('fields.size')} value={format.formatBytes(properties?.total_size ?? torrent.total_size ?? torrent.size)} />
+          <StatTile icon="download" label={t('fields.remaining')} value={format.formatBytes(torrent.amount_left)} />
+          <StatTile icon="layers" label={t('details.overview.pieces')} value={`${format.formatCount(properties?.pieces_have)} / ${format.formatCount(properties?.pieces_num)}`} />
+          <StatTile icon="hard-drive" label={t('details.overview.pieceSize')} value={properties?.piece_size ? format.formatBytes(properties.piece_size) : '-'} />
         </div>
-        <DetailRow label="Save path" value={properties?.save_path ?? ''} />
-        <DetailRow label="Content path" value={torrent.content_path || torrent.save_path} />
+        <DetailRow label={t('fields.savePath')} value={properties?.save_path ?? ''} />
+        <DetailRow label={t('details.overview.contentPath')} value={torrent.content_path || torrent.save_path} />
       </SectionCard>
 
-      <SectionCard title="Metadata" icon="shield">
-        <DetailRow label="Private torrent" value={properties?.isPrivate ? 'Yes' : 'No'} />
-        <DetailRow label="Added" value={formatDateTime(torrent.added_on || properties?.addition_date || 0)} />
-        <DetailRow label="Completed" value={formatDateTime(torrent.completion_on || properties?.completion_date || 0)} />
-        <DetailRow label="Created by" value={properties?.created_by || 'Unknown'} />
-        {properties?.comment ? <DetailRow label="Comment" value={properties.comment} /> : null}
+      <SectionCard title={t('details.overview.metadata')} icon="shield">
+        <DetailRow label={t('details.overview.privateTorrent')} value={format.formatBoolean(Boolean(properties?.isPrivate))} />
+        <DetailRow label={t('details.overview.added')} value={format.formatDateTime(torrent.added_on || properties?.addition_date || 0)} />
+        <DetailRow label={t('fields.completed')} value={format.formatDateTime(torrent.completion_on || properties?.completion_date || 0)} />
+        <DetailRow label={t('details.overview.createdByShort')} value={properties?.created_by || tCommon('values.unknown')} />
+        {properties?.comment ? <DetailRow label={t('details.overview.comment')} value={properties.comment} /> : null}
       </SectionCard>
     </div>
   );
@@ -202,6 +198,7 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 
 export const TorrentDetailsOverviewSection = React.memo<TorrentDetailsOverviewSectionProps>(
   ({ variant = 'desktop', torrent, properties, isLoading, error, onRetry }) => {
+    const { t } = useTaurentTranslation('torrents');
     if (variant === 'mobile') {
       if (isLoading && !properties) {
         return (
@@ -223,7 +220,7 @@ export const TorrentDetailsOverviewSection = React.memo<TorrentDetailsOverviewSe
       if (error) {
         return (
           <StateCard
-            title="Could not load overview"
+            title={t('details.overview.loadError')}
             action={onRetry ? <RetryButton onClick={onRetry as () => void} /> : undefined}
           />
         );
@@ -236,7 +233,7 @@ export const TorrentDetailsOverviewSection = React.memo<TorrentDetailsOverviewSe
     if (error) {
       return (
         <StateCard
-          title="Error loading properties"
+          title={t('details.overview.propertiesError')}
           action={onRetry ? <RetryButton onClick={onRetry as () => void} /> : undefined}
         />
       );

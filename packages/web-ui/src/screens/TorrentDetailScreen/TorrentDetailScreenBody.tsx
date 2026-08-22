@@ -23,18 +23,12 @@ import {
   TorrentDetailsHttpSourcesSection,
 } from '@taurent/web-ui';
 import { Icon } from '@taurent/shared';
+import { useTaurentTranslation } from '@taurent/shared/i18n';
 import { TorrentItem } from '../HomeScreen';
 
 const FILE_PREVIEW_LIMIT = 50;
 
-const TABS = (['overview', 'trackers', 'peers', 'files', 'httpSources'] as DetailTab[]).map((tab) => ({
-  id: tab,
-  label: tab === 'overview'
-    ? 'Overview'
-    : tab === 'httpSources'
-      ? 'HTTP Sources'
-      : tab.charAt(0).toUpperCase() + tab.slice(1),
-}));
+const TAB_IDS = ['overview', 'trackers', 'peers', 'files', 'httpSources'] as const satisfies readonly DetailTab[];
 
 function normalizeHttpSourceUrls(value: string): string {
   return value
@@ -131,6 +125,12 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
   handleEditHttpSource,
   handleRemoveHttpSource,
 }) => {
+  const { t } = useTaurentTranslation('torrents');
+  const { t: tCommon } = useTaurentTranslation('common');
+  const tabs = React.useMemo(() => TAB_IDS.map((id) => ({
+    id,
+    label: t(`details.screen.${id}`),
+  })), [t]);
   const fileCount = files?.length ?? 0;
   const hasManyFiles = fileCount > FILE_PREVIEW_LIMIT;
   const webSeedCount = webSeeds?.length ?? 0;
@@ -205,14 +205,16 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
               <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
                 <ActionButton
                   icon={isPaused ? 'play' : 'pause'}
-                  label={pauseResumeIsPending ? (isPaused ? 'Resuming...' : 'Pausing...') : isPaused ? 'Resume' : 'Pause'}
+                  label={pauseResumeIsPending
+                    ? t(isPaused ? 'actions.resuming' : 'actions.pausing')
+                    : t(isPaused ? 'actions.resume' : 'actions.pause')}
                   tone="primary"
                   onClick={() => void handlePauseResume()}
                   disabled={pauseResumeIsPending}
                 />
                 <ActionButton
                   icon="trash"
-                  label={deleteIsPending ? 'Deleting...' : 'Delete'}
+                  label={t(deleteIsPending ? 'actions.deleting' : 'actions.delete')}
                   tone="danger"
                   onClick={openDeleteDialog}
                   disabled={isActionPending}
@@ -223,58 +225,58 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
               <>
                 <ActionChip
                   icon="zap"
-                  label={torrent.force_start ? 'Force Start On' : 'Force Start'}
+                  label={t(torrent.force_start ? 'details.screen.forceStartOn' : 'actions.forceStart')}
                   onClick={() => { void handleForceStart(!torrent.force_start); }}
                   disabled={isActionPending}
                   isActive={torrent.force_start}
                 />
                 <ActionChip
                   icon="refresh"
-                  label={recheckIsPending ? 'Rechecking...' : 'Recheck'}
+                  label={t(recheckIsPending ? 'actions.rechecking' : 'actions.recheck')}
                   onClick={() => { void handleRecheck(); }}
                   disabled={recheckIsPending}
                 />
                 <ActionChip
                   icon="globe"
-                  label={reannounceIsPending ? 'Announcing...' : 'Announce'}
+                  label={t(reannounceIsPending ? 'actions.announcing' : 'actions.announce')}
                   onClick={() => { void handleReannounce(); }}
                   disabled={reannounceIsPending}
                 />
                 <ActionChip
                   icon="download"
-                  label="DL Limit"
+                  label={t('actions.downloadLimit')}
                   onClick={() => openSpeedLimitModal('download', currentDownloadLimit)}
                   disabled={isActionPending}
                 />
                 <ActionChip
                   icon="upload"
-                  label="UL Limit"
+                  label={t('actions.uploadLimit')}
                   onClick={() => openSpeedLimitModal('upload', currentUploadLimit)}
                   disabled={isActionPending}
                 />
                 {supportsFileRenaming && (
                 <ActionChip
                   icon="file"
-                  label="Rename"
+                  label={t('details.screen.rename')}
                   onClick={() => { openRenameDialog(torrent.name); }}
                   disabled={isActionPending}
                 />
                 )}
                 <ActionChip
                   icon="folder"
-                  label="Relocate"
+                  label={t('details.screen.relocate')}
                   onClick={() => { openRelocateDialog(properties?.save_path || ''); }}
                   disabled={isActionPending}
                 />
                 <ActionChip
                   icon="chevron-up"
-                  label={increasePriorityIsPending ? 'Moving...' : 'Queue Up'}
+                  label={t(increasePriorityIsPending ? 'actions.moving' : 'actions.queueUp')}
                   onClick={() => { void handleIncreasePriority(); }}
                   disabled={increasePriorityIsPending}
                 />
                 <ActionChip
                   icon="chevron-down"
-                  label={decreasePriorityIsPending ? 'Moving...' : 'Queue Down'}
+                  label={t(decreasePriorityIsPending ? 'actions.moving' : 'actions.queueDown')}
                   onClick={() => { void handleDecreasePriority(); }}
                   disabled={decreasePriorityIsPending}
                 />
@@ -286,7 +288,7 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
         {/* ── Tabs ──────────────────────────────────────────────────────── */}
         <TabBar
           variant="pill"
-          tabs={TABS}
+          tabs={tabs}
           activeTab={activeTab}
           onTabChange={(id) => setActiveTab(id as DetailTab)}
         />
@@ -308,9 +310,9 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
           <div className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h2 className="text-sm font-semibold text-text-primary">Trackers</h2>
+                <h2 className="text-sm font-semibold text-text-primary">{t('details.screen.trackers')}</h2>
                 <p className="mt-1 text-xs text-text-secondary">
-                  {(trackers?.length || 0)} tracker{(trackers?.length || 0) === 1 ? '' : 's'} reporting for this torrent
+                  {t('details.screen.trackerCount', { count: trackers?.length ?? 0 })}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -321,18 +323,21 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
                   size="sm"
                   onClick={toggleAddTracker}
                 >
-                  {showAddTracker ? 'Cancel' : 'Add'}
+                  {showAddTracker ? tCommon('actions.cancel') : tCommon('actions.add')}
                 </Button>
               </div>
             </div>
 
             {showAddTracker ? (
               <div className="rounded-sm border border-border bg-surface p-3 space-y-2">
-                <p className="text-xs text-text-secondary">Enter tracker URLs (one per line)</p>
+                <p className="text-xs text-text-secondary">{t('details.screen.trackerUrlsHelp')}</p>
                 <textarea
                   value={newTrackerUrl}
                   onChange={(e) => setNewTrackerUrl(e.target.value)}
-                  placeholder="https://tracker.example.com:443/announce"
+                  placeholder={
+                    // i18n-audit-ignore: protocol URL example is intentionally verbatim
+                    'https://tracker.example.com:443/announce'
+                  }
                   rows={3}
                   className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus-visible:ring-1 focus-visible:ring-border-focus focus-visible:outline-none resize-none"
                 />
@@ -345,7 +350,7 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
                   className="w-full"
                 >
                   <Icon name="plus" iconSize="md" />
-                  {addTrackerIsPending ? 'Adding...' : 'Add Trackers'}
+                  {addTrackerIsPending ? t('details.screen.adding') : t('details.screen.addTrackers')}
                 </Button>
               </div>
             ) : null}
@@ -365,9 +370,9 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
           <div className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h2 className="text-sm font-semibold text-text-primary">Peers</h2>
+                <h2 className="text-sm font-semibold text-text-primary">{t('details.screen.peers')}</h2>
                 <p className="mt-1 text-xs text-text-secondary">
-                  {(peers?.length || 0)} peer{(peers?.length || 0) === 1 ? '' : 's'} connected
+                  {t('details.screen.peerCount', { count: peers?.length ?? 0 })}
                 </p>
               </div>
               {peers && peers.length > 0 ? <Pill>{peers.length}</Pill> : null}
@@ -389,9 +394,9 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
           <div className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h2 className="text-sm font-semibold text-text-primary">Files</h2>
+                <h2 className="text-sm font-semibold text-text-primary">{t('details.screen.files')}</h2>
                 <p className="mt-1 text-xs text-text-secondary">
-                  {fileCount} file{fileCount === 1 ? '' : 's'} in this torrent
+                  {t('details.screen.fileCount', { count: fileCount })}
                 </p>
               </div>
 
@@ -402,14 +407,14 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
                   size="sm"
                   onClick={() => setShowAllFiles(!showAllFiles)}
                 >
-                  {showAllFiles ? 'Show fewer' : 'Show all'}
+                  {t(showAllFiles ? 'details.screen.showFewer' : 'details.screen.showAll')}
                 </Button>
               ) : null}
             </div>
 
             {hasManyFiles && !showAllFiles ? (
               <div className="rounded-sm bg-surface-interactive px-3 py-2 text-xs text-text-secondary">
-                Showing the first {FILE_PREVIEW_LIMIT} files, with incomplete files listed first.
+                {t('details.screen.filePreview', { count: FILE_PREVIEW_LIMIT })}
               </div>
             ) : null}
 
@@ -430,9 +435,9 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
           <div className="space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h2 className="text-sm font-semibold text-text-primary">HTTP Sources</h2>
+                <h2 className="text-sm font-semibold text-text-primary">{t('details.screen.httpSources')}</h2>
                 <p className="mt-1 text-xs text-text-secondary">
-                  {webSeedCount} source{webSeedCount === 1 ? '' : 's'} configured
+                  {t('details.screen.sourceCount', { count: webSeedCount })}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -448,7 +453,7 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
                       setEditingHttpSource(null);
                     }}
                   >
-                    {showAddHttpSources ? 'Cancel' : 'Add'}
+                    {showAddHttpSources ? tCommon('actions.cancel') : tCommon('actions.add')}
                   </CapabilityButton>
                 ) : null}
               </div>
@@ -459,7 +464,10 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
                 <textarea
                   value={newHttpSourceUrls}
                   onChange={(event) => setNewHttpSourceUrls(event.target.value)}
-                  placeholder="https://example.com/file"
+                  placeholder={
+                    // i18n-audit-ignore: protocol URL example is intentionally verbatim
+                    'https://example.com/file'
+                  }
                   rows={3}
                   className="w-full resize-none rounded-sm border border-border bg-background px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus-visible:ring-1 focus-visible:ring-border-focus focus-visible:outline-none"
                 />
@@ -472,7 +480,7 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
                   className="w-full"
                 >
                   <Icon name="plus" iconSize="md" />
-                  {addHttpSourcesIsPending ? 'Adding...' : 'Add HTTP Sources'}
+                  {addHttpSourcesIsPending ? t('details.screen.adding') : t('details.screen.addHttpSources')}
                 </Button>
               </div>
             ) : null}
@@ -493,7 +501,7 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
                     onClick={submitHttpSourceEdit}
                     disabled={!editHttpSourceUrl.trim() || editHttpSourceIsPending}
                   >
-                    {editHttpSourceIsPending ? 'Saving...' : 'Save'}
+                    {editHttpSourceIsPending ? t('details.screen.saving') : tCommon('actions.save')}
                   </Button>
                   <Button
                     type="button"
@@ -505,7 +513,7 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
                     }}
                     disabled={editHttpSourceIsPending}
                   >
-                    Cancel
+                    {tCommon('actions.cancel')}
                   </Button>
                 </div>
               </div>
@@ -544,9 +552,9 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
 
       {speedLimitModal ? (
         <NumberInputModal
-          title={speedLimitModal.type === 'download' ? 'Download Limit' : 'Upload Limit'}
+          title={t(speedLimitModal.type === 'download' ? 'details.screen.downloadLimit' : 'details.screen.uploadLimit')}
           currentValue={speedLimitModal.currentValue}
-          unit="Use 0 for unlimited speed."
+          unit={t('details.screen.unlimitedSpeedHelp')}
           unitMode="bytes-per-second"
           unitDefault="kb"
           onSubmit={(value) => { void handleSpeedLimit(speedLimitModal.type, value); }}
@@ -566,27 +574,30 @@ export const TorrentDetailScreenBody = React.memo<TorrentDetailScreenBodyProps>(
 
       {supportsFileRenaming && showRenameDialog ? (
         <InputDialog
-          title="Rename Torrent"
+          title={t('details.screen.renameTitle')}
           value={renameValue}
           onChange={setRenameValue}
           onSubmit={handleRename}
           onCancel={closeRenameDialog}
           isPending={isActionPending}
-          submitLabel="Rename"
+          submitLabel={t('details.screen.rename')}
         />
       ) : null}
 
       {showRelocateDialog ? (
         <InputDialog
-          title="Relocate Files"
-          description="Enter the new save path for this torrent"
+          title={t('details.screen.relocateTitle')}
+          description={t('details.screen.relocateDescription')}
           value={relocateValue}
           onChange={setRelocateValue}
           onSubmit={handleRelocate}
           onCancel={closeRelocateDialog}
           isPending={isActionPending}
-          submitLabel="Move"
-          placeholder="/path/to/new/location"
+          submitLabel={t('details.screen.move')}
+          placeholder={
+            // i18n-audit-ignore: filesystem path example is intentionally verbatim
+            '/path/to/new/location'
+          }
         />
       ) : null}
     </div>

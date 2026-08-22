@@ -5,6 +5,7 @@ import {
   readLatestRecordedCall,
   readMockWindowVisibility,
   readRecordedCalls,
+  readMockWindowTitle,
   readSyncCallCount,
   requestMockWindowClose,
   waitForMockWebview,
@@ -90,6 +91,7 @@ test.describe('desktop utility windows', () => {
     await expect(page.locator('html')).toHaveAttribute('lang', 'ro');
     await expect(page.getByRole('heading', { name: 'Setări', exact: true }).first()).toBeVisible();
     await expect(page.getByRole('button', { name: 'Limbă', exact: true })).toBeVisible();
+    await expect.poll(() => readMockWindowTitle(page)).toBe('Setări');
     await expect.poll(async () => {
       const calls = await readRecordedCalls(page);
       return calls.some((call) => call.name === 'syncNativeUiLabels');

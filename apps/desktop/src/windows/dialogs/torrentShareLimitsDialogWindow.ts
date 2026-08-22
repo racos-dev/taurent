@@ -2,7 +2,7 @@ import { openDialogHostWindow } from './dialogHostWindow';
 
 export const TORRENT_SHARE_LIMITS_DIALOG_WINDOW_CONFIG = {
   route: '/torrent-share-limits-dialog-window',
-  title: 'Share Limits',
+  titleKey: 'windows.shareLimits',
   width: 400,
   height: 380,
   minWidth: 400,

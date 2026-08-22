@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { onOperationFailed } from '@taurent/bridge';
-import { classifyError, formatUserMessageForContext } from '@taurent/shared/utils/error';
+import { classifyError } from '@taurent/shared/utils/error';
 import { useTaurentTranslation, type TaurentTFunction } from '@taurent/shared/i18n';
 import type { OperationFailedEvent } from '@taurent/bridge/events';
 import { subscribeOperationFailures } from './operationFailureReporter';
@@ -51,7 +51,7 @@ function localizedError(error: unknown, context: string | undefined, t: TaurentT
   const category = classifyError(error);
   if (category !== 'unknown') return t(category, { ns: 'errors' });
   if (context) return t(context, { ns: 'errors' });
-  return formatUserMessageForContext(error);
+  return t('unknown', { ns: 'errors' });
 }
 
 function formatOperationFailure(operation: string, error: unknown, t: TaurentTFunction): string {

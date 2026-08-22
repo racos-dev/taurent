@@ -3,6 +3,7 @@ import type { AuxWindowConfig } from '../auxWindowManager';
 import { createWindowLifecycle, openAuxWindow } from '../auxWindowManager';
 import { type DialogHostKind } from './registry';
 
+// i18n-audit-ignore: stable Tauri window identifier, not display copy
 const DIALOG_HOST_LABEL = 'dialog-host';
 const DIALOG_HOST_IDLE_TTL_MS = 2 * 60_000;
 
@@ -11,7 +12,7 @@ export type DialogWindowConfig = Omit<AuxWindowConfig, 'label'>;
 const lc = createWindowLifecycle({
   label: DIALOG_HOST_LABEL,
   route: '/dialog-host-window',
-  title: 'Dialog',
+  titleKey: 'windows.dialog',
   width: 400,
   height: 220,
   minWidth: 300,

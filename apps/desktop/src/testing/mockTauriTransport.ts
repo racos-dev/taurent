@@ -114,6 +114,18 @@ export function emitLanguageChanged(event: LanguageChangedEvent) {
   emitToListeners(languageChangedListeners, event);
 }
 
+declare global {
+  interface Window {
+    __TAURENT_TAURI_TRANSPORT__?: {
+      emitLanguageChanged: (event: LanguageChangedEvent) => void;
+    };
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.__TAURENT_TAURI_TRANSPORT__ = { emitLanguageChanged };
+}
+
 export function emitMaindataSyncChanged(event: MaindataSyncChangedEvent) {
   emitToListeners(maindataSyncChangedListeners, event);
 }
